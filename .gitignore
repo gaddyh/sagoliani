@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.venv/
+*.tsbuildinfo
+.DS_Store
+assets-source/
+validation/
+.devin/

@@ -1,0 +1,87 @@
+import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
+import { chromium } from 'playwright-core'
+
+const baseUrl = process.env.POC_URL || 'http://127.0.0.1:5173'
+const chrome = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+const browser = await chromium.launch({ executablePath: chrome, headless: true })
+const page = await browser.newPage()
+const asset = (path) => new URL(`../public/assets/${path}`, import.meta.url)
+
+try {
+  await page.goto(`${baseUrl}/admin`)
+  await assert.doesNotReject(() => page.getByRole('heading', { name: /מכינים מקום/ }).waitFor())
+  await page.getByLabel('שם', { exact: true }).fill('איור בדיקה')
+  await page.getByLabel(/איור שקוף או צילום/).setInputFiles({ name: 'invalid.png', mimeType: 'image/png', buffer: Buffer.from('not an image') })
+  await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
+  await page.getByRole('status').getByText(/PNG, JPEG, WebP/).waitFor()
+
+  await page.getByLabel(/איור שקוף או צילום/).setInputFiles({ name: 'opaque.jpeg', mimeType: 'image/jpeg', buffer: await readFile(asset('vessels/turquoise.webp')) })
+  await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
+  await page.getByRole('status').getByText(/רקע מורכב/).waitFor()
+
+  await page.getByLabel(/איור שקוף או צילום/).setInputFiles({ name: 'monkey-flower.jpg', mimeType: 'image/jpeg', buffer: await readFile(new URL('../assets-source/external/monkey-flower.jpg', import.meta.url)) })
+  await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
+  await page.getByRole('status').getByText(/הטיוטה נשמרה/).waitFor()
+  await page.getByText(/הרקע הוסר בקירוב/).waitFor()
+  const alpha = await page.evaluate(async () => {
+    const db = await new Promise((resolve, reject) => { const request = indexedDB.open('art-in-clay-drafts'); request.onsuccess = () => resolve(request.result); request.onerror = reject })
+    const drafts = await new Promise((resolve, reject) => { const request = db.transaction('assets').objectStore('assets').getAll(); request.onsuccess = () => resolve(request.result); request.onerror = reject })
+    db.close()
+    const bitmap = await createImageBitmap(drafts[0].image)
+    const canvas = document.createElement('canvas'); canvas.width = bitmap.width; canvas.height = bitmap.height
+    const context = canvas.getContext('2d'); context.drawImage(bitmap, 0, 0)
+    return context.getImageData(0, 0, 1, 1).data[3]
+  })
+  assert.ok(alpha < 100, `light paper corner should be transparent: ${alpha}`)
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: 'מחיקת טיוטה' }).click()
+  await page.getByText(/עדיין אין טיוטות/).waitFor()
+  await page.getByLabel('שם', { exact: true }).fill('איור בדיקה')
+  await page.getByLabel(/איור שקוף או צילום/).setInputFiles({ name: 'meadow.png', mimeType: 'image/png', buffer: await readFile(asset('artwork/meadow.png')) })
+  await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
+  await page.getByRole('status').getByText(/הטיוטה נשמרה/).waitFor()
+  await page.waitForFunction(() => document.querySelector('.admin-review canvas')?.width === 750)
+  await page.reload()
+  await page.getByRole('button', { name: /איור בדיקה/ }).click()
+  await page.waitForFunction(() => document.querySelector('.admin-review canvas')?.width === 750)
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: 'מחיקת טיוטה' }).click()
+  await page.getByText(/עדיין אין טיוטות/).waitFor()
+
+  await page.getByRole('button', { name: 'כלי קרמיקה' }).click()
+  await page.getByLabel('שם', { exact: true }).fill('קערת בדיקה')
+  await page.getByLabel(/צילום כלי ריק/).setInputFiles({ name: 'turquoise.webp', mimeType: 'image/webp', buffer: await readFile(asset('vessels/turquoise.webp')) })
+  await page.getByLabel(/מסכת אזור קישוט/).setInputFiles({ name: 'meadow.png', mimeType: 'image/png', buffer: await readFile(asset('artwork/meadow.png')) })
+  await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
+  await page.getByRole('status').getByText(/באותם ממדים/).waitFor()
+  await page.getByLabel(/מסכת אזור קישוט/).setInputFiles({ name: 'turquoise-mask.png', mimeType: 'image/png', buffer: await readFile(asset('vessels/turquoise-mask.png')) })
+  await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
+  await page.getByRole('status').getByText(/הטיוטה נשמרה/).waitFor()
+  await page.waitForFunction(() => document.querySelector('.admin-review canvas')?.width === 750)
+  assert.equal(await page.getByRole('button', { name: /קערת בדיקה/ }).count(), 1)
+  await page.getByLabel('שם', { exact: true }).fill('קערה ללא מסכה')
+  await page.getByLabel(/צילום כלי ריק/).setInputFiles({ name: 'rim-bowl.jpg', mimeType: 'image/jpeg', buffer: await readFile(new URL('../assets-source/external/rim-bowl.jpg', import.meta.url)) })
+  await page.getByLabel(/מסכת אזור קישוט/).setInputFiles([])
+  await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
+  await page.getByText(/אזור הקישוט הוגדר אוטומטית/).waitFor()
+  await page.waitForFunction(() => document.querySelector('.admin-review canvas')?.width === 750)
+  const before = await page.locator('.admin-review canvas').evaluate((canvas) => canvas.toDataURL())
+  await page.getByLabel('מרכז אנכי').fill('0.42')
+  await page.getByLabel('רוחב').fill('0.18')
+  await page.getByRole('button', { name: 'שמירת אזור קישוט' }).click()
+  await page.getByRole('status').getByText(/אזור הקישוט עודכן/).waitFor()
+  await page.waitForFunction(() => document.querySelector('.admin-review canvas')?.width === 750)
+  await page.reload()
+  await page.getByRole('button', { name: /קערה ללא מסכה/ }).click()
+  assert.equal(await page.getByLabel('מרכז אנכי').inputValue(), '0.42')
+  assert.equal(await page.getByLabel('רוחב').inputValue(), '0.18')
+  await page.waitForFunction(() => document.querySelector('.admin-review canvas')?.width === 750)
+  const after = await page.locator('.admin-review canvas').evaluate((canvas) => canvas.toDataURL())
+  assert.notEqual(before, after, 'updated region should change rendering')
+  await page.setViewportSize({ width: 390, height: 844 })
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'admin mobile horizontal overflow')
+  console.log('Admin uploads: validation, rendering, draft persistence, deletion and mobile layout OK')
+} finally {
+  await browser.close()
+}
