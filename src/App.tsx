@@ -116,8 +116,8 @@ function App() {
               <li key={item.id}>
                 <strong>{item.name}</strong>
                 <span>{item.credit!.author}</span>
-                <span>רישיון: <a href={item.credit!.licenseUrl} target="_blank" rel="noopener noreferrer">{item.credit!.license}</a></span>
-                <a href={item.credit!.sourceUrl} target="_blank" rel="noopener noreferrer">מקור ↗</a>
+                <span>רישיון: {item.credit!.licenseUrl ? <a href={item.credit!.licenseUrl} target="_blank" rel="noopener noreferrer">{item.credit!.license}</a> : item.credit!.license}</span>
+                {item.credit!.sourceUrl ? <a href={item.credit!.sourceUrl} target="_blank" rel="noopener noreferrer">מקור ↗</a> : <span />}
               </li>
             ))}
           </ul>

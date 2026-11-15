@@ -60,7 +60,7 @@ try {
     }
   }
 
-  for (const vessel of ['white-study', 'rim-study']) {
+  for (const vessel of ['ai-round-plate', 'ai-oval-plate', 'ai-rect-platter']) {
     for (const artwork of ['monkey-flower', 'gentian', 'poppy']) {
       await page.goto(`${baseUrl}/?collection=external&vessel=${vessel}&artwork=${artwork}&preset=center`)
       await waitForPreview()
@@ -105,7 +105,7 @@ try {
 
   await page.goto(`${baseUrl}/?collection=external`)
   await waitForPreview()
-  assert.equal(await page.getByRole('button', { name: /קערת לבן לבדיקה/ }).count(), 1, 'external vessel chip missing')
+  assert.equal(await page.getByRole('button', { name: /צלחת שוליים גליים/ }).count(), 1, 'external vessel chip missing')
   assert.equal(await page.getByRole('button', { name: /פרח קוף/ }).count(), 1, 'external artwork chip missing')
   await page.getByRole('button', { name: /נכסי בדיקה חיצוניים/ }).click()
   await page.getByRole('heading', { name: /מקורות ורישיונות/ }).waitFor()

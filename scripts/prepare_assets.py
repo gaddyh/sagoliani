@@ -35,14 +35,7 @@ BOWLS = {
     },
 }
 
-EXTERNAL_BOWLS = {
-    "white-study": {
-        "file": "white-bowl.png", "center": (.50, .50), "radius": (.355, .263),
-    },
-    "rim-study": {
-        "file": "rim-bowl.jpg", "center": (.455, .432), "radius": (.218, .092),
-    },
-}
+EXTERNAL_BOWLS: dict = {}  # external test vessels are now added with scripts/add_asset.py
 
 EXTERNAL_ART_CROPS = {
     "monkey-flower": {"file": "monkey-flower.jpg", "crop": (.025, .085, .93, .955)},

@@ -7,10 +7,13 @@ Run from the project root with the venv from the README:
     .venv/bin/python scripts/add_asset.py artwork poppies "פרגים" ~/Downloads/poppies.jpg --detail "פרגים אדומים"
     options: --crop L,T,R,B (fractions 0-1)  --rotate 90  --method scan|photo  --scale 1.2
 
+  External test asset (not the artists' work): add --credit-author and --license (+ optional --credit-url, --license-url).
+  It is marked external, shown under "נכסי בדיקה חיצוניים" and listed in the credits.
+
   Vessel (empty piece, photographed from above):
     .venv/bin/python scripts/add_asset.py vessel cream-bowl "קערת שמנת" ~/Downloads/bowl.jpg --detail "שמנת מנוקד"
-    options: --mask mask.png (white = decoration area, same photo size)  or  --ellipse CX,CY,RX,RY (fractions)
-             --material light|dark  --fit crop|pad  --curve 0.032  --perspective 0.15
+    options: --mask mask.png (white = decoration area, same photo size)  or  --ellipse CX,CY,RX,RY (fractions of the result)
+             --crop L,T,R,B (frame the piece first)  --material light|dark  --fit crop|pad  --curve 0.032  --perspective 0.15
 
   --update replaces the files of an existing id without touching the catalog (e.g. after a better photo).
   --dry-run only writes a preview to /tmp and prints the catalog entry.
@@ -44,19 +47,37 @@ def open_photo(path: Path) -> Image.Image:
 
 
 def fit_vessel(image: Image.Image, mode: str, fill) -> Image.Image:
-    if mode == "pad":
-        return ImageOps.pad(image, VESSEL_SIZE, Image.Resampling.LANCZOS, color=fill)
-    return ImageOps.fit(image, VESSEL_SIZE, Image.Resampling.LANCZOS)
+    if mode != "pad":
+        return ImageOps.fit(image, VESSEL_SIZE, Image.Resampling.LANCZOS)
+    width, height = VESSEL_SIZE
+    scale = min(width / image.width, height / image.height)
+    resized = np.asarray(image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS))
+    top, left = (height - resized.shape[0]) // 2, (width - resized.shape[1]) // 2
+    padding = [(top, height - resized.shape[0] - top), (left, width - resized.shape[1] - left)] + [(0, 0)] * (resized.ndim - 2)
+    # Masks pad with black; photos extend their own edge so the background continues without a seam.
+    padded = np.pad(resized, padding, mode="constant", constant_values=0) if fill == 0 else np.pad(resized, padding, mode="edge")
+    return Image.fromarray(padded)
+
+
+def crop_fractions(image: Image.Image, crop) -> Image.Image:
+    if not crop:
+        return image
+    left, top, right, bottom = crop
+    return image.crop((round(image.width * left), round(image.height * top), round(image.width * right), round(image.height * bottom)))
 
 
 def prepare_vessel(args) -> tuple[Image.Image, Image.Image, dict]:
-    photo = open_photo(args.image).convert("RGB")
-    background = tuple(int(value) for value in np.asarray(photo).reshape(-1, 3)[:: max(1, photo.width)].mean(axis=0))
+    photo = crop_fractions(open_photo(args.image).convert("RGB"), args.crop)
+    pixels = np.asarray(photo)
+    border = np.concatenate([pixels[0], pixels[-1], pixels[:, 0], pixels[:, -1]])
+    background = tuple(int(value) for value in np.median(border, axis=0))
     image = fit_vessel(photo, args.fit, background)
     if args.mask:
         source = open_photo(args.mask).convert("L")
-        if source.size != photo.size:
-            sys.exit(f"Mask is {source.size[0]}x{source.size[1]} but the photo is {photo.width}x{photo.height}; they must match.")
+        original = open_photo(args.image)
+        if source.size != original.size:
+            sys.exit(f"Mask is {source.size[0]}x{source.size[1]} but the photo is {original.width}x{original.height}; they must match.")
+        source = crop_fractions(source, args.crop)
         mask = fit_vessel(source, args.fit, 0).point(lambda value: 255 if value > 127 else 0)
     else:
         cx, cy, rx, ry = args.ellipse
@@ -80,10 +101,7 @@ def prepare_vessel(args) -> tuple[Image.Image, Image.Image, dict]:
 
 
 def prepare_artwork(args) -> Image.Image:
-    image = open_photo(args.image)
-    if args.crop:
-        left, top, right, bottom = args.crop
-        image = image.crop((round(image.width * left), round(image.height * top), round(image.width * right), round(image.height * bottom)))
+    image = crop_fractions(open_photo(args.image), args.crop)
     if args.rotate:
         image = image.rotate(args.rotate, expand=True)
     image.thumbnail((ARTWORK_MAX, ARTWORK_MAX), Image.Resampling.LANCZOS)
@@ -98,6 +116,20 @@ def ts(text: str) -> str:
     return "'" + text.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
 
+def credit_lines(args) -> str:
+    if not args.credit_author:
+        return ""
+    return (
+        "    external: true,\n"
+        "    credit: {\n"
+        f"      author: {ts(args.credit_author)},\n"
+        f"      sourceUrl: {ts(args.credit_url or '')},\n"
+        f"      license: {ts(args.license)},\n"
+        f"      licenseUrl: {ts(args.license_url or '')},\n"
+        "    },\n"
+    )
+
+
 def vessel_entry(args, placements: dict) -> str:
     rows = "\n".join(f"      {name}: {{ x: {x:.3f}, y: {y:.3f}, width: {width:.3f} }}," for name, (x, y, width) in placements.items())
     return (
@@ -108,6 +140,7 @@ def vessel_entry(args, placements: dict) -> str:
         "    placements: {\n"
         f"{rows}\n"
         "    },\n"
+        f"{credit_lines(args)}"
         "  },\n"
     )
 
@@ -118,6 +151,7 @@ def artwork_entry(args) -> str:
         "  {\n"
         f"    id: {ts(args.id)}, name: {ts(args.name)}, detail: {ts(args.detail)},\n"
         f"    image: '/assets/artwork/{args.id}.png', source: {ts(args.source)}{scale},\n"
+        f"{credit_lines(args)}"
         "  },\n"
     )
 
@@ -155,7 +189,13 @@ def main() -> None:
     parser.add_argument("--fit", choices=["crop", "pad"], default="crop")
     parser.add_argument("--curve", type=float, default=.032)
     parser.add_argument("--perspective", type=float, default=.15)
+    parser.add_argument("--credit-author", help="external asset: who made the photo/artwork and where from")
+    parser.add_argument("--credit-url", help="external asset: page of the original file (optional)")
+    parser.add_argument("--license", help="external asset: license name, e.g. 'Pexels License'")
+    parser.add_argument("--license-url", help="external asset: link to the license (optional)")
     args = parser.parse_args()
+    if args.credit_author and not args.license:
+        sys.exit("--credit-author needs --license too (for an AI image, e.g. --license 'תמונה שנוצרה ב-AI').")
 
     if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", args.id):
         sys.exit("id must be lowercase English letters, digits and dashes, e.g. cream-bowl")

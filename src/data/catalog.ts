@@ -1,4 +1,4 @@
-export type VesselId = 'turquoise' | 'blue' | 'white-study' | 'rim-study'
+export type VesselId = 'turquoise' | 'blue' | 'ai-round-plate' | 'ai-oval-plate' | 'ai-rect-platter'
 export type ArtworkId = 'meadow' | 'spring' | 'garden' | 'wildflowers' | 'monkey-flower' | 'gentian' | 'poppy'
 export type PresetId = 'center' | 'small' | 'offset'
 
@@ -62,37 +62,54 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'white-study', name: 'קערת לבן לבדיקה', detail: 'נכס בדיקה חיצוני · רקע בהיר',
-    image: '/assets/vessels/white-study.webp', mask: '/assets/vessels/white-study-mask.png',
-    material: 'light', curve: 0.028, perspective: 0.12,
+    id: 'ai-round-plate', name: 'צלחת שוליים גליים · AI', detail: 'נכס בדיקה חיצוני · תמונת AI',
+    image: '/assets/vessels/ai-round-plate.webp', mask: '/assets/vessels/ai-round-plate-mask.png',
+    material: 'light', curve: 0.012, perspective: 0.04,
     placements: {
-      center: { x: .50, y: .50, width: .40 },
-      small: { x: .50, y: .50, width: .30 },
-      offset: { x: .57, y: .47, width: .36 },
+      center: { x: 0.490, y: 0.492, width: 0.281 },
+      small: { x: 0.490, y: 0.492, width: 0.208 },
+      offset: { x: 0.539, y: 0.463, width: 0.248 },
     },
     external: true,
     credit: {
-      author: 'Wikimedia Commons · צילום קערה לבנה',
-      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Empty_white_bowl.png',
-      license: 'CC BY 4.0',
-      licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
+      author: 'תמונה שנוצרה בבינה מלאכותית, סופקה לצורך ההדמיה',
+      sourceUrl: '',
+      license: 'תמונה שנוצרה ב-AI · להמחשה בלבד',
+      licenseUrl: '',
     },
   },
   {
-    id: 'rim-study', name: 'קערה עם שפה כחולה לבדיקה', detail: 'נכס בדיקה חיצוני · שפה מורכבת',
-    image: '/assets/vessels/rim-study.webp', mask: '/assets/vessels/rim-study-mask.png',
-    material: 'light', curve: 0.05, perspective: 0.26,
+    id: 'ai-oval-plate', name: 'צלחת אובאלית גלית · AI', detail: 'נכס בדיקה חיצוני · תמונת AI',
+    image: '/assets/vessels/ai-oval-plate.webp', mask: '/assets/vessels/ai-oval-plate-mask.png',
+    material: 'light', curve: 0.012, perspective: 0.04,
     placements: {
-      center: { x: .455, y: .432, width: .26 },
-      small: { x: .455, y: .432, width: .19 },
-      offset: { x: .52, y: .41, width: .23 },
+      center: { x: 0.500, y: 0.500, width: 0.306 },
+      small: { x: 0.500, y: 0.500, width: 0.227 },
+      offset: { x: 0.554, y: 0.481, width: 0.270 },
     },
     external: true,
     credit: {
-      author: 'Wikimedia Commons · קערת קרמיקה פשוטה עם שפה כחולה',
-      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Simple-ceramic-bowl.jpg',
-      license: 'CC BY 3.0',
-      licenseUrl: 'https://creativecommons.org/licenses/by/3.0/',
+      author: 'תמונה שנוצרה בבינה מלאכותית, סופקה לצורך ההדמיה',
+      sourceUrl: '',
+      license: 'תמונה שנוצרה ב-AI · להמחשה בלבד',
+      licenseUrl: '',
+    },
+  },
+  {
+    id: 'ai-rect-platter', name: 'מגש מלבני גלי · AI', detail: 'נכס בדיקה חיצוני · תמונת AI',
+    image: '/assets/vessels/ai-rect-platter.webp', mask: '/assets/vessels/ai-rect-platter-mask.png',
+    material: 'light', curve: 0.008, perspective: 0.03,
+    placements: {
+      center: { x: 0.502, y: 0.491, width: 0.317 },
+      small: { x: 0.502, y: 0.491, width: 0.235 },
+      offset: { x: 0.558, y: 0.470, width: 0.279 },
+    },
+    external: true,
+    credit: {
+      author: 'תמונה שנוצרה בבינה מלאכותית, סופקה לצורך ההדמיה',
+      sourceUrl: '',
+      license: 'תמונה שנוצרה ב-AI · להמחשה בלבד',
+      licenseUrl: '',
     },
   },
 ]
