@@ -27,7 +27,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'adjust', label: 'גודל וסיבוב' },
   { id: 'summary', label: 'סיכום' },
 ]
-const HOLD_MS = 450
 const DRAG_THRESHOLD = 6
 
 function parsePlacementParam(value: string | null): Placement | null {
@@ -51,10 +50,7 @@ export default function Studio() {
   const [empty, setEmpty] = useState(false)
   const [renderState, setRenderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [dragging, setDragging] = useState(false)
-  const [holding, setHolding] = useState(false)
   const [tab, setTab] = useState<Tab>('vessel')
-  const holdTimer = useRef<number | null>(null)
-  const showEmpty = empty || holding
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const dragRef = useRef<{ startX: number; startY: number; origin: Placement; moved: boolean } | null>(null)
   const vessel = vessels.find((item) => item.id === vesselId)!
@@ -92,13 +88,12 @@ export default function Studio() {
     if (!canvas) return
     let current = true
     setRenderState('loading')
-    renderCombination(canvas, { vessel, artwork, preset: presetId, empty: showEmpty, placement: customPlacement, size: size / 100, rotation }, () => current)
+    renderCombination(canvas, { vessel, artwork, preset: presetId, empty: empty, placement: customPlacement, size: size / 100, rotation }, () => current)
       .then(() => { if (current) setRenderState('ready') })
       .catch(() => { if (current) setRenderState('error') })
     return () => { current = false }
-  }, [vessel, artwork, presetId, showEmpty, customPlacement, size, rotation])
+  }, [vessel, artwork, presetId, empty, customPlacement, size, rotation])
 
-  useEffect(() => () => { if (holdTimer.current) window.clearTimeout(holdTimer.current) }, [])
 
   const latest = useRef({ position: { x: basePlacement.x, y: basePlacement.y }, size, rotation })
   latest.current = { position: customPos ?? { x: basePlacement.x, y: basePlacement.y }, size, rotation }
@@ -137,11 +132,8 @@ export default function Studio() {
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
     if (pointers.current.size === 1) {
       startDrag(event.clientX, event.clientY, false)
-      holdTimer.current = window.setTimeout(() => { if (dragRef.current && !dragRef.current.moved) setHolding(true) }, HOLD_MS)
       return
     }
-    if (holdTimer.current) window.clearTimeout(holdTimer.current)
-    setHolding(false)
     dragRef.current = null
     gestureRef.current = { ...twoFingers(), size: latest.current.size, rotation: latest.current.rotation, origin: latest.current.position }
     setDragging(true)
@@ -161,11 +153,10 @@ export default function Studio() {
       return
     }
     const drag = dragRef.current
-    if (!drag || holding) return
+    if (!drag) return
     if (!drag.moved) {
       if (Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < DRAG_THRESHOLD) return
       drag.moved = true
-      if (holdTimer.current) window.clearTimeout(holdTimer.current)
       setDragging(true)
     }
     setCustomPos({
@@ -185,10 +176,8 @@ export default function Studio() {
       if (remaining) { startDrag(remaining.x, remaining.y, true); return }
     }
     if (pointers.current.size) return
-    if (holdTimer.current) window.clearTimeout(holdTimer.current)
     dragRef.current = null
     setDragging(false)
-    setHolding(false)
   }
 
   function downloadImage() {
@@ -222,7 +211,7 @@ export default function Studio() {
           <canvas
             ref={canvasRef}
             role="img"
-            aria-label={`הדמיה: ${vessel.name} ${showEmpty ? 'ללא איור' : `עם איור ${artwork.name}`}`}
+            aria-label={`הדמיה: ${vessel.name} ${empty ? 'ללא איור' : `עם איור ${artwork.name}`}`}
             className={empty ? '' : 'draggable'}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -233,8 +222,7 @@ export default function Studio() {
           {renderState === 'loading' && <div className="preview-loading" role="status">מכינים את ההדמיה…</div>}
           {renderState === 'error' && <div className="preview-loading" role="alert">לא ניתן לטעון את התמונה. נסו לרענן את הדף.</div>}
           <span className="preview-watermark">הדמיה ניסיונית</span>
-          {holding && <span className="hold-badge" role="status">הכלי ללא איור</span>}
-          {!showEmpty && <span className={dragging ? 'drag-hint' : 'drag-hint subtle'}>{dragging ? 'מזיזים…' : <><span className="hint-touch">גררו להזזה · שתי אצבעות לגודל וסיבוב · לחיצה ארוכה להשוואה</span><span className="hint-mouse">גררו להזזה · צביטה במשטח המגע לגודל · לחיצה ארוכה להשוואה</span></>}</span>}
+          {!empty && <span className={dragging ? 'drag-hint' : 'drag-hint subtle'}>{dragging ? 'מזיזים…' : <><span className="hint-touch">גררו להזזה · שתי אצבעות לגודל וסיבוב</span><span className="hint-mouse">גררו להזזה · צביטה במשטח המגע לגודל</span></>}</span>}
           <div className="stage-actions">
             <div className="compare-controls" role="group" aria-label="השוואת הכלי הריק לתוצאה">
               <button type="button" className={empty ? 'compare-button active' : 'compare-button'} aria-pressed={empty} onClick={() => setEmpty(true)}>לפני</button>
@@ -248,7 +236,7 @@ export default function Studio() {
       <section className="editor-panel" aria-label="בחירת הכלי והאיור">
         <div className="editor-caption">
           <strong>{vessel.name}</strong>
-          <span>{showEmpty ? 'הכלי ללא איור' : `בשילוב ${artwork.name}`}{isCustom || isAdjusted ? ` · ${isCustom ? 'מיקום חופשי' : preset.name}${isAdjusted ? ` · ${size}% · ${rotationLabel(rotation)}` : ''}` : ''}</span>
+          <span>{empty ? 'הכלי ללא איור' : `בשילוב ${artwork.name}`}{isCustom || isAdjusted ? ` · ${isCustom ? 'מיקום חופשי' : preset.name}${isAdjusted ? ` · ${size}% · ${rotationLabel(rotation)}` : ''}` : ''}</span>
         </div>
         <div className="editor-body" role="tabpanel" id={`studio-panel-${tab}`} aria-labelledby={`studio-tab-${tab}`}>
           {tab === 'vessel' && <>
