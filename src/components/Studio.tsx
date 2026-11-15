@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { artworks, presets, vessels, type ArtworkId, type Placement, type PresetId, type VesselId } from '../data/catalog'
+import { artists } from '../data/products'
 import { configurationKey, preloadAssets, renderCombination } from '../renderer/composite'
 
 type Collection = 'original' | 'external'
@@ -28,6 +29,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'summary', label: 'סיכום' },
 ]
 const DRAG_THRESHOLD = 6
+const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
 
 function parsePlacementParam(value: string | null): Placement | null {
   if (!value) return null
@@ -51,6 +53,12 @@ export default function Studio() {
   const [renderState, setRenderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [dragging, setDragging] = useState(false)
   const [tab, setTab] = useState<Tab>('vessel')
+  const [customerName, setCustomerName] = useState('')
+  const [customerNote, setCustomerNote] = useState('')
+  const [requestError, setRequestError] = useState('')
+  const [requestSent, setRequestSent] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const requestDialog = useRef<HTMLDialogElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const dragRef = useRef<{ startX: number; startY: number; origin: Placement; moved: boolean } | null>(null)
   const vessel = vessels.find((item) => item.id === vesselId)!
@@ -68,8 +76,8 @@ export default function Studio() {
 
   useEffect(() => { preloadAssets(vessels, artworks) }, [])
 
-  useEffect(() => {
-    const url = new URL(window.location.href)
+  const designUrl = useMemo(() => {
+    const url = new URL(location.href)
     url.searchParams.set('collection', collection)
     url.searchParams.set('vessel', vesselId)
     url.searchParams.set('artwork', artworkId)
@@ -80,8 +88,14 @@ export default function Studio() {
     else url.searchParams.delete('size')
     if (rotation) url.searchParams.set('rot', String(rotation))
     else url.searchParams.delete('rot')
-    window.history.replaceState(null, '', url)
+    return url
   }, [collection, vesselId, artworkId, presetId, customPos, size, rotation])
+
+  useEffect(() => {
+    const url = new URL(designUrl)
+    url.hash = window.location.hash
+    window.history.replaceState(null, '', url)
+  }, [designUrl])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -180,6 +194,52 @@ export default function Studio() {
     setDragging(false)
   }
 
+  const placementText = `${isCustom ? 'מיקום חופשי' : preset.name}${isAdjusted ? `, גודל ${size}%, סיבוב ${rotationLabel(rotation).replace(/[\u2066\u2069]/g, '')}` : ''}`
+  const requestLink = new URL(designUrl)
+  requestLink.hash = 'studio-editor'
+  const requestMessage = [
+    `שלום ${EFRAT.name.split(' ')[0]}, אשמח להזמין כלי מעוצב מ-ART IN CLAY.`,
+    `שם: ${customerName.trim()}`,
+    `כלי: ${vessel.name}`,
+    `ציור: ${artwork.name}`,
+    `מיקום: ${placementText}`,
+    ...(customerNote.trim() ? [`הערות: ${customerNote.trim()}`] : []),
+    `ההדמיה שלי: ${requestLink.href}`,
+  ].join('\n')
+  const requestHref = `https://wa.me/${EFRAT.whatsapp}?text=${encodeURIComponent(requestMessage)}`
+
+  function openRequest() {
+    setRequestError('')
+    setRequestSent(false)
+    setCopied(false)
+    requestDialog.current?.showModal()
+  }
+
+  function sendRequest(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (!customerName.trim()) {
+      event.preventDefault()
+      setRequestError('נא למלא שם, כדי שאפרת תדע למי לחזור.')
+      return
+    }
+    setRequestError('')
+    setRequestSent(true)
+  }
+
+  async function copyMessage() {
+    try {
+      await navigator.clipboard.writeText(requestMessage)
+    } catch {
+      // Older browsers or embedded views without clipboard access: copy through a temporary text field.
+      const field = document.createElement('textarea')
+      field.value = requestMessage
+      document.body.appendChild(field)
+      field.select()
+      document.execCommand('copy')
+      field.remove()
+    }
+    setCopied(true)
+  }
+
   function downloadImage() {
     const canvas = canvasRef.current
     if (!canvas || renderState !== 'ready') return
@@ -238,6 +298,7 @@ export default function Studio() {
 
       <section className="editor-panel" aria-label="בחירת הכלי והאיור">
         <div className="editor-caption">
+          <button type="button" className="request-button" onClick={openRequest} disabled={renderState === 'error'}>שליחת בקשה לאפרת</button>
           <strong>{vessel.name}</strong>
           <span>{empty ? 'הכלי ללא איור' : `בשילוב ${artwork.name}`}{isCustom || isAdjusted ? ` · ${isCustom ? 'מיקום חופשי' : preset.name}${isAdjusted ? ` · ${size}% · ${rotationLabel(rotation)}` : ''}` : ''}</span>
         </div>
@@ -308,6 +369,28 @@ export default function Studio() {
           ))}
         </div>
       </section>
+
+      <dialog ref={requestDialog} className="request-dialog" aria-labelledby="request-title" onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
+        <form method="dialog" className="request-form" onSubmit={(event) => event.preventDefault()}>
+          <div className="request-head">
+            <h3 id="request-title">שליחת בקשה לאפרת</h3>
+            <button type="button" className="request-close" aria-label="סגירה" onClick={() => requestDialog.current?.close()}>×</button>
+          </div>
+          <p className="request-summary"><strong>{vessel.name}</strong> + <strong>{artwork.name}</strong> · {placementText}</p>
+          <label>שם <input name="customer-name" autoComplete="name" required maxLength={60} value={customerName} onChange={(event) => { setCustomerName(event.target.value); setRequestError('') }} /></label>
+          <label><span>הערות <span className="request-optional">(רשות)</span></span>
+            <textarea name="customer-note" rows={3} maxLength={500} placeholder="למשל: כמות או סט, חומר חלק או מנוקד, איסוף או משלוח" value={customerNote} onChange={(event) => setCustomerNote(event.target.value)} />
+          </label>
+          {requestError && <p className="request-error" role="alert">{requestError}</p>}
+          <a className="request-send" href={requestHref} target="_blank" rel="noopener noreferrer" onClick={sendRequest}>שליחה בוואטסאפ לאפרת</a>
+          {requestSent && <div className="request-after" role="status">
+            <p>וואטסאפ אמור להיפתח עם ההודעה; נשאר רק ללחוץ ״שליחה״. ההודעה כוללת קישור שפותח בדיוק את ההדמיה שלכם.</p>
+            <p>לא נפתח? העתיקו את ההודעה ושלחו לאפרת בוואטסאפ: <a href={`tel:+${EFRAT.whatsapp}`} dir="ltr">{EFRAT.phone}</a></p>
+            <button type="button" className="request-secondary" onClick={copyMessage}>{copied ? 'ההודעה הועתקה ✓' : 'העתקת ההודעה'}</button>
+          </div>}
+          <p className="request-note">ההודעה נשלחת מהוואטסאפ שלכם ישירות לאפרת; הפרטים לא נשמרים באתר. הציור הסופי מותאם לגודל הכלי ולעיצובו על ידי היוצרות.</p>
+        </form>
+      </dialog>
     </div>
   )
 }
