@@ -111,9 +111,16 @@ try {
   await page.getByRole('heading', { name: /מקורות ורישיונות/ }).waitFor()
   console.log('External collection toggle, chips and credits section: OK')
 
+  await page.goto(`${baseUrl}/`)
+  await waitForPreview()
+  assert.equal(await page.locator('.product-card').count(), 8, 'catalog should list 8 brochure products')
+  await page.screenshot({ path: new URL('page-full.png', output).pathname, fullPage: true })
+  console.log('Brochure page sections and catalog: OK')
+
   await page.setViewportSize({ width: 1440, height: 1100 })
   await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
   await waitForPreview()
+  await page.locator('canvas').scrollIntoViewIfNeeded()
   const canvasBox = await page.locator('canvas').boundingBox()
   const centerX = canvasBox.x + canvasBox.width / 2
   const centerY = canvasBox.y + canvasBox.height / 2
