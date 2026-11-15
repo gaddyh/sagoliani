@@ -1,5 +1,5 @@
 export type VesselId = 'turquoise' | 'blue' | 'ai-round-plate' | 'ai-oval-plate' | 'ai-rect-platter'
-export type ArtworkId = 'meadow' | 'spring' | 'garden' | 'wildflowers' | 'monkey-flower' | 'gentian' | 'poppy'
+export type ArtworkId = 'meadow' | 'spring' | 'garden' | 'wildflowers' | 'monkey-flower' | 'gentian' | 'poppy' | 'ai-anemones' | 'ai-blue-sprig' | 'ai-poppies' | 'ai-lavender'
 export type PresetId = 'center' | 'small' | 'offset'
 
 export interface Placement {
@@ -162,6 +162,50 @@ export const artworks: Artwork[] = [
       sourceUrl: 'https://commons.wikimedia.org/wiki/File:California_Poppy_(Eschscholtzia_californica)_by_Mary_Vaux_Walcott-saam1970.355.303.jpg',
       license: 'CC0 1.0 (נחלת הכלל)',
       licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
+    },
+  },
+  {
+    id: 'ai-anemones', name: 'כלניות כחולות · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
+    image: '/assets/artwork/ai-anemones.png', source: 'ציור AI לבדיקה', scale: 1.35,
+    external: true,
+    credit: {
+      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
+      sourceUrl: '',
+      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
+      licenseUrl: '',
+    },
+  },
+  {
+    id: 'ai-blue-sprig', name: 'ענף פרחים כחולים · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
+    image: '/assets/artwork/ai-blue-sprig.png', source: 'ציור AI לבדיקה',
+    external: true,
+    credit: {
+      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
+      sourceUrl: '',
+      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
+      licenseUrl: '',
+    },
+  },
+  {
+    id: 'ai-poppies', name: 'פרגים אדומים · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
+    image: '/assets/artwork/ai-poppies.png', source: 'ציור AI לבדיקה',
+    external: true,
+    credit: {
+      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
+      sourceUrl: '',
+      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
+      licenseUrl: '',
+    },
+  },
+  {
+    id: 'ai-lavender', name: 'לבנדר · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
+    image: '/assets/artwork/ai-lavender.png', source: 'ציור AI לבדיקה',
+    external: true,
+    credit: {
+      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
+      sourceUrl: '',
+      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
+      licenseUrl: '',
     },
   },
 ]

@@ -61,7 +61,7 @@ try {
   }
 
   for (const vessel of ['ai-round-plate', 'ai-oval-plate', 'ai-rect-platter']) {
-    for (const artwork of ['monkey-flower', 'gentian', 'poppy']) {
+    for (const artwork of ['monkey-flower', 'gentian', 'poppy', 'ai-anemones', 'ai-blue-sprig', 'ai-poppies', 'ai-lavender']) {
       await page.goto(`${baseUrl}/?collection=external&vessel=${vessel}&artwork=${artwork}&preset=center`)
       await waitForPreview()
       await page.getByRole('button', { name: 'לפני' }).click()
