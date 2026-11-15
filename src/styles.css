@@ -253,3 +253,13 @@ h1, h2, h3, p { margin-top: 0; }
   .site-footer { flex-wrap: wrap; padding: 23px 17px; }
   .bottom-note { padding: 32px 0 48px; }
 }
+.adjust-controls { display: grid; gap: 14px; margin-top: 18px; padding: 16px 18px; border: 1px solid #deded1; background: #fcfaf4; border-radius: 4px; font-size: 12px; color: #4a5446; }
+.adjust-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 82px; align-items: center; gap: 12px; }
+.adjust-row label { color: #343e30; }
+.adjust-row output { font-size: 11px; color: #777b6f; text-align: left; white-space: nowrap; }
+.adjust-row input[type="range"] { width: 100%; min-width: 0; accent-color: #637453; }
+.rotation-input { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rotate-button { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1px solid #c9d2ba; background: white; color: #56634b; font-size: 15px; line-height: 1; padding: 0; }
+.rotate-button:hover:not(:disabled) { background: #e8ebdf; }
+.rotate-button:disabled { opacity: .4; cursor: default; }
+@media (max-width: 520px) { .adjust-row { grid-template-columns: 42px minmax(0, 1fr) 70px; gap: 8px; } }

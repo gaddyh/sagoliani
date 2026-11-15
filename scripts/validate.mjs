@@ -136,10 +136,78 @@ try {
   await waitForPreview()
   assert.equal(page.url(), draggedUrl, 'custom placement not restored from URL')
   await page.locator('.custom-placement-note').waitFor()
-  await page.getByRole('button', { name: /חזרה לפריסט/ }).click()
+  await page.getByRole('button', { name: /חזרה למרכז/ }).click()
   await waitForPreview()
   assert.doesNotMatch(page.url(), /pos=/, 'custom pos not cleared on reset')
   console.log('Free drag, URL persistence, reload restore and reset: OK')
+
+  const outsideMask = (vesselId) => page.locator('canvas').evaluate(async (canvas, id) => {
+    const mask = new Image()
+    mask.src = `/assets/vessels/${id}-mask.png`
+    await mask.decode()
+    const maskCanvas = document.createElement('canvas')
+    maskCanvas.width = canvas.width
+    maskCanvas.height = canvas.height
+    maskCanvas.getContext('2d').drawImage(mask, 0, 0, canvas.width, canvas.height)
+    const maskData = maskCanvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+    const after = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+    let changed = 0
+    let outside = 0
+    for (let i = 0; i < after.length; i += 4) {
+      if (Math.abs(after[i] - window.__before[i]) + Math.abs(after[i + 1] - window.__before[i + 1]) + Math.abs(after[i + 2] - window.__before[i + 2]) < 2) continue
+      changed++
+      if (maskData[i] === 0) outside++
+    }
+    return { changed, outside, signature: canvas.toDataURL() }
+  }, vesselId)
+  for (const [vessel, artwork, size, rot] of [['turquoise', 'meadow', 150, 90], ['turquoise', 'spring', 150, -90], ['ai-rect-platter', 'ai-lavender', 150, 45], ['ai-oval-plate', 'ai-anemones', 60, -60]]) {
+    await page.goto(`${baseUrl}/?collection=${vessel.startsWith('ai-') ? 'external' : 'original'}&vessel=${vessel}&artwork=${artwork}&preset=center&size=${size}&rot=${rot}`)
+    await waitForPreview()
+    assert.equal(await page.locator('#artwork-size').inputValue(), String(size), 'size not restored from URL')
+    assert.equal(await page.locator('#artwork-rotation').inputValue(), String(rot), 'rotation not restored from URL')
+    await page.getByRole('button', { name: 'לפני' }).click()
+    await waitForPreview()
+    await page.locator('canvas').evaluate((canvas) => { window.__before = new Uint8ClampedArray(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data) })
+    await page.getByRole('button', { name: 'אחרי' }).click()
+    await waitForPreview()
+    const metrics = await outsideMask(vessel)
+    assert.ok(metrics.changed > 30, `${vessel}/${artwork} size ${size} rot ${rot} has no visible rendering`)
+    assert.equal(metrics.outside, 0, `${vessel}/${artwork} size ${size} rot ${rot} renders outside mask`)
+    await page.reload()
+    await waitForPreview()
+    assert.equal(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), metrics.signature, `${vessel}/${artwork} size ${size} rot ${rot} is not reproducible`)
+    console.log(`${vessel}/${artwork} size ${size}% rotation ${rot}°: ${metrics.changed} changed pixels, 0 outside mask, reproducible`)
+  }
+
+  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await waitForPreview()
+  const straight = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
+  await page.locator('#artwork-rotation').fill('30')
+  await waitForPreview()
+  assert.match(page.url(), /rot=30/)
+  assert.notEqual(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), straight, 'rotation did not change the preview')
+  await page.getByRole('button', { name: 'סיבוב ימינה ב־15 מעלות' }).click()
+  assert.match(page.url(), /rot=45/)
+  for (let i = 0; i < 12; i++) await page.getByRole('button', { name: 'סיבוב שמאלה ב־15 מעלות' }).click({ force: true })
+  assert.match(page.url(), /rot=-90/, 'rotation should stop at -90')
+  assert.equal(await page.getByRole('button', { name: 'סיבוב שמאלה ב־15 מעלות' }).isDisabled(), true)
+  await page.locator('#artwork-size').fill('130')
+  await waitForPreview()
+  assert.match(page.url(), /size=130/)
+  assert.match(await page.locator('.summary-card').innerText(), /130%.*90°\u2069? שמאלה/s)
+  await page.getByRole('button', { name: /איפוס גודל וסיבוב/ }).click()
+  await waitForPreview()
+  assert.doesNotMatch(page.url(), /size=|rot=/)
+  assert.equal(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), straight, 'reset should restore the original preview')
+  assert.equal(await page.locator('.preset-grid').count(), 0, 'preset buttons should be removed')
+  await page.locator('#artwork-rotation').fill('-20')
+  await page.getByRole('button', { name: /מתחילים מחדש/ }).click()
+  await waitForPreview()
+  assert.doesNotMatch(page.url(), /rot=/, 'starting over should reset rotation')
+  await page.goto(`${baseUrl}/?collection=original&vessel=blue&artwork=spring&preset=offset`)
+  await waitForPreview()
+  assert.match(page.url(), /preset=offset/, 'old links with a preset should still open')
+  console.log('Size and rotation controls, limits, URL state, summary and reset: OK')
 
   assert.ok(await page.getByRole('button', { name: /הורד.*PNG/ }).isEnabled(), 'download button disabled')
   const blobSize = await page.locator('canvas').evaluate(async (canvas) => {
@@ -156,11 +224,12 @@ try {
   await waitForPreview()
   await page.getByRole('button', { name: /פריחת אביב/ }).click()
   await waitForPreview()
-  await page.getByRole('button', { name: /מעט הצידה/ }).click()
+  await page.locator('#artwork-size').fill('120')
   await waitForPreview()
-  assert.match(page.url(), /vessel=blue&artwork=spring&preset=offset/)
-  await page.screenshot({ path: new URL('mobile-blue-spring-offset.png', output).pathname, fullPage: true })
-  console.log('Mobile selection, preset switching, URL state and overflow: OK')
+  assert.match(page.url(), /vessel=blue&artwork=spring&preset=center&size=120/)
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow with controls')
+  await page.screenshot({ path: new URL('mobile-blue-spring-size.png', output).pathname, fullPage: true })
+  console.log('Mobile selection, size control, URL state and overflow: OK')
 } finally {
   await browser.close()
 }

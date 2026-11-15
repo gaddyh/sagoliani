@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { artworks, presets, vessels, type ArtworkId, type Placement, type PresetId, type VesselId } from '../data/catalog'
 import { configurationKey, preloadAssets, renderCombination } from '../renderer/composite'
 
@@ -8,6 +8,19 @@ const originalVessels = vessels.filter((item) => !item.external)
 const externalVessels = vessels.filter((item) => item.external)
 const originalArtworks = artworks.filter((item) => !item.external)
 const externalArtworks = artworks.filter((item) => item.external)
+const MIN_SIZE = 60
+const MAX_SIZE = 150
+const MAX_ROTATION = 90
+
+function parseNumber(value: string | null, fallback: number, min: number, max: number): number {
+  const number = Number(value)
+  return value !== null && Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback
+}
+
+function rotationLabel(degrees: number): string {
+  if (!degrees) return 'ישר'
+  return `\u2066${Math.abs(degrees)}°\u2069 ${degrees < 0 ? 'שמאלה' : 'ימינה'}`
+}
 
 function parsePlacementParam(value: string | null): Placement | null {
   if (!value) return null
@@ -25,6 +38,8 @@ export default function Studio() {
     const parsed = parsePlacementParam(new URLSearchParams(location.search).get('pos'))
     return parsed ? { ...parsed, width: 0 } : null
   })
+  const [size, setSize] = useState(() => parseNumber(new URLSearchParams(location.search).get('size'), 100, MIN_SIZE, MAX_SIZE))
+  const [rotation, setRotation] = useState(() => Math.round(parseNumber(new URLSearchParams(location.search).get('rot'), 0, -MAX_ROTATION, MAX_ROTATION)))
   const [empty, setEmpty] = useState(false)
   const [renderState, setRenderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [dragging, setDragging] = useState(false)
@@ -36,8 +51,9 @@ export default function Studio() {
   const activeVessels = collection === 'original' ? originalVessels : externalVessels
   const activeArtworks = collection === 'original' ? originalArtworks : externalArtworks
   const basePlacement = vessel.placements[presetId]
-  const customPlacement: Placement | null = customPos ? { ...customPos, width: basePlacement.width } : null
+  const customPlacement = useMemo<Placement | null>(() => customPos ? { ...customPos, width: basePlacement.width } : null, [customPos, basePlacement])
   const isCustom = customPos !== null
+  const isAdjusted = size !== 100 || rotation !== 0
 
   useEffect(() => {
     if (!activeVessels.some((item) => item.id === vesselId)) setVesselId(activeVessels[0].id)
@@ -54,19 +70,23 @@ export default function Studio() {
     url.searchParams.set('preset', presetId)
     if (customPos) url.searchParams.set('pos', `${customPos.x.toFixed(4)},${customPos.y.toFixed(4)}`)
     else url.searchParams.delete('pos')
+    if (size !== 100) url.searchParams.set('size', String(size))
+    else url.searchParams.delete('size')
+    if (rotation) url.searchParams.set('rot', String(rotation))
+    else url.searchParams.delete('rot')
     window.history.replaceState(null, '', url)
-  }, [collection, vesselId, artworkId, presetId, customPos])
+  }, [collection, vesselId, artworkId, presetId, customPos, size, rotation])
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     let current = true
     setRenderState('loading')
-    renderCombination(canvas, { vessel, artwork, preset: presetId, empty, placement: customPlacement }, () => current)
+    renderCombination(canvas, { vessel, artwork, preset: presetId, empty, placement: customPlacement, size: size / 100, rotation }, () => current)
       .then(() => { if (current) setRenderState('ready') })
       .catch(() => { if (current) setRenderState('error') })
     return () => { current = false }
-  }, [vessel, artwork, presetId, empty, customPlacement])
+  }, [vessel, artwork, presetId, empty, customPlacement, size, rotation])
 
   function onPointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
     if (empty) return
@@ -94,10 +114,6 @@ export default function Studio() {
     setDragging(false)
   }
 
-  function selectPreset(id: PresetId) {
-    setPresetId(id)
-    setCustomPos(null)
-  }
 
   function downloadImage() {
     const canvas = canvasRef.current
@@ -194,29 +210,39 @@ export default function Studio() {
             </div>
 
             <div className="selection-section placement-section">
-              <div className="section-heading"><span className="step-number">03</span><div><h3>בוחרים מיקום</h3><p>מתחילים מפריסט ואז גוררים לכוונון</p></div></div>
-              <div className="preset-grid">
-                {presets.map((item) => (
-                  <button key={item.id} type="button" className={`preset-option ${!isCustom && presetId === item.id ? 'selected' : ''}`} aria-pressed={!isCustom && presetId === item.id} onClick={() => selectPreset(item.id)}>
-                    <span className={`preset-symbol ${item.id}`} aria-hidden="true"><span>◌</span></span>
-                    <strong>{item.name}</strong><small>{item.detail}</small>
-                  </button>
-                ))}
+              <div className="section-heading"><span className="step-number">03</span><div><h3>גודל וסיבוב</h3><p>גוררים את האיור על הכלי כדי להזיז אותו, ומכוונים כאן גודל וסיבוב</p></div></div>
+              {isCustom && <div className="custom-placement-note" role="note"><strong>מיקום חופשי</strong><span>גררתם את האיור. המיקום נשמר בכתובת ונחסם בגבול אזור הקישוט.</span><button type="button" className="reset-custom" onClick={() => setCustomPos(null)}>חזרה למרכז ↺</button></div>}
+              <div className="adjust-controls" role="group" aria-label="גודל וסיבוב האיור">
+                <div className="adjust-row">
+                  <label htmlFor="artwork-size">גודל</label>
+                  <input id="artwork-size" type="range" dir="ltr" min={MIN_SIZE} max={MAX_SIZE} step={5} value={size} aria-valuetext={`${size}%`} onChange={(event) => setSize(Number(event.target.value))} />
+                  <output htmlFor="artwork-size">{size}%</output>
+                </div>
+                <div className="adjust-row">
+                  <label htmlFor="artwork-rotation">סיבוב</label>
+                  <div className="rotation-input" dir="ltr">
+                    <button type="button" className="rotate-button" aria-label="סיבוב שמאלה ב־15 מעלות" disabled={rotation <= -MAX_ROTATION} onClick={() => setRotation((value) => Math.max(-MAX_ROTATION, value - 15))}>↺</button>
+                    <input id="artwork-rotation" type="range" dir="ltr" min={-MAX_ROTATION} max={MAX_ROTATION} step={1} value={rotation} aria-valuetext={rotationLabel(rotation)} onChange={(event) => setRotation(Number(event.target.value))} />
+                    <button type="button" className="rotate-button" aria-label="סיבוב ימינה ב־15 מעלות" disabled={rotation >= MAX_ROTATION} onClick={() => setRotation((value) => Math.min(MAX_ROTATION, value + 15))}>↻</button>
+                  </div>
+                  <output htmlFor="artwork-rotation">{rotationLabel(rotation)}</output>
+                </div>
+                {isAdjusted && <button type="button" className="reset-custom" onClick={() => { setSize(100); setRotation(0) }}>איפוס גודל וסיבוב ↺</button>}
               </div>
-              {isCustom && <div className="custom-placement-note" role="note"><strong>מיקום חופשי</strong><span>גררתם את האיור. המיקום נשמר בכתובת ונחסם בגבול אזור הקישוט.</span><button type="button" className="reset-custom" onClick={() => setCustomPos(null)}>חזרה לפריסט ↺</button></div>}
             </div>
 
             <div className="summary-card">
               <span className="small-label">THE COMBINATION</span>
               <div className="summary-row"><span>הבחירה שלכם</span><strong>{vessel.name} + {artwork.name}</strong></div>
               <div className="summary-row"><span>מיקום</span><strong>{isCustom ? 'מיקום חופשי' : preset.name}</strong></div>
+              {isAdjusted && <div className="summary-row"><span>גודל וסיבוב</span><strong>{size}% · {rotationLabel(rotation)}</strong></div>}
               <p>{vessel.material === 'dark' ? 'שימו לב: על הגלזורה הכהה הגוונים העדינים כמעט אינם נראים. אין בכך הבטחה לתוצאה פיזית זהה.' : 'כל כלי נוצר ביד, ולכן המרקם והגוונים במציאות ישתנו מעט מההדמיה.'}</p>
               {(vessel.external || artwork.external) && <p className="summary-external" role="note">השילוב הנוכחי כולל נכסי בדיקה חיצוניים שאינם יצירות ART IN CLAY. ראו פירוט מקורות ורישיונות בתחתית העמוד.</p>}
-              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setCollection('original'); setVesselId('turquoise'); setArtworkId('meadow'); setPresetId('center'); setCustomPos(null); setEmpty(false) }}>מתחילים מחדש ↗</button></div>
+              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setCollection('original'); setVesselId('turquoise'); setArtworkId('meadow'); setPresetId('center'); setCustomPos(null); setSize(100); setRotation(0); setEmpty(false) }}>מתחילים מחדש ↗</button></div>
             </div>
           </section>
         </div>
-        <div className="bottom-note"><span>·</span><p>ניסוי אמיתי על צילום קרמיקה ואיורי צבעי מים מקוריים. מפתח השחזור: <code dir="ltr">{configurationKey({ vessel, artwork, preset: presetId })}</code></p></div>
+        <div className="bottom-note"><span>·</span><p>ניסוי אמיתי על צילום קרמיקה ואיורי צבעי מים מקוריים. מפתח השחזור: <code dir="ltr">{configurationKey({ vessel, artwork, preset: presetId, placement: customPlacement, size: size / 100, rotation })}</code></p></div>
     </>
   )
 }

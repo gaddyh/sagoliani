@@ -6,12 +6,43 @@ export interface RenderSelection {
   preset: PresetId
   empty?: boolean
   placement?: Placement | null
+  size?: number
+  rotation?: number
+}
+
+interface ArtSource {
+  image: CanvasImageSource
+  width: number
+  height: number
 }
 
 const WIDTH = 750
 const HEIGHT = 1000
 const imageCache = new Map<string, Promise<HTMLImageElement>>()
 const maskBoundsCache = new Map<string, { minX: number; minY: number; maxX: number; maxY: number }>()
+const rotatedCache = new Map<string, ArtSource>()
+
+/** Rotates the flat artwork before the vessel warp; degrees > 0 turn right (clockwise). */
+function rotatedArtwork(image: HTMLImageElement, degrees: number): ArtSource {
+  if (!degrees) return { image, width: image.naturalWidth, height: image.naturalHeight }
+  const key = `${image.src}@${degrees.toFixed(1)}`
+  const cached = rotatedCache.get(key)
+  if (cached) return cached
+  const radians = degrees * Math.PI / 180
+  const cos = Math.abs(Math.cos(radians))
+  const sin = Math.abs(Math.sin(radians))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.ceil(image.naturalWidth * cos + image.naturalHeight * sin)
+  canvas.height = Math.ceil(image.naturalWidth * sin + image.naturalHeight * cos)
+  const ctx = canvas.getContext('2d')!
+  ctx.translate(canvas.width / 2, canvas.height / 2)
+  ctx.rotate(radians)
+  ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2)
+  const source = { image: canvas, width: canvas.width, height: canvas.height }
+  if (rotatedCache.size > 60) rotatedCache.delete(rotatedCache.keys().next().value!)
+  rotatedCache.set(key, source)
+  return source
+}
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   const cached = imageCache.get(src)
@@ -84,10 +115,9 @@ function clampPlacement(placement: Placement, artWidth: number, artHeight: numbe
   return { x: cx / WIDTH, y: cy / HEIGHT, width: placement.width }
 }
 
-function warpArtwork(canvas: HTMLCanvasElement, image: HTMLImageElement, vessel: Vessel, artwork: Artwork, placement: Placement): void {
+function warpArtwork(canvas: HTMLCanvasElement, source: ArtSource, vessel: Vessel, placement: Placement, width: number): void {
   const ctx = context(canvas)
-  const width = placement.width * WIDTH * (artwork.scale ?? 1)
-  const height = width * image.naturalHeight / image.naturalWidth
+  const height = width * source.height / source.width
   const cx = placement.x * WIDTH
   const cy = placement.y * HEIGHT
   const columns = 20
@@ -115,18 +145,19 @@ function warpArtwork(canvas: HTMLCanvasElement, image: HTMLImageElement, vessel:
       const right = Math.max(b.x, d.x)
       const bottom = Math.max(c.y, d.y)
       ctx.drawImage(
-        image,
-        u0 * image.naturalWidth, v0 * image.naturalHeight,
-        image.naturalWidth / columns, image.naturalHeight / rows,
+        source.image,
+        u0 * source.width, v0 * source.height,
+        source.width / columns, source.height / rows,
         x, y, right - x + .35, bottom - y + .35,
       )
     }
   }
 }
 
-export function configurationKey({ vessel, artwork, preset, placement }: RenderSelection): string {
+export function configurationKey({ vessel, artwork, preset, placement, size = 1, rotation = 0 }: RenderSelection): string {
   const custom = placement ? `:${placement.x.toFixed(4)},${placement.y.toFixed(4)}` : ''
-  return `${assetVersion}:${vessel.id}:${artwork.id}:${preset}${custom}`
+  const adjusted = size !== 1 || rotation ? `:s${size.toFixed(2)}r${rotation}` : ''
+  return `${assetVersion}:${vessel.id}:${artwork.id}:${preset}${custom}${adjusted}`
 }
 
 export function effectivePlacement(selection: RenderSelection): Placement {
@@ -134,7 +165,7 @@ export function effectivePlacement(selection: RenderSelection): Placement {
 }
 
 export async function renderCombination(canvas: HTMLCanvasElement, selection: RenderSelection, isCurrent = () => true): Promise<void> {
-  const { vessel, artwork, preset, empty, placement: customPlacement } = selection
+  const { vessel, artwork, preset, empty, placement: customPlacement, size = 1, rotation = 0 } = selection
   const [baseImage, maskImage, artImage] = await Promise.all([
     loadImage(vessel.image), loadImage(vessel.mask), loadImage(artwork.image),
   ])
@@ -146,14 +177,16 @@ export async function renderCombination(canvas: HTMLCanvasElement, selection: Re
   if (empty) return
 
   const basePlacement = customPlacement ?? vessel.placements[preset]
-  const artWidth = basePlacement.width * WIDTH * (artwork.scale ?? 1)
-  const artHeight = artWidth * artImage.naturalHeight / artImage.naturalWidth
+  const source = rotatedArtwork(artImage, rotation)
+  // Size applies to the painting itself; the rotated canvas is larger, so its drawn width grows with it.
+  const artWidth = basePlacement.width * WIDTH * (artwork.scale ?? 1) * size * source.width / artImage.naturalWidth
+  const artHeight = artWidth * source.height / source.width
   const placement = clampPlacement(basePlacement, artWidth, artHeight, maskBounds(maskImage))
 
   const paintCanvas = document.createElement('canvas')
   paintCanvas.width = WIDTH
   paintCanvas.height = HEIGHT
-  warpArtwork(paintCanvas, artImage, vessel, artwork, placement)
+  warpArtwork(paintCanvas, source, vessel, placement, artWidth)
 
   const maskCanvas = document.createElement('canvas')
   maskCanvas.width = WIDTH
