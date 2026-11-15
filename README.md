@@ -13,6 +13,25 @@ npm run dev
 
 פתחו `http://127.0.0.1:5173/`. בנייה: `npm run build`. המצב נכתב גם בכתובת, למשל `?vessel=blue&artwork=garden&preset=offset`.
 
+**חיפוש ושיתוף:** `npm run build` מריץ בסופו את `scripts/prerender.mjs`, שכותב את תוכן העמוד כ־HTML מוכן ב־`dist/index.html`, יחד עם נתונים מובנים (schema.org: העסק, הטלפונים והמוצרים עם מחירים), `robots.txt` ו־`sitemap.xml`. תמונת השיתוף `public/og-image.jpg` נוצרת מהחוברת ב־`scripts/prepare_brochure.py`. הכתובת הקנונית היא `https://sagoliani.onrender.com/`; אם עוברים לדומיין אחר, הגדירו ב־Render את משתנה הסביבה `SITE_URL`.
+
+## הוספת תמונות לסטודיו
+
+הסטודיו מציג רק כלים ואיורים שמופיעים ב־`src/data/catalog.ts`, לא כל קובץ בתיקיות. `scripts/add_asset.py` מכין את התמונה ומוסיף אותה לקטלוג בפקודה אחת (דורש את סביבת ה־Python שמתוארת בהמשך):
+
+```sh
+# איור: PNG שקוף נשמר כמו שהוא; צילום או סריקה על נייר בהיר — הרקע מוסר
+.venv/bin/python scripts/add_asset.py artwork poppies "פרגים" ~/Downloads/poppies.jpg --detail "פרגים אדומים"
+
+# כלי: צילום של כלי ריק מלמעלה; אזור הקישוט מאליפסה (ברירת מחדל) או ממסכה
+.venv/bin/python scripts/add_asset.py vessel cream-bowl "קערת שמנת" ~/Downloads/bowl.jpg --detail "שמנת מנוקד" --ellipse .5,.55,.3,.2
+```
+
+- איור: `--crop L,T,R,B` (שברים 0–1), `--rotate 90`, `--method scan|photo` (סריקה או צילום), `--scale`.
+- כלי: `--mask mask.png` (לבן באזור הקישוט, באותם ממדים של הצילום), `--material dark` לגלזורה כהה, `--fit pad` כדי לא לחתוך צילום רחב. הסקריפט שומר תצוגת אזור קישוט ב־`/tmp/<id>-area-preview.jpg` — כדאי להסתכל עליה ולכוונן את `--ellipse` עד שהאזור יושב בתוך הכלי.
+- `--dry-run` מראה מה ייכתב בלי לשנות את הקטלוג; `--update` מחליף קבצים של פריט קיים (למשל צילום טוב יותר).
+- אחרי ההוספה: לבדוק בסטודיו עם `npm run dev`, ואז commit ו־push.
+
 לבדיקת שמונה שילובים, היעדר ציור מחוץ למסכה, שחזור של אותו רינדור, וניווט מובייל, הפעילו את שרת הפיתוח ואז `npm run test:visual`. הבדיקה משתמשת ב־Google Chrome המותקן בנתיב הרגיל ב־macOS; במערכת אחרת אפשר לספק `CHROME_PATH=/path/to/chrome`. היא שומרת צילומי בדיקה ב־`validation/`. הבדיקה מכסה כעת גם את ששת השילובים של נכסי הבדיקה החיצוניים (שתי קערות חיצוניות × שלושה איורים חיצוניים).
 
 ## הכנת נכסים מקומית

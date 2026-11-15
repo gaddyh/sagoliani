@@ -34,7 +34,11 @@ def main() -> None:
         w, h = image.size
         crop = image.crop((round(w * left), round(h * top), round(w * right), round(h * bottom)))
         crop.save(OUTPUT / f"{name}.webp", "WEBP", quality=88)
-    print(f"Prepared {len(CROPS)} brochure crops in {OUTPUT.relative_to(ROOT)}")
+    cover = Image.open(ROOT / PAGE_A).convert("RGB")
+    w, h = cover.size
+    share = cover.crop((0, 0, w, round(w * 630 / 1200))).resize((1200, 630), Image.Resampling.LANCZOS)
+    share.save(ROOT / "public" / "og-image.jpg", "JPEG", quality=85, optimize=True)
+    print(f"Prepared {len(CROPS)} brochure crops in {OUTPUT.relative_to(ROOT)} and public/og-image.jpg")
 
 
 if __name__ == "__main__":
