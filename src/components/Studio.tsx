@@ -190,7 +190,10 @@ export default function Studio() {
       const safeVessel = vessel.name.replace(/[^\p{L}\p{N}]+/gu, '_')
       const safeArtwork = artwork.name.replace(/[^\p{L}\p{N}]+/gu, '_')
       link.href = url
-      link.download = `art-in-clay_${safeVessel}_${safeArtwork}.png`
+      const now = new Date()
+      const pad = (value: number) => String(value).padStart(2, '0')
+      const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`
+      link.download = `art-in-clay_${safeVessel}_${safeArtwork}_${stamp}.png`
       link.click()
       setTimeout(() => URL.revokeObjectURL(url), 1000)
     }, 'image/png')

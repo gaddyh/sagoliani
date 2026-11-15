@@ -224,7 +224,22 @@ try {
     return await new Promise((resolve) => canvas.toBlob((blob) => resolve(blob?.size ?? 0), 'image/png'))
   })
   assert.ok(blobSize > 10000, `canvas PNG blob too small: ${blobSize}`)
-  console.log(`Download PNG button enabled, canvas blob: ${blobSize} bytes: OK`)
+  const downloadNames = await page.evaluate(async () => {
+    const names = []
+    const original = HTMLAnchorElement.prototype.click
+    HTMLAnchorElement.prototype.click = function () { if (this.download) names.push(this.download); else original.call(this) }
+    const button = [...document.querySelectorAll('button')].find((item) => item.getAttribute('aria-label')?.includes('PNG'))
+    button.click()
+    await new Promise((resolve) => setTimeout(resolve, 1100))
+    button.click()
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    HTMLAnchorElement.prototype.click = original
+    return names
+  })
+  assert.equal(downloadNames.length, 2, 'two downloads expected')
+  for (const name of downloadNames) assert.match(name, /^art-in-clay_.+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.png$/, `download name should end with a timestamp: ${name}`)
+  assert.notEqual(downloadNames[0], downloadNames[1], 'downloads a second apart should get different names')
+  console.log(`Download PNG button enabled, canvas blob: ${blobSize} bytes, timestamped names (${downloadNames[1]}): OK`)
 
   await page.goto(`${baseUrl}/?collection=original&vessel=ai-round-plate&artwork=meadow&preset=center`)
   await waitForPreview()
