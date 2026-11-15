@@ -1,4 +1,4 @@
-export type VesselId = 'turquoise' | 'blue' | 'ai-round-plate' | 'ai-oval-plate' | 'ai-rect-platter'
+export type VesselId = 'ai-round-plate' | 'ai-oval-plate' | 'ai-rect-platter'
 export type ArtworkId = 'meadow' | 'spring' | 'garden' | 'wildflowers' | 'monkey-flower' | 'gentian' | 'poppy' | 'ai-anemones' | 'ai-blue-sprig' | 'ai-poppies' | 'ai-lavender'
 export type PresetId = 'center' | 'small' | 'offset'
 
@@ -41,26 +41,6 @@ export interface Artwork {
 }
 
 export const vessels: Vessel[] = [
-  {
-    id: 'turquoise', name: 'קערת תכלת אורגנית', detail: 'גלזורה תכולה · שפה חופשית',
-    image: '/assets/vessels/turquoise.webp', mask: '/assets/vessels/turquoise-mask.png',
-    material: 'light', curve: 0.032, perspective: 0.15,
-    placements: {
-      center: { x: .51, y: .575, width: .255 },
-      small: { x: .51, y: .575, width: .19 },
-      offset: { x: .58, y: .54, width: .225 },
-    },
-  },
-  {
-    id: 'blue', name: 'קערת כחול עמוק', detail: 'גלזורה כחולה · שפה בהירה',
-    image: '/assets/vessels/blue.webp', mask: '/assets/vessels/blue-mask.png',
-    material: 'dark', curve: 0.058, perspective: 0.22,
-    placements: {
-      center: { x: .50, y: .55, width: .27 },
-      small: { x: .50, y: .55, width: .20 },
-      offset: { x: .57, y: .515, width: .23 },
-    },
-  },
   {
     id: 'ai-round-plate', name: 'צלחת שוליים גליים · AI', detail: 'נכס בדיקה חיצוני · תמונת AI',
     image: '/assets/vessels/ai-round-plate.webp', mask: '/assets/vessels/ai-round-plate-mask.png',

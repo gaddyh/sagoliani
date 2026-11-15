@@ -14,26 +14,8 @@ OUTPUT = ROOT / "public" / "assets"
 VESSELS = OUTPUT / "vessels"
 ARTWORK = OUTPUT / "artwork"
 
-BOWLS = {
-    "turquoise": {
-        "file": "WhatsApp Image 2026-11-15 at 00.14.10 (1).jpeg",
-        "surface": [
-            (.42, .405), (.55, .400), (.69, .420), (.78, .468),
-            (.82, .535), (.80, .617), (.73, .690), (.61, .746),
-            (.48, .757), (.36, .738), (.26, .691), (.21, .622),
-            (.21, .547), (.26, .475), (.33, .432),
-        ],
-    },
-    "blue": {
-        "file": "WhatsApp Image 2026-11-15 at 00.14.10.jpeg",
-        "surface": [
-            (.40, .342), (.56, .343), (.69, .369), (.78, .426),
-            (.82, .505), (.80, .598), (.72, .681), (.61, .735),
-            (.47, .760), (.35, .743), (.24, .696), (.18, .618),
-            (.17, .528), (.22, .441), (.30, .379),
-        ],
-    },
-}
+# The two original bowl photos (turquoise, deep blue) were removed from the studio; their masks are in git history.
+BOWLS: dict = {}
 
 EXTERNAL_BOWLS: dict = {}  # external test vessels are now added with scripts/add_asset.py
 

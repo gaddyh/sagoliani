@@ -19,7 +19,7 @@ async function waitForPreview() {
 const openTab = (name) => page.getByRole('tab', { name, exact: true }).click()
 
 try {
-  for (const vessel of ['turquoise', 'blue']) {
+  for (const vessel of ['ai-round-plate', 'ai-oval-plate', 'ai-rect-platter']) {
     for (const artwork of ['meadow', 'spring', 'garden', 'wildflowers']) {
       await page.goto(`${baseUrl}/?collection=original&vessel=${vessel}&artwork=${artwork}&preset=center`)
       await waitForPreview()
@@ -121,7 +121,7 @@ try {
   console.log('Brochure page sections and catalog: OK')
 
   await page.setViewportSize({ width: 1440, height: 1100 })
-  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/?collection=original&vessel=ai-round-plate&artwork=meadow&preset=center`)
   await waitForPreview()
   await page.locator('canvas').scrollIntoViewIfNeeded()
   const canvasBox = await page.locator('canvas').boundingBox()
@@ -165,8 +165,8 @@ try {
     }
     return { changed, outside, signature: canvas.toDataURL() }
   }, vesselId)
-  for (const [vessel, artwork, size, rot] of [['turquoise', 'meadow', 150, 90], ['turquoise', 'spring', 150, -90], ['ai-rect-platter', 'ai-lavender', 150, 45], ['ai-oval-plate', 'ai-anemones', 60, -60]]) {
-    await page.goto(`${baseUrl}/?collection=${vessel.startsWith('ai-') ? 'external' : 'original'}&vessel=${vessel}&artwork=${artwork}&preset=center&size=${size}&rot=${rot}`)
+  for (const [vessel, artwork, size, rot] of [['ai-round-plate', 'meadow', 150, 90], ['ai-oval-plate', 'spring', 150, -90], ['ai-rect-platter', 'ai-lavender', 150, 45], ['ai-oval-plate', 'ai-anemones', 60, -60]]) {
+    await page.goto(`${baseUrl}/?collection=${artwork.startsWith('ai-') ? 'external' : 'original'}&vessel=${vessel}&artwork=${artwork}&preset=center&size=${size}&rot=${rot}`)
     await waitForPreview()
     await openTab('גודל וסיבוב')
     assert.equal(await page.locator('#artwork-size').inputValue(), String(size), 'size not restored from URL')
@@ -185,7 +185,7 @@ try {
     console.log(`${vessel}/${artwork} size ${size}% rotation ${rot}°: ${metrics.changed} changed pixels, 0 outside mask, reproducible`)
   }
 
-  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/?collection=original&vessel=ai-round-plate&artwork=meadow&preset=center`)
   await waitForPreview()
   const straight = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
   await openTab('גודל וסיבוב')
@@ -214,7 +214,7 @@ try {
   await page.getByRole('button', { name: /מתחילים מחדש/ }).click()
   await waitForPreview()
   assert.doesNotMatch(page.url(), /rot=/, 'starting over should reset rotation')
-  await page.goto(`${baseUrl}/?collection=original&vessel=blue&artwork=spring&preset=offset`)
+  await page.goto(`${baseUrl}/?collection=original&vessel=ai-oval-plate&artwork=spring&preset=offset`)
   await waitForPreview()
   assert.match(page.url(), /preset=offset/, 'old links with a preset should still open')
   console.log('Size and rotation controls, limits, URL state, summary and reset: OK')
@@ -226,7 +226,7 @@ try {
   assert.ok(blobSize > 10000, `canvas PNG blob too small: ${blobSize}`)
   console.log(`Download PNG button enabled, canvas blob: ${blobSize} bytes: OK`)
 
-  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/?collection=original&vessel=ai-round-plate&artwork=meadow&preset=center`)
   await waitForPreview()
   await page.locator('canvas').scrollIntoViewIfNeeded()
   const decorated = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
@@ -263,7 +263,7 @@ try {
 
   const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
   const touchPage = await touchContext.newPage()
-  await touchPage.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await touchPage.goto(`${baseUrl}/?collection=original&vessel=ai-round-plate&artwork=meadow&preset=center`)
   await touchPage.waitForFunction(() => document.querySelector('canvas')?.width === 750 && !document.querySelector('.preview-loading'))
   await touchPage.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
   await touchPage.waitForTimeout(800)
@@ -308,7 +308,7 @@ try {
   console.log('Two-finger pinch, twist and move, finger hand-off, limits and no page scroll: OK')
 
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/?collection=original&vessel=ai-round-plate&artwork=meadow&preset=center`)
   await waitForPreview()
   await page.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
   const wheelBox = await page.locator('canvas').boundingBox()
@@ -328,10 +328,10 @@ try {
   console.log('Phones (390×844, 360×640): preview and every tab fit on one screen: OK')
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/?collection=original&vessel=ai-round-plate&artwork=meadow&preset=center`)
   await waitForPreview()
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow')
-  await page.getByRole('button', { name: /קערת כחול עמוק/ }).click()
+  await page.getByRole('button', { name: /צלחת אובאלית גלית/ }).click()
   await waitForPreview()
   await openTab('איור')
   await page.getByRole('button', { name: /פריחת אביב/ }).click()
@@ -339,7 +339,7 @@ try {
   await openTab('גודל וסיבוב')
   await page.locator('#artwork-size').fill('120')
   await waitForPreview()
-  assert.match(page.url(), /vessel=blue&artwork=spring&preset=center&size=120/)
+  assert.match(page.url(), /vessel=ai-oval-plate&artwork=spring&preset=center&size=120/)
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow with controls')
   await page.screenshot({ path: new URL('mobile-blue-spring-size.png', output).pathname, fullPage: true })
   console.log('Mobile selection, size control, URL state and overflow: OK')

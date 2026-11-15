@@ -16,7 +16,7 @@ try {
   await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
   await page.getByRole('status').getByText(/PNG, JPEG, WebP/).waitFor()
 
-  await page.getByLabel(/איור שקוף או צילום/).setInputFiles({ name: 'opaque.jpeg', mimeType: 'image/jpeg', buffer: await readFile(asset('vessels/turquoise.webp')) })
+  await page.getByLabel(/איור שקוף או צילום/).setInputFiles({ name: 'opaque.jpeg', mimeType: 'image/jpeg', buffer: await readFile(new URL('../WhatsApp Image 2026-11-15 at 00.14.10 (1).jpeg', import.meta.url)) })
   await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
   await page.getByRole('status').getByText(/רקע מורכב/).waitFor()
 
@@ -51,11 +51,11 @@ try {
 
   await page.getByRole('button', { name: 'כלי קרמיקה' }).click()
   await page.getByLabel('שם', { exact: true }).fill('קערת בדיקה')
-  await page.getByLabel(/צילום כלי ריק/).setInputFiles({ name: 'turquoise.webp', mimeType: 'image/webp', buffer: await readFile(asset('vessels/turquoise.webp')) })
+  await page.getByLabel(/צילום כלי ריק/).setInputFiles({ name: 'plate.webp', mimeType: 'image/webp', buffer: await readFile(asset('vessels/ai-round-plate.webp')) })
   await page.getByLabel(/מסכת אזור קישוט/).setInputFiles({ name: 'meadow.png', mimeType: 'image/png', buffer: await readFile(asset('artwork/meadow.png')) })
   await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
   await page.getByRole('status').getByText(/באותם ממדים/).waitFor()
-  await page.getByLabel(/מסכת אזור קישוט/).setInputFiles({ name: 'turquoise-mask.png', mimeType: 'image/png', buffer: await readFile(asset('vessels/turquoise-mask.png')) })
+  await page.getByLabel(/מסכת אזור קישוט/).setInputFiles({ name: 'plate-mask.png', mimeType: 'image/png', buffer: await readFile(asset('vessels/ai-round-plate-mask.png')) })
   await page.getByRole('button', { name: 'עיבוד ושמירה כטיוטה' }).click()
   await page.getByRole('status').getByText(/הטיוטה נשמרה/).waitFor()
   await page.waitForFunction(() => document.querySelector('.admin-review canvas')?.width === 750)

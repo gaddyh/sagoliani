@@ -4,8 +4,6 @@ import { configurationKey, preloadAssets, renderCombination } from '../renderer/
 
 type Collection = 'original' | 'external'
 
-const originalVessels = vessels.filter((item) => !item.external)
-const externalVessels = vessels.filter((item) => item.external)
 const originalArtworks = artworks.filter((item) => !item.external)
 const externalArtworks = artworks.filter((item) => item.external)
 const MIN_SIZE = 60
@@ -41,7 +39,7 @@ function parsePlacementParam(value: string | null): Placement | null {
 
 export default function Studio() {
   const [collection, setCollection] = useState<Collection>(() => new URLSearchParams(location.search).get('collection') === 'external' ? 'external' : 'original')
-  const [vesselId, setVesselId] = useState<VesselId>(() => vessels.find((item) => item.id === new URLSearchParams(location.search).get('vessel'))?.id ?? 'turquoise')
+  const [vesselId, setVesselId] = useState<VesselId>(() => vessels.find((item) => item.id === new URLSearchParams(location.search).get('vessel'))?.id ?? vessels[0].id)
   const [artworkId, setArtworkId] = useState<ArtworkId>(() => artworks.find((item) => item.id === new URLSearchParams(location.search).get('artwork'))?.id ?? 'meadow')
   const [presetId, setPresetId] = useState<PresetId>(() => presets.find((item) => item.id === new URLSearchParams(location.search).get('preset'))?.id ?? 'center')
   const [customPos, setCustomPos] = useState<Placement | null>(() => {
@@ -62,7 +60,6 @@ export default function Studio() {
   const vessel = vessels.find((item) => item.id === vesselId)!
   const artwork = artworks.find((item) => item.id === artworkId)!
   const preset = presets.find((item) => item.id === presetId)!
-  const activeVessels = collection === 'original' ? originalVessels : externalVessels
   const activeArtworks = collection === 'original' ? originalArtworks : externalArtworks
   const basePlacement = vessel.placements[presetId]
   const customPlacement = useMemo<Placement | null>(() => customPos ? { ...customPos, width: basePlacement.width } : null, [customPos, basePlacement])
@@ -70,7 +67,6 @@ export default function Studio() {
   const isAdjusted = size !== 100 || rotation !== 0
 
   useEffect(() => {
-    if (!activeVessels.some((item) => item.id === vesselId)) setVesselId(activeVessels[0].id)
     if (!activeArtworks.some((item) => item.id === artworkId)) setArtworkId(activeArtworks[0].id)
   }, [collection])
 
@@ -259,7 +255,7 @@ export default function Studio() {
             {collectionToggle}
             {collectionNote}
             <div className="option-strip vessel-strip">
-              {activeVessels.map((item) => (
+              {vessels.map((item) => (
                 <button key={item.id} type="button" className={`option-card vessel-option ${vesselId === item.id ? 'selected' : ''}`} aria-pressed={vesselId === item.id} onClick={() => setVesselId(item.id)}>
                   <span className="option-image vessel-image"><img src={item.image} alt="" /></span>
                   <span className="option-text"><strong>{item.name}</strong><small>{item.detail}</small></span>
@@ -310,7 +306,7 @@ export default function Studio() {
               {isAdjusted && <div className="summary-row"><span>גודל וסיבוב</span><strong>{size}% · {rotationLabel(rotation)}</strong></div>}
               <p>{vessel.material === 'dark' ? 'שימו לב: על הגלזורה הכהה הגוונים העדינים כמעט אינם נראים. אין בכך הבטחה לתוצאה פיזית זהה.' : 'כל כלי נוצר ביד, ולכן המרקם והגוונים במציאות ישתנו מעט מההדמיה.'}</p>
               {(vessel.external || artwork.external) && <p className="summary-external" role="note">השילוב הנוכחי כולל נכסי בדיקה חיצוניים שאינם יצירות ART IN CLAY. ראו פירוט מקורות ורישיונות בתחתית העמוד.</p>}
-              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setCollection('original'); setVesselId('turquoise'); setArtworkId('meadow'); setPresetId('center'); setCustomPos(null); setSize(100); setRotation(0); setEmpty(false); setTab('vessel') }}>מתחילים מחדש ↗</button></div>
+              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setCollection('original'); setVesselId(vessels[0].id); setArtworkId('meadow'); setPresetId('center'); setCustomPos(null); setSize(100); setRotation(0); setEmpty(false); setTab('vessel') }}>מתחילים מחדש ↗</button></div>
             </div>
             <p className="editor-disclaimer">זו הדמיית מחקר על בסיס צילום, לא צילום של מוצר מוגמר. מפתח השחזור: <code dir="ltr">{configurationKey({ vessel, artwork, preset: presetId, placement: customPlacement, size: size / 100, rotation })}</code></p>
           </>}

@@ -7,7 +7,7 @@ export default function Admin() {
   const [kind, setKind] = useState<DraftAsset['kind']>('artwork')
   const [drafts, setDrafts] = useState<DraftAsset[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [testId, setTestId] = useState('turquoise')
+  const [testId, setTestId] = useState<string>(vessels[0].id)
   const [preset, setPreset] = useState<PresetId>('center')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
