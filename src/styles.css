@@ -341,3 +341,7 @@ h1, h2, h3, p { margin-top: 0; }
   .editor-body { padding-bottom: calc(10px + env(safe-area-inset-bottom) / 2); }
   .stage-actions { bottom: calc(8px + env(safe-area-inset-bottom) / 2); }
 }
+/* Phones: keep a grey margin on both sides of the preview so the page can be scrolled without touching the image. */
+@media (max-width: 800px) {
+  .stage-frame { width: min(calc(100cqw - 72px), 75cqh); }
+}
