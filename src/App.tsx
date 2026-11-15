@@ -7,7 +7,7 @@ const externalAssets = [...vessels, ...artworks].filter((item) => item.external 
 
 function App() {
   function openStudio() {
-    document.getElementById('studio')?.scrollIntoView({ behavior: 'smooth' })
+    document.getElementById('studio-editor')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -21,7 +21,7 @@ function App() {
           </a>
           <nav className="site-nav" aria-label="ניווט ראשי">
             <a href="#collection">הקולקציה</a>
-            <a href="#studio">הסטודיו</a>
+            <a href="#studio-editor">הסטודיו</a>
             <a href="#before-ordering">לפני שמזמינים</a>
             <a href="#contact">צרו קשר</a>
             {import.meta.env.DEV && <a className="admin-back" href="/admin">הכנת נכסים ↗</a>}
@@ -38,7 +38,7 @@ function App() {
             <Ornament />
             <p className="hero-copy">קולקציה ייחודית המחברת בין עבודות יד וקדרות בקרמיקה לציורי מים מקוריים. בחרו כלי, מצאו ציור שמדבר אליכם, וראו איך הם נפגשים.</p>
             <div className="hero-actions">
-              <a className="primary-link" href="#studio">לעצב כלי משלכם</a>
+              <a className="primary-link" href="#studio-editor">לעצב כלי משלכם</a>
               <a className="secondary-link" href="#collection">לקולקציה</a>
             </div>
           </div>

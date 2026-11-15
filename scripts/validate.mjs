@@ -16,6 +16,8 @@ async function waitForPreview() {
   })
 }
 
+const openTab = (name) => page.getByRole('tab', { name, exact: true }).click()
+
 try {
   for (const vessel of ['turquoise', 'blue']) {
     for (const artwork of ['meadow', 'spring', 'garden', 'wildflowers']) {
@@ -106,6 +108,7 @@ try {
   await page.goto(`${baseUrl}/?collection=external`)
   await waitForPreview()
   assert.equal(await page.getByRole('button', { name: /צלחת שוליים גליים/ }).count(), 1, 'external vessel chip missing')
+  await openTab('איור')
   assert.equal(await page.getByRole('button', { name: /פרח קוף/ }).count(), 1, 'external artwork chip missing')
   await page.getByRole('button', { name: /נכסי בדיקה חיצוניים/ }).click()
   await page.getByRole('heading', { name: /מקורות ורישיונות/ }).waitFor()
@@ -130,11 +133,13 @@ try {
   await page.mouse.up()
   await waitForPreview()
   assert.match(page.url(), /pos=/, 'custom drag did not persist in URL')
+  await openTab('גודל וסיבוב')
   await page.locator('.custom-placement-note').waitFor()
   const draggedUrl = page.url()
   await page.reload()
   await waitForPreview()
   assert.equal(page.url(), draggedUrl, 'custom placement not restored from URL')
+  await openTab('גודל וסיבוב')
   await page.locator('.custom-placement-note').waitFor()
   await page.getByRole('button', { name: /חזרה למרכז/ }).click()
   await waitForPreview()
@@ -163,6 +168,7 @@ try {
   for (const [vessel, artwork, size, rot] of [['turquoise', 'meadow', 150, 90], ['turquoise', 'spring', 150, -90], ['ai-rect-platter', 'ai-lavender', 150, 45], ['ai-oval-plate', 'ai-anemones', 60, -60]]) {
     await page.goto(`${baseUrl}/?collection=${vessel.startsWith('ai-') ? 'external' : 'original'}&vessel=${vessel}&artwork=${artwork}&preset=center&size=${size}&rot=${rot}`)
     await waitForPreview()
+    await openTab('גודל וסיבוב')
     assert.equal(await page.locator('#artwork-size').inputValue(), String(size), 'size not restored from URL')
     assert.equal(await page.locator('#artwork-rotation').inputValue(), String(rot), 'rotation not restored from URL')
     await page.getByRole('button', { name: 'לפני' }).click()
@@ -182,6 +188,7 @@ try {
   await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
   await waitForPreview()
   const straight = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
+  await openTab('גודל וסיבוב')
   await page.locator('#artwork-rotation').fill('30')
   await waitForPreview()
   assert.match(page.url(), /rot=30/)
@@ -194,13 +201,16 @@ try {
   await page.locator('#artwork-size').fill('130')
   await waitForPreview()
   assert.match(page.url(), /size=130/)
+  await openTab('סיכום')
   assert.match(await page.locator('.summary-card').innerText(), /130%.*90°\u2069? שמאלה/s)
+  await openTab('גודל וסיבוב')
   await page.getByRole('button', { name: /איפוס גודל וסיבוב/ }).click()
   await waitForPreview()
   assert.doesNotMatch(page.url(), /size=|rot=/)
   assert.equal(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), straight, 'reset should restore the original preview')
   assert.equal(await page.locator('.preset-grid').count(), 0, 'preset buttons should be removed')
   await page.locator('#artwork-rotation').fill('-20')
+  await openTab('סיכום')
   await page.getByRole('button', { name: /מתחילים מחדש/ }).click()
   await waitForPreview()
   assert.doesNotMatch(page.url(), /rot=/, 'starting over should reset rotation')
@@ -216,14 +226,57 @@ try {
   assert.ok(blobSize > 10000, `canvas PNG blob too small: ${blobSize}`)
   console.log(`Download PNG button enabled, canvas blob: ${blobSize} bytes: OK`)
 
+  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await waitForPreview()
+  await page.locator('canvas').scrollIntoViewIfNeeded()
+  const decorated = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
+  const holdBox = await page.locator('canvas').boundingBox()
+  await page.mouse.move(holdBox.x + holdBox.width / 2, holdBox.y + holdBox.height / 2)
+  await page.mouse.down()
+  await page.getByRole('status').filter({ hasText: 'הכלי ללא איור' }).waitFor()
+  await waitForPreview()
+  const held = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
+  await page.mouse.up()
+  await waitForPreview()
+  assert.notEqual(held, decorated, 'long press should show the empty vessel')
+  assert.equal(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), decorated, 'releasing should bring the artwork back')
+  assert.doesNotMatch(page.url(), /pos=/, 'a long press must not move the artwork')
+  await page.getByRole('button', { name: 'לפני' }).click()
+  await waitForPreview()
+  assert.equal(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), held, 'long press and the before button should show the same empty vessel')
+  await page.getByRole('button', { name: 'אחרי' }).click()
+  await waitForPreview()
+  console.log('Long press to compare: OK')
+
+  const fitsOnScreen = async (label) => {
+    await page.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
+    const r = await page.evaluate(() => {
+      const box = (s) => document.querySelector(s).getBoundingClientRect()
+      return { h: innerHeight, canvas: box('canvas'), tabs: box('.editor-tabs'), body: box('.editor-body'), header: document.querySelector('.site-header').getBoundingClientRect() }
+    })
+    assert.ok(r.canvas.top >= r.header.bottom - 1, `${label}: preview hidden under the header`)
+    for (const key of ['canvas', 'tabs', 'body']) assert.ok(r[key].bottom <= r.h + 1 && r[key].top >= 0, `${label}: ${key} does not fit on screen`)
+    assert.ok(r.canvas.height > r.h * .3, `${label}: preview too small (${Math.round(r.canvas.height)}px)`)
+  }
+  for (const name of ['כלי', 'איור', 'גודל וסיבוב', 'סיכום']) { await openTab(name); await fitsOnScreen(`desktop ${name}`) }
+  console.log('Desktop: preview and every tab fit on one screen: OK')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  for (const name of ['כלי', 'איור', 'גודל וסיבוב', 'סיכום']) { await openTab(name); await fitsOnScreen(`phone ${name}`) }
+  await page.setViewportSize({ width: 360, height: 640 })
+  for (const name of ['כלי', 'איור', 'גודל וסיבוב', 'סיכום']) { await openTab(name); await fitsOnScreen(`small phone ${name}`) }
+  console.log('Phones (390×844, 360×640): preview and every tab fit on one screen: OK')
+
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
   await waitForPreview()
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow')
   await page.getByRole('button', { name: /קערת כחול עמוק/ }).click()
   await waitForPreview()
+  await openTab('איור')
   await page.getByRole('button', { name: /פריחת אביב/ }).click()
   await waitForPreview()
+  await openTab('גודל וסיבוב')
   await page.locator('#artwork-size').fill('120')
   await waitForPreview()
   assert.match(page.url(), /vessel=blue&artwork=spring&preset=center&size=120/)
