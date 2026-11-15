@@ -261,6 +261,66 @@ try {
   for (const name of ['כלי', 'איור', 'גודל וסיבוב', 'סיכום']) { await openTab(name); await fitsOnScreen(`desktop ${name}`) }
   console.log('Desktop: preview and every tab fit on one screen: OK')
 
+  const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  const touchPage = await touchContext.newPage()
+  await touchPage.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await touchPage.waitForFunction(() => document.querySelector('canvas')?.width === 750 && !document.querySelector('.preview-loading'))
+  await touchPage.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
+  await touchPage.waitForTimeout(800)
+  await touchPage.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
+  const touchBox = await touchPage.locator('canvas').boundingBox()
+  const cdp = await touchContext.newCDPSession(touchPage)
+  const touch = (type, points) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y], id) => ({ x, y, id })) })
+  const cx = touchBox.x + touchBox.width / 2
+  const cy = touchBox.y + touchBox.height / 2
+  const fingers = (spread, degrees, shiftX = 0, shiftY = 0) => {
+    const radians = degrees * Math.PI / 180
+    const dx = Math.cos(radians) * spread / 2
+    const dy = Math.sin(radians) * spread / 2
+    return [[cx + shiftX - dx, cy + shiftY - dy], [cx + shiftX + dx, cy + shiftY + dy]]
+  }
+  const params = () => new URL(touchPage.url()).searchParams
+  const scrollStart = await touchPage.evaluate(() => scrollY)
+  await touch('touchStart', [fingers(100, 0)[0]])
+  await touch('touchStart', fingers(100, 0))
+  for (let step = 1; step <= 10; step++) await touch('touchMove', fingers(100 + step * 3, step * 3, step * 2, step))
+  await touchPage.waitForTimeout(150)
+  assert.equal(params().get('size'), '130', `pinch should grow to 130%: ${params().get('size')}`)
+  assert.equal(params().get('rot'), '30', `twist should rotate 30°: ${params().get('rot')}`)
+  assert.ok(params().get('pos'), 'moving two fingers should move the artwork')
+  const afterPinch = params().get('pos').split(',').map(Number)
+  const [stay, lifted] = fingers(130, 30, 20, 10)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [{ x: lifted[0], y: lifted[1], id: 1 }] })
+  for (let step = 1; step <= 6; step++) await touch('touchMove', [[stay[0] + step * 5, stay[1]]])
+  await touch('touchEnd', [])
+  await touchPage.waitForTimeout(150)
+  const afterDrag = params().get('pos').split(',').map(Number)
+  assert.ok(afterDrag[0] > afterPinch[0] && Math.abs(afterDrag[1] - afterPinch[1]) < .001, 'the remaining finger should keep dragging without a jump')
+  assert.equal(params().get('size'), '130', 'lifting a finger must not change the size')
+  for (let step = 0; step <= 20; step++) await touch(step ? 'touchMove' : 'touchStart', fingers(step ? 100 + step * 20 : 100, step ? -step * 8 : 0))
+  await touch('touchEnd', [])
+  await touchPage.waitForTimeout(150)
+  assert.equal(params().get('size'), '150', 'pinch must stop at 150%')
+  assert.equal(params().get('rot'), '-90', 'twist must stop at -90°')
+  assert.equal(await touchPage.evaluate(() => scrollY), scrollStart, 'gestures on the preview must not scroll the page')
+  assert.equal(await touchPage.locator('.hint-touch').isVisible(), true, 'touch hint should show on phones')
+  await touchContext.close()
+  console.log('Two-finger pinch, twist and move, finger hand-off, limits and no page scroll: OK')
+
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto(`${baseUrl}/?collection=original&vessel=turquoise&artwork=meadow&preset=center`)
+  await waitForPreview()
+  await page.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
+  const wheelBox = await page.locator('canvas').boundingBox()
+  await page.mouse.move(wheelBox.x + wheelBox.width / 2, wheelBox.y + wheelBox.height / 2)
+  await page.keyboard.down('Control')
+  await page.mouse.wheel(0, -30)
+  await page.keyboard.up('Control')
+  await page.waitForTimeout(150)
+  const pinchedSize = Number(new URL(page.url()).searchParams.get('size'))
+  assert.ok(pinchedSize > 100, `trackpad pinch (ctrl + wheel) should enlarge: ${pinchedSize}`)
+  console.log(`Trackpad pinch on desktop: size ${pinchedSize}%: OK`)
+
   await page.setViewportSize({ width: 390, height: 844 })
   for (const name of ['כלי', 'איור', 'גודל וסיבוב', 'סיכום']) { await openTab(name); await fitsOnScreen(`phone ${name}`) }
   await page.setViewportSize({ width: 360, height: 640 })

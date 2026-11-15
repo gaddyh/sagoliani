@@ -104,14 +104,66 @@ export default function Studio() {
 
   useEffect(() => () => { if (holdTimer.current) window.clearTimeout(holdTimer.current) }, [])
 
+  const latest = useRef({ position: { x: basePlacement.x, y: basePlacement.y }, size, rotation })
+  latest.current = { position: customPos ?? { x: basePlacement.x, y: basePlacement.y }, size, rotation }
+  const pointers = useRef(new Map<number, { x: number; y: number }>())
+  const gestureRef = useRef<{ distance: number; angle: number; midX: number; midY: number; size: number; rotation: number; origin: { x: number; y: number } } | null>(null)
+
+  const clampSize = (value: number) => Math.min(MAX_SIZE, Math.max(MIN_SIZE, Math.round(value)))
+  const clampRotation = (value: number) => Math.min(MAX_ROTATION, Math.max(-MAX_ROTATION, Math.round(value)))
+  const clampUnit = (value: number) => Math.min(Math.max(value, 0), 1)
+
+  // Trackpad pinch arrives as ctrl + wheel in Chrome, Edge and Safari; plain scrolling is left to the page.
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey || empty) return
+      event.preventDefault()
+      setSize((value) => clampSize(value * Math.exp(-event.deltaY * .01)))
+    }
+    canvas.addEventListener('wheel', onWheel, { passive: false })
+    return () => canvas.removeEventListener('wheel', onWheel)
+  }, [empty])
+
+  function twoFingers() {
+    const [a, b] = [...pointers.current.values()]
+    return { distance: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)), angle: Math.atan2(b.y - a.y, b.x - a.x), midX: (a.x + b.x) / 2, midY: (a.y + b.y) / 2 }
+  }
+
+  function startDrag(x: number, y: number, moved: boolean) {
+    dragRef.current = { startX: x, startY: y, origin: { ...latest.current.position, width: 0 }, moved }
+  }
+
   function onPointerDown(event: React.PointerEvent<HTMLCanvasElement>) {
-    if (empty) return
+    if (empty || pointers.current.size >= 2) return
     event.currentTarget.setPointerCapture(event.pointerId)
-    dragRef.current = { startX: event.clientX, startY: event.clientY, origin: customPlacement ?? basePlacement, moved: false }
-    holdTimer.current = window.setTimeout(() => { if (dragRef.current && !dragRef.current.moved) setHolding(true) }, HOLD_MS)
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointers.current.size === 1) {
+      startDrag(event.clientX, event.clientY, false)
+      holdTimer.current = window.setTimeout(() => { if (dragRef.current && !dragRef.current.moved) setHolding(true) }, HOLD_MS)
+      return
+    }
+    if (holdTimer.current) window.clearTimeout(holdTimer.current)
+    setHolding(false)
+    dragRef.current = null
+    gestureRef.current = { ...twoFingers(), size: latest.current.size, rotation: latest.current.rotation, origin: latest.current.position }
+    setDragging(true)
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLCanvasElement>) {
+    if (!pointers.current.has(event.pointerId)) return
+    pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    const rect = event.currentTarget.getBoundingClientRect()
+    const gesture = gestureRef.current
+    if (gesture && pointers.current.size === 2) {
+      const now = twoFingers()
+      const turn = ((now.angle - gesture.angle) * 180 / Math.PI + 540) % 360 - 180
+      setSize(clampSize(gesture.size * now.distance / gesture.distance))
+      setRotation(clampRotation(gesture.rotation + turn))
+      setCustomPos({ x: clampUnit(gesture.origin.x + (now.midX - gesture.midX) / rect.width), y: clampUnit(gesture.origin.y + (now.midY - gesture.midY) / rect.height), width: 0 })
+      return
+    }
     const drag = dragRef.current
     if (!drag || holding) return
     if (!drag.moved) {
@@ -120,16 +172,23 @@ export default function Studio() {
       if (holdTimer.current) window.clearTimeout(holdTimer.current)
       setDragging(true)
     }
-    const rect = event.currentTarget.getBoundingClientRect()
     setCustomPos({
-      x: Math.min(Math.max(drag.origin.x + (event.clientX - drag.startX) / rect.width, 0), 1),
-      y: Math.min(Math.max(drag.origin.y + (event.clientY - drag.startY) / rect.height, 0), 1),
+      x: clampUnit(drag.origin.x + (event.clientX - drag.startX) / rect.width),
+      y: clampUnit(drag.origin.y + (event.clientY - drag.startY) / rect.height),
       width: 0,
     })
   }
 
   function onPointerUp(event: React.PointerEvent<HTMLCanvasElement>) {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    pointers.current.delete(event.pointerId)
+    if (gestureRef.current) {
+      gestureRef.current = null
+      const remaining = [...pointers.current.values()][0]
+      // The finger that stays down keeps dragging from where the pinch left the artwork.
+      if (remaining) { startDrag(remaining.x, remaining.y, true); return }
+    }
+    if (pointers.current.size) return
     if (holdTimer.current) window.clearTimeout(holdTimer.current)
     dragRef.current = null
     setDragging(false)
@@ -179,7 +238,7 @@ export default function Studio() {
           {renderState === 'error' && <div className="preview-loading" role="alert">לא ניתן לטעון את התמונה. נסו לרענן את הדף.</div>}
           <span className="preview-watermark">הדמיה ניסיונית</span>
           {holding && <span className="hold-badge" role="status">הכלי ללא איור</span>}
-          {!showEmpty && <span className={dragging ? 'drag-hint' : 'drag-hint subtle'}>{dragging ? 'מזיזים…' : 'גררו להזזה · לחיצה ארוכה להשוואה'}</span>}
+          {!showEmpty && <span className={dragging ? 'drag-hint' : 'drag-hint subtle'}>{dragging ? 'מזיזים…' : <><span className="hint-touch">גררו להזזה · שתי אצבעות לגודל וסיבוב · לחיצה ארוכה להשוואה</span><span className="hint-mouse">גררו להזזה · צביטה במשטח המגע לגודל · לחיצה ארוכה להשוואה</span></>}</span>}
           <div className="stage-actions">
             <div className="compare-controls" role="group" aria-label="השוואת הכלי הריק לתוצאה">
               <button type="button" className={empty ? 'compare-button active' : 'compare-button'} aria-pressed={empty} onClick={() => setEmpty(true)}>לפני</button>
@@ -223,12 +282,12 @@ export default function Studio() {
             </div>
           </>}
           {tab === 'adjust' && <>
-            <p className="editor-hint">גררו את האיור על הכלי כדי להזיז אותו, וכוונו כאן גודל וסיבוב.</p>
+            <p className="editor-hint">גררו את האיור על הכלי כדי להזיז אותו. בטלפון אפשר גם לצבוט ולסובב בשתי אצבעות; כאן מכוונים במדויק.</p>
             {isCustom && <div className="custom-placement-note" role="note"><strong>מיקום חופשי</strong><span>המיקום נשמר בכתובת ונחסם בגבול אזור הקישוט.</span><button type="button" className="reset-custom" onClick={() => setCustomPos(null)}>חזרה למרכז ↺</button></div>}
             <div className="adjust-controls" role="group" aria-label="גודל וסיבוב האיור">
               <div className="adjust-row">
                 <label htmlFor="artwork-size">גודל</label>
-                <input id="artwork-size" type="range" dir="ltr" min={MIN_SIZE} max={MAX_SIZE} step={5} value={size} aria-valuetext={`${size}%`} onChange={(event) => setSize(Number(event.target.value))} />
+                <input id="artwork-size" type="range" dir="ltr" min={MIN_SIZE} max={MAX_SIZE} step={1} value={size} aria-valuetext={`${size}%`} onChange={(event) => setSize(Number(event.target.value))} />
                 <output htmlFor="artwork-size">{size}%</output>
               </div>
               <div className="adjust-row">
