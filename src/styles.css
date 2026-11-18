@@ -55,12 +55,15 @@ h1, h2, h3, p { margin-top: 0; }
 .design-button:hover { background: var(--olive); color: white; border-color: var(--olive); }
 .catalog-note { text-align: center; font: 16px/1.8 var(--serif); color: var(--muted); max-width: 640px; margin: 48px auto 0; }
 .studio { padding-top: 50px; padding-bottom: 70px; scroll-margin-top: 70px; }
-#collection, #before-ordering, #contact { scroll-margin-top: 70px; }
+#collection, #before-ordering, #care, #contact { scroll-margin-top: 70px; }
 .before-ordering { padding-top: 40px; padding-bottom: 70px; }
 .info-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .info-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 28px 26px; text-align: center; }
 .info-card h3 { font: 500 24px var(--serif); color: var(--olive); margin: 0 0 10px; }
 .info-card p { font: 18px/1.8 var(--serif); color: var(--ink); margin: 0; }
+.care { padding-top: 40px; padding-bottom: 70px; border-top: 1px solid var(--line); }
+.care-intro { text-align: center; font: 18px/1.8 var(--serif); color: var(--muted); margin: 0 auto 32px; }
+.care-signoff { text-align: center; font: 500 22px/1.4 var(--serif); color: var(--olive); margin: 34px 0 0; }
 .contact { display: flex; align-items: center; justify-content: center; gap: clamp(30px, 6vw, 90px); padding-top: 40px; padding-bottom: 70px; text-align: center; }
 .artists-photo { width: clamp(200px, 22vw, 290px); aspect-ratio: 1; object-fit: cover; border-radius: 50%; box-shadow: 0 10px 30px #6b5a3a26; }
 .one-of-a-kind { font: 34px var(--serif); color: var(--olive-soft); margin: 0; }

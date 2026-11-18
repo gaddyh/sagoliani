@@ -244,6 +244,19 @@ function App() {
           <div className="info-grid"><div className="info-card"><h3>בחירת החומר</h3><p>ניתן להזמין את הכלים בחומר בצבע שמנת חלק או שמנת מנוקד, לפי הצילומים הזמינים.</p></div><div className="info-card"><h3>בחירת הציור</h3><p>בחרו מתוך צילומי השילובים הזמינים. כל פריט מיוצר ביד וייתכנו הבדלים בין הפריטים.</p></div><div className="info-card"><h3>הזמנת סטים</h3><p>המעוניינים בסט הכולל עיטור זהה החוזר על עצמו, מתבקשים לציין זאת מראש.</p></div></div>
         </section>
 
+        <section id="care" className="care page-content" aria-labelledby="care-title">
+          <h2 id="care-title" className="section-title">תתחדשו!</h2>
+          <Ornament />
+          <p className="section-lead">הכלים שבידכם נוצרו בעבודת יד ובאהבה גדולה ❤️</p>
+          <p className="care-intro">כדי שתוכלו ליהנות מהם לאורך זמן, הנה כמה דברים שכדאי לדעת:</p>
+          <div className="info-grid">
+            <div className="info-card"><h3>טיפול יומיומי</h3><p>הכלים מתאימים לשטיפה ידנית רגילה וגם למדיח כלים.</p></div>
+            <div className="info-card"><h3>חום התנור</h3><p>ניתן לאפייה בתנור עד 170°.</p></div>
+            <div className="info-card"><h3>מיקרוגל</h3><p>ניתן לחימום קצר.</p></div>
+          </div>
+          <p className="care-signoff">מאחלות לכם הנאה גדולה וכיף!</p>
+        </section>
+
         <section id="contact" className="contact page-content" aria-labelledby="contact-title">
           <img className="artists-photo" src="/assets/brochure/artists.webp" alt="עירית סגל ואפרת ליאני" loading="lazy" />
           <div><p className="one-of-a-kind" dir="ltr">One of a Kind</p><Ornament /><h2 id="contact-title" className="section-title">לפרטים</h2><ul className="contact-list">{artists.map((artist) => <li key={artist.phone}><strong>{artist.name}</strong><a href={`tel:+${artist.whatsapp}`} dir="ltr">{artist.phone}</a><a href={`https://wa.me/${artist.whatsapp}`} target="_blank" rel="noopener noreferrer">וואטסאפ ↗</a></li>)}</ul></div>
