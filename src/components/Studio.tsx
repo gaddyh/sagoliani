@@ -4,7 +4,7 @@ import { artists, products, type Material } from '../data/products'
 import { configurationKey, preloadAssets, renderCombination } from '../renderer/composite'
 
 const MIN_SIZE = 60
-const MAX_SIZE = 150
+const MAX_SIZE = 700
 const MAX_ROTATION = 90
 
 function parseNumber(value: string | null, fallback: number, min: number, max: number): number {
@@ -42,7 +42,7 @@ function parsePlacementParam(value: string | null): Placement | null {
 
 export default function Studio() {
   const [vesselId, setVesselId] = useState<VesselId>(() => vessels.find((item) => item.id === new URLSearchParams(location.search).get('vessel'))?.id ?? vessels[0].id)
-  const [artworkId, setArtworkId] = useState<ArtworkId>(() => artworks.find((item) => item.id === new URLSearchParams(location.search).get('artwork'))?.id ?? 'meadow')
+  const [artworkId, setArtworkId] = useState<ArtworkId>(() => artworks.find((item) => item.id === new URLSearchParams(location.search).get('artwork'))?.id ?? artworks[0].id)
   const [presetId, setPresetId] = useState<PresetId>(() => presets.find((item) => item.id === new URLSearchParams(location.search).get('preset'))?.id ?? 'center')
   const [customPos, setCustomPos] = useState<Placement | null>(() => {
     const parsed = parsePlacementParam(new URLSearchParams(location.search).get('pos'))
@@ -50,6 +50,7 @@ export default function Studio() {
   })
   const [size, setSize] = useState(() => parseNumber(new URLSearchParams(location.search).get('size'), 100, MIN_SIZE, MAX_SIZE))
   const [rotation, setRotation] = useState(() => Math.round(parseNumber(new URLSearchParams(location.search).get('rot'), 0, -MAX_ROTATION, MAX_ROTATION)))
+  const [wrapPct, setWrapPct] = useState(() => parseNumber(new URLSearchParams(location.search).get('wrap'), -1, 0, 100))
   const [empty, setEmpty] = useState(false)
   const [renderState, setRenderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [dragging, setDragging] = useState(false)
@@ -79,6 +80,9 @@ export default function Studio() {
   const customPlacement = useMemo<Placement | null>(() => customPos ? { ...customPos, width: basePlacement.width } : null, [customPos, basePlacement])
   const isCustom = customPos !== null
   const isAdjusted = size !== 100 || rotation !== 0
+  // The curvature slider: -1 means untouched, so each vessel keeps its own default wrap.
+  const vesselWrapPct = Math.round((vessel.wrap ?? 1) * 100)
+  const effectiveWrap = wrapPct < 0 ? vesselWrapPct : wrapPct
 
   useEffect(() => { preloadAssets(vessels, artworks) }, [])
 
@@ -93,8 +97,10 @@ export default function Studio() {
     else url.searchParams.delete('size')
     if (rotation) url.searchParams.set('rot', String(rotation))
     else url.searchParams.delete('rot')
+    if (wrapPct >= 0) url.searchParams.set('wrap', String(wrapPct))
+    else url.searchParams.delete('wrap')
     return url
-  }, [vesselId, artworkId, presetId, customPos, size, rotation])
+  }, [vesselId, artworkId, presetId, customPos, size, rotation, wrapPct])
 
   useEffect(() => {
     const url = new URL(designUrl)
@@ -107,11 +113,11 @@ export default function Studio() {
     if (!canvas) return
     let current = true
     setRenderState('loading')
-    renderCombination(canvas, { vessel, artwork, preset: presetId, empty: empty, placement: customPlacement, size: size / 100, rotation }, () => current)
+    renderCombination(canvas, { vessel, artwork, preset: presetId, empty: empty, placement: customPlacement, size: size / 100, rotation, wrap: wrapPct >= 0 ? wrapPct / 100 : undefined }, () => current)
       .then(() => { if (current) setRenderState('ready') })
       .catch(() => { if (current) setRenderState('error') })
     return () => { current = false }
-  }, [vessel, artwork, presetId, empty, customPlacement, size, rotation])
+  }, [vessel, artwork, presetId, empty, customPlacement, size, rotation, wrapPct])
 
 
   const latest = useRef({ position: { x: basePlacement.x, y: basePlacement.y }, size, rotation })
@@ -387,7 +393,7 @@ export default function Studio() {
           {tab === 'adjust' && <>
             <p className="editor-hint">גררו את האיור על הכלי כדי להזיז אותו. בטלפון אפשר גם לצבוט ולסובב בשתי אצבעות; כאן מכוונים במדויק.</p>
             {isCustom && <div className="custom-placement-note" role="note"><strong>מיקום חופשי</strong><span>המיקום נשמר בכתובת ונחסם בגבול אזור הקישוט.</span><button type="button" className="reset-custom" onClick={() => setCustomPos(null)}>חזרה למרכז ↺</button></div>}
-            <div className="adjust-controls" role="group" aria-label="גודל וסיבוב האיור">
+            <div className="adjust-controls" role="group" aria-label="גודל, סיבוב ועיקום האיור">
               <div className="adjust-row">
                 <label htmlFor="artwork-size">גודל</label>
                 <input id="artwork-size" type="range" dir="ltr" min={MIN_SIZE} max={MAX_SIZE} step={1} value={size} aria-valuetext={`${size}%`} onChange={(event) => setSize(Number(event.target.value))} />
@@ -402,7 +408,12 @@ export default function Studio() {
                 </div>
                 <output htmlFor="artwork-rotation">{rotationLabel(rotation)}</output>
               </div>
-              {isAdjusted && <button type="button" className="reset-custom" onClick={() => { setSize(100); setRotation(0) }}>איפוס גודל וסיבוב ↺</button>}
+              <div className="adjust-row">
+                <label htmlFor="artwork-wrap">עיקום</label>
+                <input id="artwork-wrap" type="range" dir="ltr" min={0} max={100} step={1} value={effectiveWrap} aria-valuetext={`${effectiveWrap}% עיקום הציור סביב הכלי`} onChange={(event) => setWrapPct(Number(event.target.value))} />
+                <output htmlFor="artwork-wrap">{effectiveWrap}%</output>
+              </div>
+              {(isAdjusted || wrapPct >= 0) && <button type="button" className="reset-custom" onClick={() => { setSize(100); setRotation(0); setWrapPct(-1) }}>איפוס גודל, סיבוב ועיקום ↺</button>}
             </div>
           </>}
           {tab === 'summary' && <>
@@ -413,9 +424,9 @@ export default function Studio() {
               {isAdjusted && <div className="summary-row"><span>גודל וסיבוב</span><strong>{size}% · {rotationLabel(rotation)}</strong></div>}
               <p>{vessel.material === 'dark' ? 'שימו לב: על הגלזורה הכהה הגוונים העדינים כמעט אינם נראים. אין בכך הבטחה לתוצאה פיזית זהה.' : 'כל כלי נוצר ביד, ולכן המרקם והגוונים במציאות ישתנו מעט מההדמיה.'}</p>
               {(vessel.external || artwork.external) && <p className="summary-external" role="note">השילוב הנוכחי כולל נכסי בדיקה חיצוניים שאינם יצירות ART IN CLAY. ראו פירוט מקורות ורישיונות בתחתית העמוד.</p>}
-              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setVesselId(vessels[0].id); setArtworkId('meadow'); setPresetId('center'); setCustomPos(null); setSize(100); setRotation(0); setEmpty(false); setTab('vessel') }}>מתחילים מחדש ↗</button></div>
+              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setVesselId(vessels[0].id); setArtworkId(artworks[0].id); setPresetId('center'); setCustomPos(null); setSize(100); setRotation(0); setWrapPct(-1); setEmpty(false); setTab('vessel') }}>מתחילים מחדש ↗</button></div>
             </div>
-            <p className="editor-disclaimer">זו הדמיית מחקר על בסיס צילום, לא צילום של מוצר מוגמר. מפתח השחזור: <code dir="ltr">{configurationKey({ vessel, artwork, preset: presetId, placement: customPlacement, size: size / 100, rotation })}</code></p>
+            <p className="editor-disclaimer">זו הדמיית מחקר על בסיס צילום, לא צילום של מוצר מוגמר. מפתח השחזור: <code dir="ltr">{configurationKey({ vessel, artwork, preset: presetId, placement: customPlacement, size: size / 100, rotation, wrap: wrapPct >= 0 ? wrapPct / 100 : undefined })}</code></p>
           </>}
         </div>
         <div className="editor-tabs" role="tablist" aria-label="שלבי העיצוב">

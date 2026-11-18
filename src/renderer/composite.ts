@@ -8,6 +8,7 @@ export interface RenderSelection {
   placement?: Placement | null
   size?: number
   rotation?: number
+  wrap?: number
 }
 
 interface ArtSource {
@@ -110,24 +111,46 @@ function clampPlacement(placement: Placement, artWidth: number, artHeight: numbe
   const maxX = bounds.maxX - halfW
   const minY = bounds.minY + halfH
   const maxY = bounds.maxY - halfH
-  const cx = maxX < minX ? (bounds.minX + bounds.maxX) / 2 : Math.min(Math.max(placement.x * WIDTH, minX), maxX)
-  const cy = maxY < minY ? (bounds.minY + bounds.maxY) / 2 : Math.min(Math.max(placement.y * HEIGHT, minY), maxY)
+  // When the artwork is larger than the decoration area, its center may roam the whole
+  // bounds so an oversized painting can be pushed toward the side or bottom of the vessel.
+  const cx = maxX < minX ? Math.min(Math.max(placement.x * WIDTH, bounds.minX), bounds.maxX) : Math.min(Math.max(placement.x * WIDTH, minX), maxX)
+  const cy = maxY < minY ? Math.min(Math.max(placement.y * HEIGHT, bounds.minY), bounds.maxY) : Math.min(Math.max(placement.y * HEIGHT, minY), maxY)
   return { x: cx / WIDTH, y: cy / HEIGHT, width: placement.width }
 }
 
-function warpArtwork(canvas: HTMLCanvasElement, source: ArtSource, vessel: Vessel, placement: Placement, width: number): void {
+function warpArtwork(canvas: HTMLCanvasElement, source: ArtSource, vessel: Vessel, placement: Placement, width: number, bounds: { minX: number; minY: number; maxX: number; maxY: number }, wrap: number): void {
   const ctx = context(canvas)
   const height = width * source.height / source.width
   const cx = placement.x * WIDTH
   const cy = placement.y * HEIGHT
-  const columns = 20
-  const rows = 26
+  const columns = 32
+  const rows = 40
+  // Spherical wrap: remap the flat overlay onto the bowl as a sphere seen from above.
+  // Radial distances compress like sin(θ) toward the rim, so straight strokes become
+  // arcs curving around the bowl; beyond the rim (the visible outer wall) the surface
+  // recedes steeply and compresses to a small fraction. wrap=0 keeps the flat overlay.
+  const rimX = (bounds.minX + bounds.maxX) / 2
+  const rimY = (bounds.minY + bounds.maxY) / 2
+  const rimRX = (bounds.maxX - bounds.minX) / 2
+  const rimRY = (bounds.maxY - bounds.minY) / 2
+  const strength = wrap
+  const wrapPoint = (x: number, y: number) => {
+    if (!strength) return { x, y }
+    const dx = (x - rimX) / rimRX
+    const dy = (y - rimY) / rimRY
+    const t = Math.hypot(dx, dy)
+    if (t < 1e-6) return { x, y }
+    const capped = Math.min(t, Math.PI / 2)
+    const sphere = Math.sin(capped) + Math.max(0, t - Math.PI / 2) * .5
+    const factor = (t * (1 - strength) + sphere * strength) / t
+    return { x: rimX + dx * rimRX * factor, y: rimY + dy * rimRY * factor }
+  }
   const point = (u: number, v: number) => {
     const edge = (v - .5) * 2
-    return {
-      x: cx + (u - .5) * width * (1 - vessel.perspective * edge * edge),
-      y: cy + (v - .5) * height * .94 + vessel.curve * height * ((u - .5) * 2) ** 2,
-    }
+    return wrapPoint(
+      cx + (u - .5) * width * (1 - vessel.perspective * edge * edge),
+      cy + (v - .5) * height * .94 + vessel.curve * height * ((u - .5) * 2) ** 2,
+    )
   }
 
   for (let row = 0; row < rows; row++) {
@@ -154,9 +177,9 @@ function warpArtwork(canvas: HTMLCanvasElement, source: ArtSource, vessel: Vesse
   }
 }
 
-export function configurationKey({ vessel, artwork, preset, placement, size = 1, rotation = 0 }: RenderSelection): string {
+export function configurationKey({ vessel, artwork, preset, placement, size = 1, rotation = 0, wrap }: RenderSelection): string {
   const custom = placement ? `:${placement.x.toFixed(4)},${placement.y.toFixed(4)}` : ''
-  const adjusted = size !== 1 || rotation ? `:s${size.toFixed(2)}r${rotation}` : ''
+  const adjusted = size !== 1 || rotation || wrap !== undefined ? `:s${size.toFixed(2)}r${rotation}${wrap !== undefined ? `w${wrap.toFixed(2)}` : ''}` : ''
   return `${assetVersion}:${vessel.id}:${artwork.id}:${preset}${custom}${adjusted}`
 }
 
@@ -182,11 +205,10 @@ export async function renderCombination(canvas: HTMLCanvasElement, selection: Re
   const artWidth = basePlacement.width * WIDTH * (artwork.scale ?? 1) * size * source.width / artImage.naturalWidth
   const artHeight = artWidth * source.height / source.width
   const placement = clampPlacement(basePlacement, artWidth, artHeight, maskBounds(maskImage))
-
   const paintCanvas = document.createElement('canvas')
   paintCanvas.width = WIDTH
   paintCanvas.height = HEIGHT
-  warpArtwork(paintCanvas, source, vessel, placement, artWidth)
+  warpArtwork(paintCanvas, source, vessel, placement, artWidth, maskBounds(maskImage), selection.wrap ?? vessel.wrap ?? 1)
 
   const maskCanvas = document.createElement('canvas')
   maskCanvas.width = WIDTH

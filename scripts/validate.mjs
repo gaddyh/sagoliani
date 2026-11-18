@@ -20,7 +20,7 @@ const openTab = (name) => page.getByRole('tab', { name, exact: true }).click()
 
 try {
   for (const vessel of ['shay-clean', 'shay-dots', 'omer-clean', 'omer-dots', 'yael-clean', 'yael-dots', 'mika-clean', 'mika-dots', 'ella-clean', 'ella-dots', 'irit-clean', 'irit-dots', 'pebbles-clean', 'pebbles-dots', 'efrat-clean', 'efrat-dots', 'gaddy-clean', 'gaddy-dots']) {
-    for (const artwork of ['meadow', 'spring', 'garden', 'wildflowers']) {
+    for (const artwork of ['pink-dance', 'snapdragon-pink']) {
       await page.goto(`${baseUrl}/admin/studio?vessel=${vessel}&artwork=${artwork}&preset=center`)
       await waitForPreview()
       await page.getByRole('button', { name: 'לפני' }).click()
@@ -62,11 +62,11 @@ try {
     }
   }
 
-  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   assert.equal(await page.getByRole('button', { name: /קערת שי · חלק/ }).count(), 1, 'vessel chip missing')
   await openTab('איור')
-  assert.equal(await page.getByRole('button', { name: /פרחי שדה/ }).count(), 1, 'artwork chip missing')
+  assert.equal(await page.getByRole('button', { name: /ריקוד ורוד/ }).count(), 1, 'artwork chip missing')
   console.log('Studio vessel and artwork chips: OK')
 
   await page.goto(`${baseUrl}/`)
@@ -76,7 +76,7 @@ try {
   console.log('Shop page sections and published catalog: OK')
 
   await page.setViewportSize({ width: 1440, height: 1100 })
-  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   await page.locator('canvas').scrollIntoViewIfNeeded()
   const canvasBox = await page.locator('canvas').boundingBox()
@@ -120,7 +120,7 @@ try {
     }
     return { changed, outside, signature: canvas.toDataURL() }
   }, vesselId)
-  for (const [vessel, artwork, size, rot] of [['shay-clean', 'meadow', 150, 90], ['omer-clean', 'spring', 150, -90], ['ella-clean', 'garden', 150, 45], ['yael-clean', 'wildflowers', 60, -60]]) {
+  for (const [vessel, artwork, size, rot] of [['shay-clean', 'pink-dance', 150, 90], ['omer-clean', 'pink-dance', 150, -90], ['ella-clean', 'pink-dance', 150, 45], ['yael-clean', 'pink-dance', 60, -60]]) {
     await page.goto(`${baseUrl}/admin/studio?vessel=${vessel}&artwork=${artwork}&preset=center&size=${size}&rot=${rot}`)
     await waitForPreview()
     await openTab('גודל וסיבוב')
@@ -140,7 +140,45 @@ try {
     console.log(`${vessel}/${artwork} size ${size}% rotation ${rot}°: ${metrics.changed} changed pixels, 0 outside mask, reproducible`)
   }
 
-  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  // Full-surface painting: an oversized artwork must cover most of the bowl, sides included.
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center&size=700`)
+  await waitForPreview()
+  await page.getByRole('button', { name: 'לפני' }).click()
+  await waitForPreview()
+  await page.locator('canvas').evaluate((canvas) => { window.__before = new Uint8ClampedArray(canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data) })
+  await page.getByRole('button', { name: 'אחרי' }).click()
+  await waitForPreview()
+  const coverage = await page.locator('canvas').evaluate((canvas) => {
+    const after = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+    let changed = 0
+    for (let i = 0; i < after.length; i += 4) {
+      if (Math.abs(after[i] - window.__before[i]) + Math.abs(after[i + 1] - window.__before[i + 1]) + Math.abs(after[i + 2] - window.__before[i + 2]) < 2) continue
+      changed++
+    }
+    return changed
+  })
+  assert.ok(coverage > 80000, `oversized artwork should cover most of the bowl surface: ${coverage} changed pixels`)
+  // Dragging an oversized artwork toward the bottom keeps it inside the mask and moves the paint.
+  await page.locator('canvas').scrollIntoViewIfNeeded()
+  const wideBox = await page.locator('canvas').boundingBox()
+  await page.mouse.move(wideBox.x + wideBox.width / 2, wideBox.y + wideBox.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(wideBox.x + wideBox.width / 2, wideBox.y + wideBox.height * 0.8, { steps: 6 })
+  await page.mouse.up()
+  await waitForPreview()
+  assert.match(page.url(), /pos=/, 'oversized artwork should be draggable')
+  // The curvature slider: 0% keeps the flat overlay, the default wraps around the bowl.
+  await openTab('גודל וסיבוב')
+  await page.locator('#artwork-wrap').fill('0')
+  await waitForPreview()
+  assert.match(page.url(), /wrap=0/, 'wrap should persist in the URL')
+  const flat = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
+  await page.locator('#artwork-wrap').fill('100')
+  await waitForPreview()
+  assert.notEqual(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), flat, 'the curvature slider must change the render')
+  console.log(`Full-surface painting at 700%: ${coverage} changed pixels, draggable, curvature slider: OK`)
+
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   const straight = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
   await openTab('גודל וסיבוב')
@@ -159,7 +197,7 @@ try {
   await openTab('סיכום')
   assert.match(await page.locator('.summary-card').innerText(), /130%.*90°\u2069? שמאלה/s)
   await openTab('גודל וסיבוב')
-  await page.getByRole('button', { name: /איפוס גודל וסיבוב/ }).click()
+  await page.getByRole('button', { name: /איפוס גודל/ }).click()
   await waitForPreview()
   assert.doesNotMatch(page.url(), /size=|rot=/)
   assert.equal(await page.locator('canvas').evaluate((canvas) => canvas.toDataURL()), straight, 'reset should restore the original preview')
@@ -169,7 +207,7 @@ try {
   await page.getByRole('button', { name: /מתחילים מחדש/ }).click()
   await waitForPreview()
   assert.doesNotMatch(page.url(), /rot=/, 'starting over should reset rotation')
-  await page.goto(`${baseUrl}/admin/studio?vessel=omer-clean&artwork=spring&preset=offset`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=omer-clean&artwork=pink-dance&preset=offset`)
   await waitForPreview()
   assert.match(page.url(), /preset=offset/, 'old links with a preset should still open')
   console.log('Size and rotation controls, limits, URL state, summary and reset: OK')
@@ -197,7 +235,7 @@ try {
   console.log(`Download PNG button enabled, canvas blob: ${blobSize} bytes, timestamped names (${downloadNames[1]}): OK`)
 
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseUrl })
-  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   await page.getByRole('button', { name: 'הוספה לקטלוג' }).click()
   const catalogDialog = page.getByRole('dialog', { name: 'הוספת הדמיה לקטלוג החנות' })
@@ -206,14 +244,14 @@ try {
   assert.equal(await catalogDialog.getByRole('radio', { name: 'חלק' }).isChecked(), true, 'material should prefill from the vessel')
   await catalogDialog.getByLabel('מידה').selectOption('קוטר 20')
   const [catalogDownload] = await Promise.all([page.waitForEvent('download'), catalogDialog.getByRole('button', { name: /הורדת ההדמיה/ }).click()])
-  assert.equal(catalogDownload.suggestedFilename(), 'shay-bowl-smooth-meadow.webp', 'download should be named for the catalog path')
+  assert.equal(catalogDownload.suggestedFilename(), 'shay-bowl-smooth-pink-dance.webp', 'download should be named for the catalog path')
   const catalogSnippet = await page.evaluate(() => navigator.clipboard.readText())
-  for (const part of ["id: 'shay-bowl-smooth-meadow'", "productId: 'shay-bowl'", "material: 'smooth'", "artworkId: 'meadow'", "artworkName: 'פרחי שדה'", "images: ['/assets/products/shay-bowl/smooth/shay-bowl-smooth-meadow.webp']"]) assert.ok(catalogSnippet.includes(part), `missing from catalog snippet: ${part}`)
+  for (const part of ["id: 'shay-bowl-smooth-pink-dance'", "productId: 'shay-bowl'", "material: 'smooth'", "artworkId: 'pink-dance'", "artworkName: 'ריקוד ורוד'", "images: ['/assets/products/shay-bowl/smooth/shay-bowl-smooth-pink-dance.webp']"]) assert.ok(catalogSnippet.includes(part), `missing from catalog snippet: ${part}`)
   await catalogDialog.getByText('הורד והרשומה הועתקה').waitFor()
   await page.keyboard.press('Escape')
   await catalogDialog.waitFor({ state: 'hidden' })
 
-  await page.goto(`${baseUrl}/admin/studio?vessel=mika-clean&artwork=spring&preset=center`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=mika-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   await page.getByRole('button', { name: 'הוספה לקטלוג' }).click()
   await catalogDialog.waitFor()
@@ -224,13 +262,13 @@ try {
   await catalogDialog.getByPlaceholder('מידה (למשל קוטר 17)').fill('קוטר 17')
   await catalogDialog.getByPlaceholder('מחיר ₪').fill('75')
   const [newProductDownload] = await Promise.all([page.waitForEvent('download'), catalogDialog.getByRole('button', { name: /הורדת ההדמיה/ }).click()])
-  assert.equal(newProductDownload.suggestedFilename(), 'mika-bowl-smooth-spring.webp')
+  assert.equal(newProductDownload.suggestedFilename(), 'mika-bowl-smooth-pink-dance.webp')
   const newProductSnippet = await page.evaluate(() => navigator.clipboard.readText())
-  for (const part of ["id: 'mika-bowl'", "name: 'קערת מיקה'", "{ label: 'קוטר 17', price: 75 }", "id: 'mika-bowl-smooth-spring'", "images: ['/assets/products/mika-bowl/smooth/mika-bowl-smooth-spring.webp']"]) assert.ok(newProductSnippet.includes(part), `missing from new-product snippet: ${part}`)
+  for (const part of ["id: 'mika-bowl'", "name: 'קערת מיקה'", "{ label: 'קוטר 17', price: 75 }", "id: 'mika-bowl-smooth-pink-dance'", "images: ['/assets/products/mika-bowl/smooth/mika-bowl-smooth-pink-dance.webp']"]) assert.ok(newProductSnippet.includes(part), `missing from new-product snippet: ${part}`)
   await page.keyboard.press('Escape')
   console.log('Add to catalog: prefilled product and material, size, webp download, clipboard snippets: OK')
 
-  await page.goto(`${baseUrl}/admin/studio?vessel=omer-clean&artwork=spring&preset=center&size=120&rot=-15`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=omer-clean&artwork=pink-dance&preset=center&size=120&rot=-15`)
   await waitForPreview()
   await page.getByRole('button', { name: 'שליחת בקשה לאפרת' }).click()
   const dialog = page.getByRole('dialog', { name: 'שליחת בקשה לאפרת' })
@@ -243,10 +281,10 @@ try {
   const requestHref = await dialog.getByRole('link', { name: 'שליחה בוואטסאפ לאפרת' }).getAttribute('href')
   assert.match(requestHref, /^https:\/\/wa\.me\/972523894291\?text=/, 'the request must go to Efrat on WhatsApp')
   const requestText = decodeURIComponent(requestHref.split('text=')[1])
-  for (const part of ['שלום אפרת', 'שם: דנה כהן', 'כלי: קערת עומר · חלק', 'ציור: פריחת אביב', 'גודל 120%', '15° שמאלה', 'הערות: סט של 4, חומר מנוקד']) assert.ok(requestText.includes(part), `request message missing "${part}":\n${requestText}`)
+  for (const part of ['שלום אפרת', 'שם: דנה כהן', 'כלי: קערת עומר · חלק', 'ציור: ריקוד ורוד', 'גודל 120%', '15° שמאלה', 'הערות: סט של 4, חומר מנוקד']) assert.ok(requestText.includes(part), `request message missing "${part}":\n${requestText}`)
   const designLink = new URL(requestText.match(/ההדמיה שלי: (\S+)/)[1])
   assert.equal(designLink.hash, '#studio-editor')
-  assert.deepEqual(['vessel', 'artwork', 'size', 'rot'].map((key) => designLink.searchParams.get(key)), ['omer-clean', 'spring', '120', '-15'], 'design link must reopen the same design')
+  assert.deepEqual(['vessel', 'artwork', 'size', 'rot'].map((key) => designLink.searchParams.get(key)), ['omer-clean', 'pink-dance', '120', '-15'], 'design link must reopen the same design')
   await page.context().route('https://wa.me/**', (route) => route.fulfill({ status: 200, body: 'ok' }))
   const [whatsapp] = await Promise.all([page.context().waitForEvent('page'), dialog.getByRole('link', { name: 'שליחה בוואטסאפ לאפרת' }).click()])
   await whatsapp.close()
@@ -262,7 +300,7 @@ try {
   await page.context().unroute('https://wa.me/**')
   console.log('Request to Efrat: name required, full WhatsApp message, design link, copy fallback, close: OK')
 
-  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   await page.locator('canvas').scrollIntoViewIfNeeded()
   const decorated = await page.locator('canvas').evaluate((canvas) => canvas.toDataURL())
@@ -297,7 +335,7 @@ try {
 
   const touchContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
   const touchPage = await touchContext.newPage()
-  await touchPage.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  await touchPage.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await touchPage.waitForFunction(() => document.querySelector('canvas')?.width === 750 && !document.querySelector('.preview-loading'))
   await touchPage.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
   await touchPage.waitForTimeout(800)
@@ -331,10 +369,10 @@ try {
   const afterDrag = params().get('pos').split(',').map(Number)
   assert.ok(afterDrag[0] > afterPinch[0] && Math.abs(afterDrag[1] - afterPinch[1]) < .001, 'the remaining finger should keep dragging without a jump')
   assert.equal(params().get('size'), '130', 'lifting a finger must not change the size')
-  for (let step = 0; step <= 20; step++) await touch(step ? 'touchMove' : 'touchStart', fingers(step ? 100 + step * 20 : 100, step ? -step * 8 : 0))
+  for (let step = 0; step <= 20; step++) await touch(step ? 'touchMove' : 'touchStart', fingers(step ? 100 + step * 22 : 100, step ? -step * 8 : 0))
   await touch('touchEnd', [])
   await touchPage.waitForTimeout(150)
-  assert.equal(params().get('size'), '150', 'pinch must stop at 150%')
+  assert.equal(params().get('size'), '700', 'pinch must stop at 700%')
   assert.equal(params().get('rot'), '-90', 'twist must stop at -90°')
   assert.equal(await touchPage.evaluate(() => scrollY), scrollStart, 'gestures on the preview must not scroll the page')
   assert.equal(await touchPage.locator('.hint-touch').isVisible(), true, 'touch hint should show on phones')
@@ -342,7 +380,7 @@ try {
   console.log('Two-finger pinch, twist and move, finger hand-off, limits and no page scroll: OK')
 
   await page.setViewportSize({ width: 1440, height: 900 })
-  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   await page.locator('#studio-editor').evaluate((el) => el.scrollIntoView({ block: 'start', behavior: 'instant' }))
   const wheelBox = await page.locator('canvas').boundingBox()
@@ -362,20 +400,20 @@ try {
   console.log('Phones (390×844, 360×640): preview and every tab fit on one screen: OK')
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=meadow&preset=center`)
+  await page.goto(`${baseUrl}/admin/studio?vessel=shay-clean&artwork=pink-dance&preset=center`)
   await waitForPreview()
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow')
   await page.getByRole('button', { name: /קערת מיקה · חלק/ }).click()
   await waitForPreview()
   await openTab('איור')
-  await page.getByRole('button', { name: /פריחת אביב/ }).click()
+  await page.getByRole('button', { name: /ריקוד ורוד/ }).click()
   await waitForPreview()
   await openTab('גודל וסיבוב')
   await page.locator('#artwork-size').fill('120')
   await waitForPreview()
-  assert.match(page.url(), /vessel=mika-clean&artwork=spring&preset=center&size=120/)
+  assert.match(page.url(), /vessel=mika-clean&artwork=pink-dance&preset=center&size=120/)
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow with controls')
-  await page.screenshot({ path: new URL('mobile-blue-spring-size.png', output).pathname, fullPage: true })
+  await page.screenshot({ path: new URL('mobile-pink-dance-size.png', output).pathname, fullPage: true })
   console.log('Mobile selection, size control, URL state and overflow: OK')
 } finally {
   await browser.close()
