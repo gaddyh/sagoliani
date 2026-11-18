@@ -47,7 +47,7 @@ export const availableVariants = finishedVariants.filter((variant) => variant.im
 export const publishedProducts = products.filter((product) => availableVariants.some((variant) => variant.productId === product.id))
 
 export const artists = [
-  { name: 'עירית סגל', phone: '052-2486836', whatsapp: '972522486836' },
+  { name: 'עירית סגול', phone: '052-2486836', whatsapp: '972522486836' },
   { name: 'אפרת ליאני', phone: '052-3894291', whatsapp: '972523894291' },
 ]
 
