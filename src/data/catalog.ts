@@ -1,5 +1,5 @@
 export type VesselId = 'shay-clean' | 'shay-dots' | 'omer-clean' | 'omer-dots' | 'yael-clean' | 'yael-dots' | 'mika-clean' | 'mika-dots' | 'ella-clean' | 'ella-dots' | 'irit-clean' | 'irit-dots' | 'pebbles-clean' | 'pebbles-dots' | 'efrat-clean' | 'efrat-dots' | 'gaddy-clean' | 'gaddy-dots' | 'ari-clean' | 'ari-dots'
-export type ArtworkId = 'pink-dance' | 'snapdragon-pink' | 'snapdragon-red'
+export type ArtworkId = 'pink-dance' | 'snapdragon-pink' | 'snapdragon-red' | 'soft-strength'
 export type PresetId = 'center' | 'small' | 'offset'
 
 export interface Placement {
@@ -256,6 +256,10 @@ export const artworks: Artwork[] = [
   {
     id: 'snapdragon-red', name: 'לוע ארי אדום', detail: 'פרחי לוע ארי בגווני אדום',
     image: '/assets/artwork/snapdragon-red.png', source: 'ציור מקורי של היוצרות',
+  },
+  {
+    id: 'soft-strength', name: 'עוצמת הרכות', detail: 'ציור מקורי בגוונים חמים',
+    image: '/assets/artwork/soft-strength.png', source: 'ציור מקורי של היוצרות',
   },
 ]
 
