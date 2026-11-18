@@ -90,6 +90,7 @@ public/assets/products/english-platter-straight/speckled/spring.webp
 
 עמוד הלקוחות: פתיח, ״רגע של חיבור״, הקולקציה (רק מוצרים עם צילומים מוגמרים ב־`finishedVariants`), צפייה במוצר שנפתחת בלחיצה על כרטיס **מתחת לקולקציה** (כפתורי רדיו לחומר חלק/מנוקד ורשימת הציורים הזמינים, והצילום הנבחר מופיע באותו מסגרת), עגלה והזמנה בוואטסאפ, ״כדאי לדעת לפני שמזמינים״ ופרטי קשר. הסטודיו אינו מוצג ללקוחות — הוא חי בעמוד הניהול `/admin/studio`.
 
+- `public/assets/hero.webp`: תצלום הפתיחה של האתר (המקור: `landing-hero.jpeg` בשורש הפרויקט, מחוץ ל־git).
 - `public/assets/brochure/`: חיתוכי תמונות מתוך דפי החוברת שסופקו (`scripts/prepare_brochure.py`). אלו תמונות המחשה בלבד ואינן מפורסמות בקולקציה; הן משמשות את בדיקות החנות.
 - `src/data/products.ts`: מוצרי הקולקציה, מחירים, שילובים מצולמים (`finishedVariants`) ופרטי היוצרות.
 - `src/components/Studio.tsx`: הקונפיגורטור; `src/admin/StudioPage.tsx`: עמוד הניהול שעוטף אותו; `src/App.tsx`: אתר הלקוחות.

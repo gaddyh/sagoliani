@@ -160,7 +160,7 @@ function App() {
             <p className="hero-copy">קולקציה ייחודית המחברת בין עבודות יד וקדרות בקרמיקה לציורי מים מקוריים. בחרו כלי, חומר וציור מתוך צילומי המוצרים המוגמרים.</p>
             <div className="hero-actions"><a className="primary-link" href="#collection">לקולקציה</a></div>
           </div>
-          <div className="hero-image"><img src="/assets/brochure/hero.webp" alt="כלי קרמיקה בעבודת יד עם ציורי פרחים בצבעי מים" /></div>
+          <div className="hero-image"><img src="/assets/hero.webp" alt="כלי קרמיקה בעבודת יד עם ציורי פרחים בצבעי מים" /></div>
           <img className="hero-sprig" src="/assets/brochure/sprig.webp" alt="" aria-hidden="true" />
         </section>
 
