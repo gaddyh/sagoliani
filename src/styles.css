@@ -364,8 +364,12 @@ h1, h2, h3, p { margin-top: 0; }
 .cart-fields input, .cart-form textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid var(--line); font: inherit; }
 .cart-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 .cart-actions .secondary-link { background: transparent; }
+.undo-note { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0; }
+.order-receipt { max-width: 720px; margin: 0 auto; padding: 28px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); display: grid; gap: 16px; }
+.order-receipt h3 { margin: 0; font: 28px var(--serif); color: var(--olive); }
+.order-receipt .cart-total { margin: 0; }
 @media (max-width: 800px) { .finished-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } .site-nav a:not(.admin-back) { display: none; } }
-@media (max-width: 520px) { .cart-link { padding: 7px 10px; font-size: 12px; } .cart-items li { gap: 9px; flex-wrap: wrap; } .cart-items img { width: 75px; height: 65px; } .cart-items li div { flex-basis: calc(100% - 90px); } .cart-fields { grid-template-columns: 1fr; } .cart-form { padding: 18px; } .finished-gallery { gap: 9px; } }
+@media (max-width: 520px) { .cart-link { padding: 7px 10px; font-size: 12px; } .cart-items li { gap: 9px; flex-wrap: wrap; } .cart-items img { width: 75px; height: 65px; } .cart-items li div { flex-basis: calc(100% - 90px); } .cart-fields { grid-template-columns: 1fr; } .cart-form { padding: 18px; } .order-receipt { padding: 18px; } .finished-gallery { gap: 9px; } }
 
 /* Phones: choices first, the result below them. */
 @media (max-width: 800px) {
