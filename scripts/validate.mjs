@@ -19,8 +19,8 @@ async function waitForPreview() {
 const openTab = (name) => page.getByRole('tab', { name, exact: true }).click()
 
 try {
-  for (const vessel of ['shay-clean', 'shay-dots', 'omer-clean', 'omer-dots', 'yael-clean', 'yael-dots', 'mika-clean', 'mika-dots', 'ella-clean', 'ella-dots', 'irit-clean', 'irit-dots', 'pebbles-clean', 'pebbles-dots', 'efrat-clean', 'efrat-dots', 'gaddy-clean', 'gaddy-dots']) {
-    for (const artwork of ['pink-dance', 'snapdragon-pink']) {
+  for (const vessel of ['shay-clean', 'shay-dots', 'omer-clean', 'omer-dots', 'yael-clean', 'yael-dots', 'mika-clean', 'mika-dots', 'ella-clean', 'ella-dots', 'irit-clean', 'irit-dots', 'pebbles-clean', 'pebbles-dots', 'efrat-clean', 'efrat-dots', 'gaddy-clean', 'gaddy-dots', 'ari-clean', 'ari-dots']) {
+    for (const artwork of ['pink-dance', 'snapdragon-pink', 'snapdragon-red']) {
       await page.goto(`${baseUrl}/admin/studio?vessel=${vessel}&artwork=${artwork}&preset=center`)
       await waitForPreview()
       await page.getByRole('button', { name: 'לפני' }).click()

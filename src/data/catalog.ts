@@ -1,5 +1,5 @@
-export type VesselId = 'shay-clean' | 'shay-dots' | 'omer-clean' | 'omer-dots' | 'yael-clean' | 'yael-dots' | 'mika-clean' | 'mika-dots' | 'ella-clean' | 'ella-dots' | 'irit-clean' | 'irit-dots' | 'pebbles-clean' | 'pebbles-dots' | 'efrat-clean' | 'efrat-dots' | 'gaddy-clean' | 'gaddy-dots'
-export type ArtworkId = 'pink-dance' | 'snapdragon-pink'
+export type VesselId = 'shay-clean' | 'shay-dots' | 'omer-clean' | 'omer-dots' | 'yael-clean' | 'yael-dots' | 'mika-clean' | 'mika-dots' | 'ella-clean' | 'ella-dots' | 'irit-clean' | 'irit-dots' | 'pebbles-clean' | 'pebbles-dots' | 'efrat-clean' | 'efrat-dots' | 'gaddy-clean' | 'gaddy-dots' | 'ari-clean' | 'ari-dots'
+export type ArtworkId = 'pink-dance' | 'snapdragon-pink' | 'snapdragon-red'
 export type PresetId = 'center' | 'small' | 'offset'
 
 export interface Placement {
@@ -222,6 +222,26 @@ export const vessels: Vessel[] = [
       offset: { x: 0.533, y: 0.482, width: 0.157 },
     },
   },
+  {
+    id: 'ari-clean', name: 'קערת ארי · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/ari-clean.webp', mask: '/assets/vessels/ari-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
+    placements: {
+      center: { x: 0.499, y: 0.502, width: 0.177 },
+      small: { x: 0.499, y: 0.502, width: 0.132 },
+      offset: { x: 0.530, y: 0.478, width: 0.157 },
+    },
+  },
+  {
+    id: 'ari-dots', name: 'קערת ארי · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/ari-dots.webp', mask: '/assets/vessels/ari-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
+    placements: {
+      center: { x: 0.499, y: 0.498, width: 0.177 },
+      small: { x: 0.499, y: 0.498, width: 0.132 },
+      offset: { x: 0.530, y: 0.475, width: 0.157 },
+    },
+  },
 ]
 
 export const artworks: Artwork[] = [
@@ -232,6 +252,10 @@ export const artworks: Artwork[] = [
   {
     id: 'snapdragon-pink', name: 'לוע ארי', detail: 'פרחי לוע ארי בגווני ורוד',
     image: '/assets/artwork/snapdragon-pink.png', source: 'ציור מקורי של היוצרות',
+  },
+  {
+    id: 'snapdragon-red', name: 'לוע ארי אדום', detail: 'פרחי לוע ארי בגווני אדום',
+    image: '/assets/artwork/snapdragon-red.png', source: 'ציור מקורי של היוצרות',
   },
 ]
 

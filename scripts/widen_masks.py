@@ -6,9 +6,11 @@ wall and the visible side — so the masks are rebuilt from each vessel photo's
 silhouette (GrabCut), inset slightly and softened, matching the pipeline used
 to compute the original ellipses.
 
-Run from the project root with the venv from the README:
+GrabCut is not bit-deterministic between runs, so pass the vessel ids you want
+to (re)generate and leave the rest untouched:
 
-  .venv/bin/python scripts/widen_masks.py
+  .venv/bin/python scripts/widen_masks.py                      # all vessels
+  .venv/bin/python scripts/widen_masks.py ari-clean ari-dots    # only these
 """
 import sys
 from pathlib import Path
@@ -49,6 +51,12 @@ def main() -> None:
     array_end = catalog.find("\n]\n", array_start)
     vessels_block = catalog[array_start:array_end]
     vessel_ids = re.findall(r"id: '([a-z0-9-]+)'", vessels_block)
+    wanted = sys.argv[1:]
+    if wanted:
+        unknown = [name for name in wanted if name not in vessel_ids]
+        if unknown:
+            sys.exit(f"Unknown vessel ids: {', '.join(unknown)}")
+        vessel_ids = [name for name in vessel_ids if name in wanted]
     report = {}
     for vessel_id in sorted(vessel_ids):
         photo = cv2.imread(str(VESSELS / f"{vessel_id}.webp"))
