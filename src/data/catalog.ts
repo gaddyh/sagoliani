@@ -1,5 +1,5 @@
-export type VesselId = 'ai-round-plate' | 'ai-oval-plate' | 'ai-rect-platter'
-export type ArtworkId = 'meadow' | 'spring' | 'garden' | 'wildflowers' | 'monkey-flower' | 'gentian' | 'poppy' | 'ai-anemones' | 'ai-blue-sprig' | 'ai-poppies' | 'ai-lavender'
+export type VesselId = 'shay-clean' | 'shay-dots' | 'omer-clean' | 'omer-dots' | 'yael-clean' | 'yael-dots' | 'mika-clean' | 'mika-dots' | 'ella-clean' | 'ella-dots' | 'irit-clean' | 'irit-dots' | 'pebbles-clean' | 'pebbles-dots' | 'efrat-clean' | 'efrat-dots' | 'gaddy-clean' | 'gaddy-dots'
+export type ArtworkId = 'meadow' | 'spring' | 'garden' | 'wildflowers'
 export type PresetId = 'center' | 'small' | 'offset'
 
 export interface Placement {
@@ -42,54 +42,183 @@ export interface Artwork {
 
 export const vessels: Vessel[] = [
   {
-    id: 'ai-round-plate', name: 'צלחת שוליים גליים · AI', detail: 'נכס בדיקה חיצוני · תמונת AI',
-    image: '/assets/vessels/ai-round-plate.webp', mask: '/assets/vessels/ai-round-plate-mask.png',
-    material: 'light', curve: 0.012, perspective: 0.04,
+    id: 'shay-clean', name: 'קערת שי · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/shay-clean.webp', mask: '/assets/vessels/shay-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
     placements: {
-      center: { x: 0.490, y: 0.492, width: 0.281 },
-      small: { x: 0.490, y: 0.492, width: 0.208 },
-      offset: { x: 0.539, y: 0.463, width: 0.248 },
-    },
-    external: true,
-    credit: {
-      author: 'תמונה שנוצרה בבינה מלאכותית, סופקה לצורך ההדמיה',
-      sourceUrl: '',
-      license: 'תמונה שנוצרה ב-AI · להמחשה בלבד',
-      licenseUrl: '',
+      center: { x: 0.500, y: 0.496, width: 0.177 },
+      small: { x: 0.500, y: 0.496, width: 0.132 },
+      offset: { x: 0.531, y: 0.475, width: 0.157 },
     },
   },
   {
-    id: 'ai-oval-plate', name: 'צלחת אובאלית גלית · AI', detail: 'נכס בדיקה חיצוני · תמונת AI',
-    image: '/assets/vessels/ai-oval-plate.webp', mask: '/assets/vessels/ai-oval-plate-mask.png',
-    material: 'light', curve: 0.012, perspective: 0.04,
+    id: 'shay-dots', name: 'קערת שי · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/shay-dots.webp', mask: '/assets/vessels/shay-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
     placements: {
-      center: { x: 0.500, y: 0.500, width: 0.306 },
-      small: { x: 0.500, y: 0.500, width: 0.227 },
-      offset: { x: 0.554, y: 0.481, width: 0.270 },
-    },
-    external: true,
-    credit: {
-      author: 'תמונה שנוצרה בבינה מלאכותית, סופקה לצורך ההדמיה',
-      sourceUrl: '',
-      license: 'תמונה שנוצרה ב-AI · להמחשה בלבד',
-      licenseUrl: '',
+      center: { x: 0.501, y: 0.496, width: 0.178 },
+      small: { x: 0.501, y: 0.496, width: 0.132 },
+      offset: { x: 0.532, y: 0.471, width: 0.157 },
     },
   },
   {
-    id: 'ai-rect-platter', name: 'מגש מלבני גלי · AI', detail: 'נכס בדיקה חיצוני · תמונת AI',
-    image: '/assets/vessels/ai-rect-platter.webp', mask: '/assets/vessels/ai-rect-platter-mask.png',
-    material: 'light', curve: 0.008, perspective: 0.03,
+    id: 'omer-clean', name: 'קערת עומר · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/omer-clean.webp', mask: '/assets/vessels/omer-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
     placements: {
-      center: { x: 0.502, y: 0.491, width: 0.317 },
-      small: { x: 0.502, y: 0.491, width: 0.235 },
-      offset: { x: 0.558, y: 0.470, width: 0.279 },
+      center: { x: 0.500, y: 0.501, width: 0.177 },
+      small: { x: 0.500, y: 0.501, width: 0.132 },
+      offset: { x: 0.531, y: 0.478, width: 0.157 },
     },
-    external: true,
-    credit: {
-      author: 'תמונה שנוצרה בבינה מלאכותית, סופקה לצורך ההדמיה',
-      sourceUrl: '',
-      license: 'תמונה שנוצרה ב-AI · להמחשה בלבד',
-      licenseUrl: '',
+  },
+  {
+    id: 'omer-dots', name: 'קערת עומר · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/omer-dots.webp', mask: '/assets/vessels/omer-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.500, y: 0.502, width: 0.177 },
+      small: { x: 0.500, y: 0.502, width: 0.132 },
+      offset: { x: 0.531, y: 0.478, width: 0.157 },
+    },
+  },
+  {
+    id: 'yael-clean', name: 'קערת יעל · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/yael-clean.webp', mask: '/assets/vessels/yael-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.500, y: 0.498, width: 0.177 },
+      small: { x: 0.500, y: 0.498, width: 0.132 },
+      offset: { x: 0.531, y: 0.477, width: 0.157 },
+    },
+  },
+  {
+    id: 'yael-dots', name: 'קערת יעל · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/yael-dots.webp', mask: '/assets/vessels/yael-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.499, y: 0.496, width: 0.177 },
+      small: { x: 0.499, y: 0.496, width: 0.132 },
+      offset: { x: 0.530, y: 0.478, width: 0.157 },
+    },
+  },
+  {
+    id: 'mika-clean', name: 'קערת מיקה · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/mika-clean.webp', mask: '/assets/vessels/mika-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.499, y: 0.503, width: 0.177 },
+      small: { x: 0.499, y: 0.503, width: 0.132 },
+      offset: { x: 0.530, y: 0.485, width: 0.157 },
+    },
+  },
+  {
+    id: 'mika-dots', name: 'קערת מיקה · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/mika-dots.webp', mask: '/assets/vessels/mika-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.497, y: 0.505, width: 0.178 },
+      small: { x: 0.497, y: 0.505, width: 0.132 },
+      offset: { x: 0.529, y: 0.487, width: 0.157 },
+    },
+  },
+  {
+    id: 'ella-clean', name: 'צלחת אלה · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/ella-clean.webp', mask: '/assets/vessels/ella-clean-mask.png',
+    material: 'light', curve: 0.01, perspective: 0.04,
+    placements: {
+      center: { x: 0.499, y: 0.500, width: 0.206 },
+      small: { x: 0.499, y: 0.500, width: 0.153 },
+      offset: { x: 0.535, y: 0.490, width: 0.182 },
+    },
+  },
+  {
+    id: 'ella-dots', name: 'צלחת אלה · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/ella-dots.webp', mask: '/assets/vessels/ella-dots-mask.png',
+    material: 'light', curve: 0.01, perspective: 0.04,
+    placements: {
+      center: { x: 0.499, y: 0.500, width: 0.206 },
+      small: { x: 0.499, y: 0.500, width: 0.153 },
+      offset: { x: 0.535, y: 0.490, width: 0.182 },
+    },
+  },
+  {
+    id: 'irit-clean', name: 'קערת עירית · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/irit-clean.webp', mask: '/assets/vessels/irit-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.496, y: 0.498, width: 0.178 },
+      small: { x: 0.496, y: 0.498, width: 0.132 },
+      offset: { x: 0.527, y: 0.478, width: 0.157 },
+    },
+  },
+  {
+    id: 'irit-dots', name: 'קערת עירית · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/irit-dots.webp', mask: '/assets/vessels/irit-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.499, y: 0.497, width: 0.177 },
+      small: { x: 0.499, y: 0.497, width: 0.132 },
+      offset: { x: 0.530, y: 0.476, width: 0.157 },
+    },
+  },
+  {
+    id: 'pebbles-clean', name: 'קערת חלוקים · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/pebbles-clean.webp', mask: '/assets/vessels/pebbles-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.497, y: 0.499, width: 0.178 },
+      small: { x: 0.497, y: 0.499, width: 0.132 },
+      offset: { x: 0.528, y: 0.478, width: 0.157 },
+    },
+  },
+  {
+    id: 'pebbles-dots', name: 'קערת חלוקים · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/pebbles-dots.webp', mask: '/assets/vessels/pebbles-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.502, y: 0.495, width: 0.178 },
+      small: { x: 0.502, y: 0.495, width: 0.132 },
+      offset: { x: 0.533, y: 0.474, width: 0.157 },
+    },
+  },
+  {
+    id: 'efrat-clean', name: 'קערת אפרת · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/efrat-clean.webp', mask: '/assets/vessels/efrat-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.502, y: 0.497, width: 0.176 },
+      small: { x: 0.502, y: 0.497, width: 0.130 },
+      offset: { x: 0.533, y: 0.473, width: 0.155 },
+    },
+  },
+  {
+    id: 'efrat-dots', name: 'קערת אפרת · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/efrat-dots.webp', mask: '/assets/vessels/efrat-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.506, y: 0.498, width: 0.178 },
+      small: { x: 0.506, y: 0.498, width: 0.132 },
+      offset: { x: 0.537, y: 0.474, width: 0.157 },
+    },
+  },
+  {
+    id: 'gaddy-clean', name: 'קערת גדי · חלק', detail: 'חומר שמנת חלק',
+    image: '/assets/vessels/gaddy-clean.webp', mask: '/assets/vessels/gaddy-clean-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.501, y: 0.498, width: 0.178 },
+      small: { x: 0.501, y: 0.498, width: 0.132 },
+      offset: { x: 0.532, y: 0.479, width: 0.157 },
+    },
+  },
+  {
+    id: 'gaddy-dots', name: 'קערת גדי · מנוקד', detail: 'חומר שמנת מנוקד',
+    image: '/assets/vessels/gaddy-dots.webp', mask: '/assets/vessels/gaddy-dots-mask.png',
+    material: 'light', curve: 0.02, perspective: 0.08,
+    placements: {
+      center: { x: 0.502, y: 0.501, width: 0.178 },
+      small: { x: 0.502, y: 0.501, width: 0.132 },
+      offset: { x: 0.533, y: 0.482, width: 0.157 },
     },
   },
 ]
@@ -110,83 +239,6 @@ export const artworks: Artwork[] = [
   {
     id: 'wildflowers', name: 'לבנדר פראי', detail: 'ענף בוטני בגוני סגול וורוד',
     image: '/assets/artwork/wildflowers.png', source: 'צילום האיור הממוסגר', scale: 1.3,
-  },
-  {
-    id: 'monkey-flower', name: 'פרח קוף (בדיקה)', detail: 'נכס בדיקה חיצוני · צבעי מים CC0',
-    image: '/assets/artwork/monkey-flower.png', source: 'Mary Vaux Walcott, 1920s',
-    external: true,
-    credit: {
-      author: 'Mary Vaux Walcott — Lewis Monkey Flower (Mimulus lewisii)',
-      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Lewis_Monkey_Flower_(Mimulus_lewisii)_by_Mary_Vaux_Walcott-saam1970.355.711.jpg',
-      license: 'CC0 1.0 (נחלת הכלל)',
-      licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
-    },
-  },
-  {
-    id: 'gentian', name: 'גנציאן (בדיקה)', detail: 'נכס בדיקה חיצוני · צבעי מים CC0',
-    image: '/assets/artwork/gentian.png', source: 'Mary Vaux Walcott, 1920s',
-    external: true,
-    credit: {
-      author: 'Mary Vaux Walcott — Gentian (Gentiana newberri)',
-      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Gentian_(Gentiana_newberri)_by_Mary_Vaux_Walcott-saam1970.355.243.jpg',
-      license: 'CC0 1.0 (נחלת הכלל)',
-      licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
-    },
-  },
-  {
-    id: 'poppy', name: 'פרג קליפורני (בדיקה)', detail: 'נכס בדיקה חיצוני · צבעי מים CC0',
-    image: '/assets/artwork/poppy.png', source: 'Mary Vaux Walcott, 1920s',
-    external: true,
-    credit: {
-      author: 'Mary Vaux Walcott — California Poppy (Eschscholtzia californica)',
-      sourceUrl: 'https://commons.wikimedia.org/wiki/File:California_Poppy_(Eschscholtzia_californica)_by_Mary_Vaux_Walcott-saam1970.355.303.jpg',
-      license: 'CC0 1.0 (נחלת הכלל)',
-      licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/',
-    },
-  },
-  {
-    id: 'ai-anemones', name: 'כלניות כחולות · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
-    image: '/assets/artwork/ai-anemones.png', source: 'ציור AI לבדיקה', scale: 1.35,
-    external: true,
-    credit: {
-      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
-      sourceUrl: '',
-      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
-      licenseUrl: '',
-    },
-  },
-  {
-    id: 'ai-blue-sprig', name: 'ענף פרחים כחולים · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
-    image: '/assets/artwork/ai-blue-sprig.png', source: 'ציור AI לבדיקה',
-    external: true,
-    credit: {
-      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
-      sourceUrl: '',
-      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
-      licenseUrl: '',
-    },
-  },
-  {
-    id: 'ai-poppies', name: 'פרגים אדומים · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
-    image: '/assets/artwork/ai-poppies.png', source: 'ציור AI לבדיקה',
-    external: true,
-    credit: {
-      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
-      sourceUrl: '',
-      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
-      licenseUrl: '',
-    },
-  },
-  {
-    id: 'ai-lavender', name: 'לבנדר · AI', detail: 'נכס בדיקה חיצוני · ציור AI',
-    image: '/assets/artwork/ai-lavender.png', source: 'ציור AI לבדיקה',
-    external: true,
-    credit: {
-      author: 'ציור שנוצר בבינה מלאכותית, סופק לצורך ההדמיה',
-      sourceUrl: '',
-      license: 'ציור שנוצר ב-AI · להמחשה בלבד',
-      licenseUrl: '',
-    },
   },
 ]
 

@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
 import App from './App'
-import { artists, products } from './data/products'
+import { artists, availableVariants, priceLabel, publishedProducts } from './data/products'
 
 export function render(): string {
   return renderToString(<StrictMode><App /></StrictMode>)
@@ -17,12 +17,12 @@ export function structuredData(siteUrl: string): object {
     image: `${siteUrl}og-image.jpg`,
     telephone: artists.map((artist) => `+${artist.whatsapp}`),
     founder: artists.map((artist) => ({ '@type': 'Person', name: artist.name })),
-    priceRange: '₪50–₪165',
-    makesOffer: products.map((product) => ({
+    ...(publishedProducts.length ? { priceRange: `₪${Math.min(...publishedProducts.flatMap((product) => product.sizes.map((size) => size.price)))}–₪${Math.max(...publishedProducts.flatMap((product) => product.sizes.map((size) => size.price)))}` } : {}),
+    makesOffer: publishedProducts.map((product) => ({
       '@type': 'Offer',
       priceCurrency: 'ILS',
       price: Math.min(...product.sizes.map((size) => size.price)),
-      itemOffered: { '@type': 'Product', name: product.name, description: product.detail, image: `${siteUrl}${product.image.slice(1)}` },
+      itemOffered: { '@type': 'Product', name: product.name, description: `${product.detail} · ${priceLabel(product)}`, image: availableVariants.find((variant) => variant.productId === product.id)!.images.map((image) => `${siteUrl}${image.slice(1)}`) },
     })),
   }
 }

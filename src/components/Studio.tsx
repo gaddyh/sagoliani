@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { artworks, presets, vessels, type ArtworkId, type Placement, type PresetId, type VesselId } from '../data/catalog'
-import { artists } from '../data/products'
+import { artists, products, type Material } from '../data/products'
 import { configurationKey, preloadAssets, renderCombination } from '../renderer/composite'
 
-type Collection = 'original' | 'external'
-
-const originalArtworks = artworks.filter((item) => !item.external)
-const externalArtworks = artworks.filter((item) => item.external)
 const MIN_SIZE = 60
 const MAX_SIZE = 150
 const MAX_ROTATION = 90
@@ -30,6 +26,12 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 const DRAG_THRESHOLD = 6
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
+const NEW_PRODUCT = '__new__'
+const VESSEL_PRODUCTS: Partial<Record<VesselId, string>> = { 'shay-clean': 'shay-bowl', 'shay-dots': 'shay-bowl' }
+
+function ts(text: string): string {
+  return "'" + text.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"
+}
 
 function parsePlacementParam(value: string | null): Placement | null {
   if (!value) return null
@@ -39,7 +41,6 @@ function parsePlacementParam(value: string | null): Placement | null {
 }
 
 export default function Studio() {
-  const [collection, setCollection] = useState<Collection>(() => new URLSearchParams(location.search).get('collection') === 'external' ? 'external' : 'original')
   const [vesselId, setVesselId] = useState<VesselId>(() => vessels.find((item) => item.id === new URLSearchParams(location.search).get('vessel'))?.id ?? vessels[0].id)
   const [artworkId, setArtworkId] = useState<ArtworkId>(() => artworks.find((item) => item.id === new URLSearchParams(location.search).get('artwork'))?.id ?? 'meadow')
   const [presetId, setPresetId] = useState<PresetId>(() => presets.find((item) => item.id === new URLSearchParams(location.search).get('preset'))?.id ?? 'center')
@@ -58,27 +59,31 @@ export default function Studio() {
   const [requestError, setRequestError] = useState('')
   const [requestSent, setRequestSent] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [catalogProductId, setCatalogProductId] = useState('')
+  const [catalogSizeLabel, setCatalogSizeLabel] = useState('')
+  const [catalogMaterial, setCatalogMaterial] = useState<Material>('smooth')
+  const [newProductId, setNewProductId] = useState('')
+  const [newProductName, setNewProductName] = useState('')
+  const [newProductDetail, setNewProductDetail] = useState('')
+  const [newProductSizes, setNewProductSizes] = useState<{ label: string; price: string }[]>([{ label: '', price: '' }])
+  const [catalogPreview, setCatalogPreview] = useState('')
+  const [catalogResult, setCatalogResult] = useState<{ filename: string; imagePath: string; productId: string; material: Material } | null>(null)
   const requestDialog = useRef<HTMLDialogElement>(null)
+  const catalogDialog = useRef<HTMLDialogElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const dragRef = useRef<{ startX: number; startY: number; origin: Placement; moved: boolean } | null>(null)
   const vessel = vessels.find((item) => item.id === vesselId)!
   const artwork = artworks.find((item) => item.id === artworkId)!
   const preset = presets.find((item) => item.id === presetId)!
-  const activeArtworks = collection === 'original' ? originalArtworks : externalArtworks
   const basePlacement = vessel.placements[presetId]
   const customPlacement = useMemo<Placement | null>(() => customPos ? { ...customPos, width: basePlacement.width } : null, [customPos, basePlacement])
   const isCustom = customPos !== null
   const isAdjusted = size !== 100 || rotation !== 0
 
-  useEffect(() => {
-    if (!activeArtworks.some((item) => item.id === artworkId)) setArtworkId(activeArtworks[0].id)
-  }, [collection])
-
   useEffect(() => { preloadAssets(vessels, artworks) }, [])
 
   const designUrl = useMemo(() => {
     const url = new URL(location.href)
-    url.searchParams.set('collection', collection)
     url.searchParams.set('vessel', vesselId)
     url.searchParams.set('artwork', artworkId)
     url.searchParams.set('preset', presetId)
@@ -89,7 +94,7 @@ export default function Studio() {
     if (rotation) url.searchParams.set('rot', String(rotation))
     else url.searchParams.delete('rot')
     return url
-  }, [collection, vesselId, artworkId, presetId, customPos, size, rotation])
+  }, [vesselId, artworkId, presetId, customPos, size, rotation])
 
   useEffect(() => {
     const url = new URL(designUrl)
@@ -259,13 +264,66 @@ export default function Studio() {
     }, 'image/png')
   }
 
-  const collectionToggle = (
-    <div className="collection-toggle" role="group" aria-label="בחירת אוסף נכסים">
-      <button type="button" className={collection === 'original' ? 'collection-chip active' : 'collection-chip'} aria-pressed={collection === 'original'} onClick={() => setCollection('original')}>יצירות ART IN CLAY</button>
-      <button type="button" className={collection === 'external' ? 'collection-chip active' : 'collection-chip'} aria-pressed={collection === 'external'} onClick={() => setCollection('external')}>נכסי בדיקה חיצוניים</button>
-    </div>
-  )
-  const collectionNote = collection === 'external' && <p className="collection-note" role="note">אוסף בדיקה: כלים וציורים חיצוניים, לא יצירות ART IN CLAY. מקורות ורישיונות בתחתית העמוד.</p>
+  function openCatalog() {
+    const canvas = canvasRef.current
+    if (!canvas || renderState !== 'ready') return
+    const thumb = document.createElement('canvas')
+    thumb.width = 150
+    thumb.height = 200
+    thumb.getContext('2d')!.drawImage(canvas, 0, 0, thumb.width, thumb.height)
+    setCatalogProductId(VESSEL_PRODUCTS[vesselId] ?? '')
+    const next = products.find((item) => item.id === VESSEL_PRODUCTS[vesselId])
+    setCatalogSizeLabel(next?.sizes[0]?.label ?? '')
+    setCatalogMaterial(vessel.name.includes('מנוקד') ? 'speckled' : 'smooth')
+    setNewProductId('')
+    setNewProductName(vessel.name.replace(/\s·\s(חלק|מנוקד)$/, ''))
+    setNewProductDetail('')
+    setNewProductSizes([{ label: '', price: '' }])
+    setCatalogPreview(thumb.toDataURL('image/png'))
+    setCatalogResult(null)
+    catalogDialog.current?.showModal()
+  }
+
+  async function addToCatalog(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const canvas = canvasRef.current
+    if (!canvas || renderState !== 'ready') return
+    const isNew = catalogProductId === NEW_PRODUCT
+    const productId = isNew ? newProductId.trim() : catalogProductId
+    if (!productId) return
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', .9))
+    if (!blob) return
+    const ext = blob.type === 'image/webp' ? 'webp' : 'png'
+    const filename = `${productId}-${catalogMaterial}-${artworkId}.${ext}`
+    const imagePath = `/assets/products/${productId}/${catalogMaterial}/${filename}`
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    const snippet = [
+      ...(isNew ? [
+        '// הוסיפו ל־products ב־src/data/products.ts (וגם את המזהה ל־ProductId):',
+        `  { id: ${ts(productId)}, name: ${ts(newProductName.trim())}, detail: ${ts(newProductDetail.trim())}, sizes: [${newProductSizes.filter((size) => size.label.trim() && size.price.trim()).map((size) => `{ label: ${ts(size.label.trim())}, price: ${Number(size.price) || 0} }`).join(', ')}] },`,
+        '',
+      ] : []),
+      '// הוסיפו ל־finishedVariants ב־src/data/products.ts:',
+      `  { id: ${ts(`${productId}-${catalogMaterial}-${artworkId}`)}, productId: ${ts(productId)}, material: ${ts(catalogMaterial)}, artworkId: ${ts(artworkId)}, artworkName: ${ts(artwork.name)}, images: [${ts(imagePath)}] },`,
+    ].join('\n')
+    try {
+      await navigator.clipboard.writeText(snippet)
+    } catch {
+      // Older browsers or embedded views without clipboard access: copy through a temporary text field.
+      const field = document.createElement('textarea')
+      field.value = snippet
+      document.body.appendChild(field)
+      field.select()
+      document.execCommand('copy')
+      field.remove()
+    }
+    setCatalogResult({ filename, imagePath, productId, material: catalogMaterial })
+  }
 
   return (
     <div className="editor" id="studio-editor">
@@ -292,6 +350,7 @@ export default function Studio() {
               <button type="button" className={!empty ? 'compare-button active' : 'compare-button'} aria-pressed={!empty} onClick={() => setEmpty(false)}>אחרי</button>
             </div>
             <button type="button" className="download-button" onClick={downloadImage} disabled={renderState !== 'ready'} aria-label="הורדת ההדמיה כקובץ PNG">הורד PNG ↓</button>
+            <button type="button" className="download-button" onClick={openCatalog} disabled={renderState !== 'ready'}>הוספה לקטלוג ↗</button>
           </div>
         </div>
       </section>
@@ -304,8 +363,6 @@ export default function Studio() {
         </div>
         <div className="editor-body" role="tabpanel" id={`studio-panel-${tab}`} aria-labelledby={`studio-tab-${tab}`}>
           {tab === 'vessel' && <>
-            {collectionToggle}
-            {collectionNote}
             <div className="option-strip vessel-strip">
               {vessels.map((item) => (
                 <button key={item.id} type="button" className={`option-card vessel-option ${vesselId === item.id ? 'selected' : ''}`} aria-pressed={vesselId === item.id} onClick={() => setVesselId(item.id)}>
@@ -317,10 +374,8 @@ export default function Studio() {
             </div>
           </>}
           {tab === 'artwork' && <>
-            {collectionToggle}
-            {collectionNote}
             <div className="option-strip artwork-strip">
-              {activeArtworks.map((item) => (
+              {artworks.map((item) => (
                 <button key={item.id} type="button" className={`option-card artwork-option ${artworkId === item.id ? 'selected' : ''}`} aria-pressed={artworkId === item.id} onClick={() => setArtworkId(item.id)}>
                   <span className="option-image artwork-image"><img src={item.image} alt="" /></span>
                   <span className="option-text"><strong>{item.name}</strong><small>{item.detail}</small></span>
@@ -358,7 +413,7 @@ export default function Studio() {
               {isAdjusted && <div className="summary-row"><span>גודל וסיבוב</span><strong>{size}% · {rotationLabel(rotation)}</strong></div>}
               <p>{vessel.material === 'dark' ? 'שימו לב: על הגלזורה הכהה הגוונים העדינים כמעט אינם נראים. אין בכך הבטחה לתוצאה פיזית זהה.' : 'כל כלי נוצר ביד, ולכן המרקם והגוונים במציאות ישתנו מעט מההדמיה.'}</p>
               {(vessel.external || artwork.external) && <p className="summary-external" role="note">השילוב הנוכחי כולל נכסי בדיקה חיצוניים שאינם יצירות ART IN CLAY. ראו פירוט מקורות ורישיונות בתחתית העמוד.</p>}
-              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setCollection('original'); setVesselId(vessels[0].id); setArtworkId('meadow'); setPresetId('center'); setCustomPos(null); setSize(100); setRotation(0); setEmpty(false); setTab('vessel') }}>מתחילים מחדש ↗</button></div>
+              <div className="summary-footer"><span>POC בלבד · ללא הזמנה</span><button type="button" onClick={() => { setVesselId(vessels[0].id); setArtworkId('meadow'); setPresetId('center'); setCustomPos(null); setSize(100); setRotation(0); setEmpty(false); setTab('vessel') }}>מתחילים מחדש ↗</button></div>
             </div>
             <p className="editor-disclaimer">זו הדמיית מחקר על בסיס צילום, לא צילום של מוצר מוגמר. מפתח השחזור: <code dir="ltr">{configurationKey({ vessel, artwork, preset: presetId, placement: customPlacement, size: size / 100, rotation })}</code></p>
           </>}
@@ -389,6 +444,61 @@ export default function Studio() {
             <button type="button" className="request-secondary" onClick={copyMessage}>{copied ? 'ההודעה הועתקה ✓' : 'העתקת ההודעה'}</button>
           </div>}
           <p className="request-note">ההודעה נשלחת מהוואטסאפ שלכם ישירות לאפרת; הפרטים לא נשמרים באתר. הציור הסופי מותאם לגודל הכלי ולעיצובו על ידי היוצרות.</p>
+        </form>
+      </dialog>
+
+      <dialog ref={catalogDialog} className="request-dialog" aria-labelledby="catalog-title" onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close() }}>
+        <form method="dialog" className="request-form" onSubmit={addToCatalog}>
+          <div className="request-head">
+            <h3 id="catalog-title">הוספת הדמיה לקטלוג החנות</h3>
+            <button type="button" className="request-close" aria-label="סגירה" onClick={() => catalogDialog.current?.close()}>×</button>
+          </div>
+          <div className="catalog-preview-row">
+            {catalogPreview && <img className="catalog-preview" src={catalogPreview} alt="" />}
+            <p className="request-summary"><strong>{vessel.name}</strong><br />+ <strong>{artwork.name}</strong></p>
+          </div>
+          <label>מוצר בחנות
+            <select value={catalogProductId} onChange={(event) => {
+              setCatalogProductId(event.target.value)
+              const next = products.find((item) => item.id === event.target.value)
+              setCatalogSizeLabel(next?.sizes[0]?.label ?? '')
+            }}>
+              <option value="">— בחירת מוצר —</option>
+              {products.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              <option value={NEW_PRODUCT}>מוצר חדש…</option>
+            </select>
+          </label>
+          {catalogProductId && catalogProductId !== NEW_PRODUCT && <label>מידה
+            <select value={catalogSizeLabel} onChange={(event) => setCatalogSizeLabel(event.target.value)}>
+              {products.find((item) => item.id === catalogProductId)!.sizes.map((size) => <option key={size.label} value={size.label}>{size.label} · {size.price} ₪</option>)}
+            </select>
+          </label>}
+          {catalogProductId === NEW_PRODUCT && <>
+            <label>מזהה מוצר באנגלית <input dir="ltr" required pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="mika-bowl" value={newProductId} onChange={(event) => setNewProductId(event.target.value)} /></label>
+            <label>שם המוצר <input required maxLength={80} value={newProductName} onChange={(event) => setNewProductName(event.target.value)} /></label>
+            <label>תיאור קצר <input maxLength={160} placeholder="מידות או שימוש, למשל: קוטר 17 · למרק או לסלטים" value={newProductDetail} onChange={(event) => setNewProductDetail(event.target.value)} /></label>
+            <div className="catalog-sizes" role="group" aria-label="מידות ומחירים">
+              {newProductSizes.map((size, index) => <div className="catalog-size-row" key={index}>
+                <input required maxLength={40} placeholder="מידה (למשל קוטר 17)" value={size.label} onChange={(event) => setNewProductSizes((rows) => rows.map((row, i) => i === index ? { ...row, label: event.target.value } : row))} />
+                <input required type="number" min="1" placeholder="מחיר ₪" value={size.price} onChange={(event) => setNewProductSizes((rows) => rows.map((row, i) => i === index ? { ...row, price: event.target.value } : row))} />
+                <button type="button" className="catalog-size-remove" aria-label="הסרת מידה" onClick={() => setNewProductSizes((rows) => rows.length > 1 ? rows.filter((_, i) => i !== index) : rows)}>×</button>
+              </div>)}
+              <button type="button" className="request-secondary" onClick={() => setNewProductSizes((rows) => [...rows, { label: '', price: '' }])}>+ הוספת מידה</button>
+            </div>
+          </>}
+          <fieldset className="material-choices catalog-material">
+            <legend>חומר</legend>
+            {(['smooth', 'speckled'] as const).map((option) => <label key={option}>
+              <input type="radio" name="catalog-material" value={option} checked={catalogMaterial === option} onChange={() => setCatalogMaterial(option)} />
+              {option === 'smooth' ? 'חלק' : 'מנוקד'}
+            </label>)}
+          </fieldset>
+          <button type="submit" className="request-send">הורדת ההדמיה והעתקת הרשומה</button>
+          {catalogResult && <div className="request-after" role="status">
+            <p>הקובץ <code dir="ltr">{catalogResult.filename}</code> הורד והרשומה הועתקה ללוח.</p>
+            <p>לפרסום: העבירו את הקובץ ל־<code dir="ltr">public{catalogResult.imagePath}</code> (תיקיית <code dir="ltr">{catalogResult.productId}/{catalogResult.material}</code>), הדביקו את הרשומה ב־<code dir="ltr">src/data/products.ts</code> ואז commit ו־push.</p>
+            <p>שימו לב: זו הדמיית סטודיו של השילוב, לא צילום של מוצר מוגמר.</p>
+          </div>}
         </form>
       </dialog>
     </div>

@@ -1,5 +1,5 @@
 // Runs after `vite build`: renders the page to static HTML so search engines and link previews see real content.
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createServer } from 'vite'
 
 const siteUrl = (process.env.SITE_URL || 'https://sagoliani.onrender.com').replace(/\/?$/, '/')
@@ -19,6 +19,13 @@ try {
     .replace('</head>', `    <script type="application/ld+json">${jsonLd}</script>\n  </head>`)
     .replace('<div id="root"></div>', `<div id="root">${render()}</div>`)
   await writeFile(new URL('index.html', dist), html)
+  // /admin/studio renders on the client; a static copy of the shell makes the deep link work on any host.
+  const studioHtml = template
+    .replaceAll('__SITE_URL__', siteUrl)
+    .replace(/<title>.*?<\/title>/, '<title>ART IN CLAY | הסטודיו</title>')
+    .replace('<meta name="viewport"', '<meta name="robots" content="noindex" />\n    <meta name="viewport"')
+  await mkdir(new URL('admin/studio/', dist), { recursive: true })
+  await writeFile(new URL('admin/studio/index.html', dist), studioHtml)
   await writeFile(new URL('robots.txt', dist), `User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ${siteUrl}sitemap.xml\n`)
   await writeFile(new URL('sitemap.xml', dist), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${siteUrl}</loc></url>\n</urlset>\n`)
   console.log(`Prerendered dist/index.html (${Math.round(html.length / 1024)} KB) for ${siteUrl}`)
