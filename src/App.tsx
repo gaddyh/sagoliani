@@ -3,11 +3,9 @@ import Ornament from './components/Ornament'
 import { artists, availableVariants, priceLabel, publishedProducts, sizeOf, type Material, type Product } from './data/products'
 
 type CartItem = { variantId: string; sizeLabel: string; quantity: number }
-type PlacedOrder = { items: CartItem[]; message: string }
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
 const materialName: Record<Material, string> = { smooth: 'חלק', speckled: 'מנוקד' }
 const cartKey = 'art-in-clay-cart-v3'
-const CLEAR_CART_SECONDS = 10
 
 function restoreCart(): CartItem[] {
   if (typeof window === 'undefined') return []
@@ -47,24 +45,14 @@ function App() {
   const [phone, setPhone] = useState('')
   const [delivery, setDelivery] = useState<'pickup' | 'delivery'>('pickup')
   const [notes, setNotes] = useState('')
-  const [sent, setSent] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null)
-  const [undoSeconds, setUndoSeconds] = useState<number | null>(null)
   const orderForm = useRef<HTMLFormElement>(null)
   const productSection = useRef<HTMLElement>(null)
 
   useEffect(() => {
     try { localStorage.setItem(cartKey, JSON.stringify(cart)) } catch { return }
   }, [cart])
-  useEffect(() => { setSent(false); setCopied(false); setUndoSeconds(null) }, [cart, name, phone, delivery, notes])
-  useEffect(() => {
-    if (undoSeconds === null) return
-    const id = window.setTimeout(() => {
-      if (undoSeconds <= 1) { setCart([]); setUndoSeconds(null) } else setUndoSeconds(undoSeconds - 1)
-    }, 1000)
-    return () => window.clearTimeout(id)
-  }, [undoSeconds])
+  useEffect(() => { setCopied(false) }, [cart, name, phone, delivery, notes])
 
   function openProduct(next: Product) {
     const first = availableVariants.find((variant) => variant.productId === next.id)
@@ -88,8 +76,6 @@ function App() {
   const chosenVariant = visibleVariants.find((variant) => variant.id === selectedVariant)
   const activeSize = product ? sizeOf(product, sizeLabel) : null
   const cartDetails = detailsOf(cart)
-  const sentDetails = placedOrder ? detailsOf(placedOrder.items) : []
-  const sentTotal = sentDetails.reduce((sum, item) => sum + item.size.price * item.quantity, 0)
   const total = cartDetails.reduce((sum, item) => sum + item.size.price * item.quantity, 0)
   const itemCount = cartDetails.reduce((sum, item) => sum + item.quantity, 0)
 
@@ -138,10 +124,8 @@ function App() {
     }
   }
 
-  function restorePlacedOrder() {
-    if (!placedOrder) return
-    setCart(placedOrder.items)
-    setPlacedOrder(null)
+  function clearCart() {
+    setCart([])
   }
 
   return (
@@ -159,7 +143,10 @@ function App() {
             <a href="#contact">צרו קשר</a>
             {import.meta.env.DEV && <a className="admin-back" href="/admin">הכנת נכסים ↗</a>}
           </nav>
-          <a className="cart-link" href="#cart" aria-label={`עגלת קניות, ${itemCount} פריטים`}>עגלה <span aria-hidden="true">({itemCount})</span></a>
+          <div className="cart-tools">
+            <a className="cart-link" href="#cart" aria-label={`עגלת קניות, ${itemCount} פריטים`}>עגלה <span aria-hidden="true">({itemCount})</span></a>
+            {itemCount > 0 && <button type="button" className="clear-cart" onClick={clearCart}>פינוי העגלה</button>}
+          </div>
         </div>
       </header>
 
@@ -254,23 +241,10 @@ function App() {
               <div className="cart-fields"><label>שם <input autoComplete="name" required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} /></label><label>טלפון <input type="tel" autoComplete="tel" required maxLength={25} value={phone} onChange={(event) => setPhone(event.target.value)} /></label></div>
               <fieldset className="delivery-choices"><legend>אופן קבלה</legend><label><input type="radio" name="delivery" checked={delivery === 'pickup'} onChange={() => setDelivery('pickup')} /> איסוף עצמי</label><label><input type="radio" name="delivery" checked={delivery === 'delivery'} onChange={() => setDelivery('delivery')} /> משלוח בתיאום</label></fieldset>
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
-              <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else { setSent(true); setPlacedOrder({ items: cart, message }); setUndoSeconds(CLEAR_CART_SECONDS) } }}>שליחת בקשה בוואטסאפ</a><button type="button" className="secondary-link" onClick={copyOrder}>{copied ? 'ההודעה הועתקה' : 'העתקת ההודעה'}</button></div>
-              {sent && <p role="status">נפתחה הודעה בוואטסאפ; יש ללחוץ שם על שליחה כדי שאפרת תקבל אותה.</p>}
-              {undoSeconds !== null && <p className="undo-note"><span role="status">העגלה תתפנה בקרוב.</span><span aria-hidden="true">בעוד {undoSeconds === 1 ? 'שנייה אחת' : `${undoSeconds} שניות`}</span><button type="button" className="secondary-link" onClick={() => setUndoSeconds(null)}>שמירת העגלה</button></p>}
+              <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else setCart([]) }}>שליחת בקשה בוואטסאפ</a><button type="button" className="secondary-link" onClick={copyOrder}>{copied ? 'ההודעה הועתקה' : 'העתקת ההודעה'}</button></div>
               <p className="cart-caution">לאחר שתשלחו את הבקשה, אפרת תאשר את הזמינות ואת הסכום כולל משלוח במידת הצורך, ותשלח קישור PayBox לתשלום. התשלום מאומת על ידה, לא על ידי האתר. הפרטים לא נשמרים באתר.</p>
             </form>
-          </> : placedOrder ? <div className="order-receipt">
-            <h3>הבקשה נשלחה לאפרת</h3>
-            <p role="status">נפתחה הודעה בוואטסאפ; יש ללחוץ שם על שליחה כדי שאפרת תקבל אותה.</p>
-            <ul className="cart-items">{sentDetails.map(({ variant, product: entry, size, quantity: count }) => <li key={`${variant.id}:${size.label}`}>
-              <img src={variant.images[0]} alt="" loading="lazy" />
-              <div><strong>{entry.name}</strong><span>מידה {size.label} · {materialName[variant.material]} · ציור {variant.artworkName}</span><span>{count} × {size.price} ₪</span></div>
-              <strong>{count * size.price} ₪</strong>
-            </li>)}</ul>
-            <p className="cart-total">סכום הבקשה: <strong>{sentTotal} ₪</strong></p>
-            <p className="cart-caution">אפרת תאשר את הזמינות ואת הסכום הסופי, ותשלח קישור PayBox לתשלום לאחר האישור.</p>
-            <div className="cart-actions"><a className="primary-link" href={`https://wa.me/${EFRAT.whatsapp}?text=${encodeURIComponent(placedOrder.message)}`} target="_blank" rel="noopener noreferrer">פתיחת ההודעה בוואטסאפ בשנית</a><button type="button" className="secondary-link" onClick={restorePlacedOrder}>שחזור העגלה לעריכה</button></div>
-          </div> : <p className="catalog-empty">העגלה עדיין ריקה. בחרו מוצר וציור מהקולקציה.</p>}
+          </> : <p className="catalog-empty">העגלה עדיין ריקה. בחרו מוצר וציור מהקולקציה.</p>}
         </section>
 
         <section id="before-ordering" className="before-ordering page-content" aria-labelledby="before-title">
