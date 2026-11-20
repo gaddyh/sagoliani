@@ -66,6 +66,7 @@ h1, h2, h3, p { margin-top: 0; }
 .contact { display: flex; align-items: center; justify-content: center; gap: clamp(30px, 6vw, 90px); padding-top: 40px; padding-bottom: 70px; text-align: center; }
 .artists-photo { width: clamp(200px, 22vw, 290px); aspect-ratio: 1; object-fit: cover; border-radius: 50%; box-shadow: 0 10px 30px #6b5a3a26; }
 .one-of-a-kind { font: 34px var(--serif); color: var(--olive-soft); margin: 0; }
+.contact-logo { width: 220px; max-width: 100%; display: block; margin: 0 auto 18px; }
 .contact-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 12px; }
 .contact-list li { display: flex; gap: 14px; justify-content: center; align-items: baseline; font: 20px var(--serif); }
 .contact-list strong { font-weight: 500; }
@@ -147,8 +148,7 @@ h1, h2, h3, p { margin-top: 0; }
 .custom-placement-note strong { font-weight: 400; font-size: 13px; }
 .reset-custom { justify-self: start; border: 0; background: transparent; color: #566a51; text-decoration: underline; text-underline-offset: 4px; padding: 4px 0; font: inherit; font-size: 12px; }
 .studio-layout, .studio .bottom-note { font-family: Arial, "Noto Sans Hebrew", sans-serif; color: #313a30; }
-.site-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 26px max(48px, calc((100vw - 1394px)/2)); border-top: 1px solid var(--line); font-family: var(--serif); font-size: 11px; color: #919486; }
-.footer-logo { width: 64px; height: auto; display: block; }
+.site-footer { display: flex; justify-content: space-between; gap: 20px; padding: 26px max(48px, calc((100vw - 1394px)/2)); border-top: 1px solid var(--line); font-family: var(--serif); font-size: 11px; color: #919486; }
 .site-footer span:first-child { font-family: Georgia, serif; letter-spacing: .1em; }
 .admin-back { color: #56634b; font-size: 12px; text-underline-offset: 4px; white-space: nowrap; }
 .admin-page { padding-top: 55px; padding-bottom: 80px; }
@@ -211,8 +211,6 @@ h1, h2, h3, p { margin-top: 0; }
 }
 @media (max-width: 520px) {
   .header-inner, .page-content { padding-left: 17px; padding-right: 17px; }
-  .site-footer { flex-wrap: wrap; justify-content: center; gap: 8px 16px; }
-  .footer-logo { width: 56px; }
   .header-inner { min-height: 72px; gap: 8px; }
   .brand { gap: 0; }
   .brand-name { font-size: 20px; }
