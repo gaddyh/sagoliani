@@ -267,10 +267,10 @@ function App() {
 
         <section id="contact" className="contact page-content" aria-labelledby="contact-title">
           <img className="artists-photo" src="/assets/artists.webp" alt="עירית סגול ואפרת ליאני" loading="lazy" />
-          <div><p className="one-of-a-kind" dir="ltr">One of a Kind</p><Ornament /><h2 id="contact-title" className="section-title">לפרטים</h2><ul className="contact-list">{artists.map((artist) => <li key={artist.phone}><strong>{artist.name}</strong><a href={`tel:+${artist.whatsapp}`} dir="ltr">{artist.phone}</a><a href={`https://wa.me/${artist.whatsapp}`} target="_blank" rel="noopener noreferrer">וואטסאפ ↗</a></li>)}</ul></div>
+          <div><p className="one-of-a-kind" dir="ltr">One of a Kind · סגוליאני</p><Ornament /><h2 id="contact-title" className="section-title">לפרטים</h2><ul className="contact-list">{artists.map((artist) => <li key={artist.phone}><strong>{artist.name}</strong><a href={`tel:+${artist.whatsapp}`} dir="ltr">{artist.phone}</a><a href={`https://wa.me/${artist.whatsapp}`} target="_blank" rel="noopener noreferrer">וואטסאפ ↗</a></li>)}</ul></div>
         </section>
       </main>
-      <footer className="site-footer"><span dir="ltr">ART IN CLAY ©</span><span>כשהחומר פוגש את המכחול</span><span>מוצרים בעבודת יד</span></footer>
+      <footer className="site-footer"><img className="footer-logo" src="/assets/logo.webp" alt="לוגו ART IN CLAY" /><span dir="ltr">ART IN CLAY ©</span><span>כשהחומר פוגש את המכחול</span><span>מוצרים בעבודת יד</span></footer>
     </div>
   )
 }
