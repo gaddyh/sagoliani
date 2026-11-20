@@ -81,6 +81,17 @@ try {
   assert.equal(await page.evaluate(() => localStorage.getItem('art-in-clay-cart-v3')), '[]', 'cart must be cleared after sending')
   await page.context().unroute('https://wa.me/**')
 
+  await page.getByRole('button', { name: /לצפייה במגש אלה/ }).click()
+  await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  const ellaLine = await page.locator('.cart-items li').first().innerText()
+  assert.ok(ellaLine.includes('מגש אלה') && !ellaLine.includes('מידה'), 'single-size products should not repeat their size label in the cart')
+  const ellaHref = await page.locator('.cart-actions a').getAttribute('href')
+  const ellaText = new URL(ellaHref).searchParams.get('text')
+  assert.ok(ellaText.includes('מגש אלה | חלק | ציור: ריקוד בשדה') && !ellaText.includes('מידה:'), 'single-size products should not repeat their size label in the order message')
+  await page.getByRole('button', { name: 'פינוי העגלה' }).click()
+  await page.getByText('העגלה עדיין ריקה').waitFor()
+
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
   await page.getByRole('radio', { name: 'חלק' }).waitFor()

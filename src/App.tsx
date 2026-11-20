@@ -108,7 +108,7 @@ function App() {
     `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
     `שם: ${name.trim()}`,
     `טלפון: ${phone.trim()}`,
-    ...cartDetails.map(({ variant, product: entry, size, quantity: count }) => `${entry.name} | מידה: ${size.label} | ${materialName[variant.material]} | ציור: ${variant.artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
+    ...cartDetails.map(({ variant, product: entry, size, quantity: count }) => `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${variant.artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
     `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
     `אספקה: ${delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח — לתיאום מחיר ופרטים'}`,
     ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
@@ -216,7 +216,7 @@ function App() {
                 {chosenVariant.images.map((image, index) => <button type="button" key={image} className={selectedImage === index ? 'selected' : ''} aria-label={`צילום ${index + 1} מתוך ${chosenVariant.images.length}`} aria-pressed={selectedImage === index} onClick={() => setSelectedImage(index)}><img src={image} alt="" loading="lazy" /></button>)}
               </div>}
               <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} onLoad={() => { if (pendingProductScroll.current) scrollProductIntoView() }} /></div>
-              <div className="purchase-row"><strong>{product.name} · {activeSize?.label} · {materialName[material]} · {chosenVariant.artworkName} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button></div>
+              <div className="purchase-row"><strong>{product.name}{product.sizes.length > 1 ? ` · ${activeSize?.label} ·` : ''} {materialName[material]} + ציור {chosenVariant.artworkName} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button></div>
             </>}
           </> : <p className="catalog-empty" role="status">אין כרגע צילומים זמינים של {product.name} ברקע {materialName[material]}.</p>}
         </section>}
@@ -227,7 +227,7 @@ function App() {
           {cartDetails.length ? <>
             <ul className="cart-items">{cartDetails.map(({ variant, product: entry, size, quantity: count }) => <li key={`${variant.id}:${size.label}`}>
               <img src={variant.images[0]} alt="" loading="lazy" />
-              <div><strong>{entry.name}</strong><span>מידה {size.label} · {materialName[variant.material]} · ציור {variant.artworkName}</span><span>{size.price} ₪ ליחידה</span></div>
+              <div><strong>{entry.name}</strong><span>{entry.sizes.length > 1 ? `מידה ${size.label} · ` : ''}{materialName[variant.material]} · ציור {variant.artworkName}</span><span>{size.price} ₪ ליחידה</span></div>
               <label>כמות <input type="number" min="1" max="99" value={count} onChange={(event) => updateCart(variant.id, size.label, Number(event.target.value) || 1)} /></label>
               <strong>{size.price * count} ₪</strong>
               <button type="button" className="remove-item" onClick={() => setCart((items) => items.filter((item) => !(item.variantId === variant.id && item.sizeLabel === size.label)))}>הסרה</button>
