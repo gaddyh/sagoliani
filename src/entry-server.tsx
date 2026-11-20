@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
 import App from './App'
-import { artists, availableVariants, priceLabel, publishedProducts } from './data/products'
+import { artists, displayVariant, priceLabel, publishedProducts } from './data/products'
 
 export function render(): string {
   return renderToString(<StrictMode><App /></StrictMode>)
@@ -22,7 +22,7 @@ export function structuredData(siteUrl: string): object {
       '@type': 'Offer',
       priceCurrency: 'ILS',
       price: Math.min(...product.sizes.map((size) => size.price)),
-      itemOffered: { '@type': 'Product', name: product.name, description: `${product.detail} · ${priceLabel(product)}`, image: availableVariants.find((variant) => variant.productId === product.id)!.images.map((image) => `${siteUrl}${image.slice(1)}`) },
+      itemOffered: { '@type': 'Product', name: product.name, description: `${product.detail} · ${priceLabel(product)}`, image: displayVariant(product)!.images.map((image) => `${siteUrl}${image.slice(1)}`) },
     })),
   }
 }

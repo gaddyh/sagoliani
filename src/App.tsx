@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Ornament from './components/Ornament'
-import { artists, availableVariants, priceLabel, publishedProducts, sizeOf, type Material, type Product } from './data/products'
+import { artists, availableVariants, displayVariant, priceLabel, publishedProducts, sizeOf, type Material, type Product } from './data/products'
 
 type CartItem = { variantId: string; sizeLabel: string; quantity: number }
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
@@ -55,7 +55,7 @@ function App() {
   useEffect(() => { setCopied(false) }, [cart, name, phone, delivery, notes])
 
   function openProduct(next: Product) {
-    const first = availableVariants.find((variant) => variant.productId === next.id)
+    const first = displayVariant(next)
     if (!first) return
     setProduct(next)
     setMaterial(first.material)
@@ -176,7 +176,7 @@ function App() {
           <Ornament />
           {publishedProducts.length ? <div className="collection-grid">
             {publishedProducts.map((entry) => {
-              const variant = availableVariants.find((item) => item.productId === entry.id)!
+              const variant = displayVariant(entry)!
               return <article key={entry.id} className="product-card">
                 <button type="button" className="product-open" onClick={() => openProduct(entry)} aria-label={`לצפייה ב${entry.name}`}>
                   <span className="product-photo"><img src={variant.images[0]} alt={`${entry.name}, ${materialName[variant.material]}, ציור ${variant.artworkName}`} loading="lazy" /></span>
@@ -206,13 +206,15 @@ function App() {
             </label>)}
           </fieldset>
           {visibleVariants.length ? <>
-            <p className="gallery-heading">בחרו ציור מתוך התמונות של {materialName[material]}:</p>
-            <div className="finished-gallery">
-              {visibleVariants.map((variant) => <button type="button" key={variant.id} className={`finished-option ${selectedVariant === variant.id ? 'selected' : ''}`} aria-pressed={selectedVariant === variant.id} onClick={() => { setSelectedVariant(variant.id); setSelectedImage(0) }}>
-                <img src={variant.images[0]} alt={`${product.name} על רקע ${materialName[material]} עם ציור ${variant.artworkName}`} loading="lazy" />
-                <span>{variant.artworkName}</span>
-              </button>)}
-            </div>
+            {visibleVariants.length > 1 && <>
+              <p className="gallery-heading">בחרו ציור מתוך התמונות של {materialName[material]}:</p>
+              <div className="finished-gallery">
+                {visibleVariants.map((variant) => <button type="button" key={variant.id} className={`finished-option ${selectedVariant === variant.id ? 'selected' : ''}`} aria-pressed={selectedVariant === variant.id} onClick={() => { setSelectedVariant(variant.id); setSelectedImage(0) }}>
+                  <img src={variant.images[0]} alt={`${product.name} על רקע ${materialName[material]} עם ציור ${variant.artworkName}`} loading="lazy" />
+                  <span>{variant.artworkName}</span>
+                </button>)}
+              </div>
+            </>}
             {chosenVariant && <>
               <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} /></div>
               {chosenVariant.images.length > 1 && <div className="variant-thumbnails" role="group" aria-label="זוויות צילום של השילוב הנבחר">

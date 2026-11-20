@@ -11,6 +11,7 @@ export interface Product {
   name: string
   detail: string
   sizes: ProductSize[]
+  coverVariantId?: string
 }
 
 export interface ProductVariant {
@@ -59,6 +60,11 @@ export const finishedVariants: ProductVariant[] = [
 
 export const availableVariants = finishedVariants.filter((variant) => variant.images.length > 0)
 export const publishedProducts = products.filter((product) => availableVariants.some((variant) => variant.productId === product.id))
+
+export function displayVariant(product: Product): ProductVariant | undefined {
+  return availableVariants.find((variant) => variant.id === product.coverVariantId && variant.productId === product.id)
+    ?? availableVariants.find((variant) => variant.productId === product.id)
+}
 
 export const artists = [
   { name: 'עירית סגול', phone: '052-2486836', whatsapp: '972522486836' },
