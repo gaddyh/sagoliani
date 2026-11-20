@@ -1,5 +1,5 @@
 export type Material = 'smooth' | 'speckled'
-export type ProductId = 'cake-pan' | 'speckled-platter' | 'round-platter' | 'deep-bowl' | 'flat-bowl' | 'english-platter-straight' | 'english-platter-oval' | 'river-stones-large' | 'river-stones-medium' | 'river-stones-small' | 'vase' | 'shay-bowl'
+export type ProductId = 'cake-pan' | 'speckled-platter' | 'round-platter' | 'deep-bowl' | 'flat-bowl' | 'english-platter-straight' | 'english-platter-oval' | 'river-stones-large' | 'river-stones-medium' | 'river-stones-small' | 'vase' | 'shay-bowl' | 'irit-platter'
 
 export interface ProductSize {
   label: string
@@ -35,12 +35,17 @@ export const products: Product[] = [
   { id: 'river-stones-small', name: 'צלחת הגשה ״אבני נחל״ · קטן', detail: 'גודל קטן', sizes: [{ label: 'קטן', price: 50 }] },
   { id: 'vase', name: 'אגרטל', detail: 'גובה 13–20 ס״מ', sizes: [{ label: 'גובה 13–20', price: 110 }] },
   { id: 'shay-bowl', name: 'קערת שי', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }] },
+  { id: 'irit-platter', name: 'מגש עירית', detail: 'מגש הגשה בעבודת יד', sizes: [{ label: 'מגש', price: 145 }] },
 ]
 
 export const finishedVariants: ProductVariant[] = [
   { id: 'shay-bowl-smooth-pink-dance', productId: 'shay-bowl', material: 'smooth', artworkId: 'pink-dance', artworkName: 'ריקוד ורוד', images: ['/assets/products/shay-bowl/smooth/pink-dance.webp'] },
   { id: 'shay-bowl-speckled-pink-dance', productId: 'shay-bowl', material: 'speckled', artworkId: 'pink-dance', artworkName: 'ריקוד ורוד', images: ['/assets/products/shay-bowl/speckled/pink-dance.webp'] },
   { id: 'shay-bowl-smooth-spring', productId: 'shay-bowl', material: 'smooth', artworkId: 'spring', artworkName: 'פריחת אביב', images: ['/assets/products/shay-bowl/smooth/shay-bowl-smooth-spring.webp'] },
+  { id: 'shay-bowl-smooth-purple-embrace', productId: 'shay-bowl', material: 'smooth', artworkId: 'purple-embrace', artworkName: 'חיבוק סגול', images: ['/assets/products/shay-bowl/smooth/purple-embrace-01.webp', '/assets/products/shay-bowl/smooth/purple-embrace-02.webp', '/assets/products/shay-bowl/smooth/purple-embrace-03.webp', '/assets/products/shay-bowl/smooth/purple-embrace-04.webp'] },
+  { id: 'shay-bowl-speckled-purple-embrace', productId: 'shay-bowl', material: 'speckled', artworkId: 'purple-embrace', artworkName: 'חיבוק סגול', images: ['/assets/products/shay-bowl/speckled/purple-embrace-01.webp', '/assets/products/shay-bowl/speckled/purple-embrace-02.webp', '/assets/products/shay-bowl/speckled/purple-embrace-03.webp'] },
+  { id: 'irit-platter-smooth-wildflower-field', productId: 'irit-platter', material: 'smooth', artworkId: 'wildflower-field', artworkName: 'שדה פרחי בר', images: ['/assets/products/irit-platter/smooth/wildflower-field.webp'] },
+  { id: 'irit-platter-speckled-wildflower-field', productId: 'irit-platter', material: 'speckled', artworkId: 'wildflower-field', artworkName: 'שדה פרחי בר', images: ['/assets/products/irit-platter/speckled/wildflower-field.webp'] },
 ]
 
 export const availableVariants = finishedVariants.filter((variant) => variant.images.length > 0)
