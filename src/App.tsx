@@ -45,14 +45,12 @@ function App() {
   const [phone, setPhone] = useState('')
   const [delivery, setDelivery] = useState<'pickup' | 'delivery'>('pickup')
   const [notes, setNotes] = useState('')
-  const [copied, setCopied] = useState(false)
   const orderForm = useRef<HTMLFormElement>(null)
   const productSection = useRef<HTMLElement>(null)
 
   useEffect(() => {
     try { localStorage.setItem(cartKey, JSON.stringify(cart)) } catch { return }
   }, [cart])
-  useEffect(() => { setCopied(false) }, [cart, name, phone, delivery, notes])
 
   function openProduct(next: Product) {
     const first = displayVariant(next)
@@ -107,21 +105,6 @@ function App() {
 
   function validOrder(): boolean {
     return Boolean(cartDetails.length && orderForm.current?.reportValidity())
-  }
-
-  async function copyOrder() {
-    if (!validOrder()) return
-    try {
-      await navigator.clipboard.writeText(message)
-      setCopied(true)
-    } catch {
-      const field = document.createElement('textarea')
-      field.value = message
-      document.body.appendChild(field)
-      field.select()
-      setCopied(document.execCommand('copy'))
-      field.remove()
-    }
   }
 
   function clearCart() {
@@ -243,7 +226,7 @@ function App() {
               <div className="cart-fields"><label>שם <input autoComplete="name" required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} /></label><label>טלפון <input type="tel" autoComplete="tel" required maxLength={25} value={phone} onChange={(event) => setPhone(event.target.value)} /></label></div>
               <fieldset className="delivery-choices"><legend>אופן קבלה</legend><label><input type="radio" name="delivery" checked={delivery === 'pickup'} onChange={() => setDelivery('pickup')} /> איסוף עצמי</label><label><input type="radio" name="delivery" checked={delivery === 'delivery'} onChange={() => setDelivery('delivery')} /> משלוח בתיאום</label></fieldset>
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
-              <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else setCart([]) }}>שליחת בקשה בוואטסאפ</a><button type="button" className="secondary-link" onClick={copyOrder}>{copied ? 'ההודעה הועתקה' : 'העתקת ההודעה'}</button></div>
+              <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else setCart([]) }}>שליחת בקשה בוואטסאפ</a></div>
               <p className="cart-caution">לאחר שתשלחו את הבקשה, אפרת תאשר את הזמינות ואת הסכום כולל משלוח במידת הצורך, ותשלח קישור PayBox לתשלום. התשלום מאומת על ידה, לא על ידי האתר. הפרטים לא נשמרים באתר.</p>
             </form>
           </> : <p className="catalog-empty">העגלה עדיין ריקה. בחרו מוצר וציור מהקולקציה.</p>}
