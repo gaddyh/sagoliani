@@ -47,10 +47,22 @@ function App() {
   const [notes, setNotes] = useState('')
   const orderForm = useRef<HTMLFormElement>(null)
   const productSection = useRef<HTMLElement>(null)
+  const pendingProductScroll = useRef(false)
 
   useEffect(() => {
     try { localStorage.setItem(cartKey, JSON.stringify(cart)) } catch { return }
   }, [cart])
+
+  function scrollProductIntoView() {
+    requestAnimationFrame(() => {
+      const image = productSection.current?.querySelector<HTMLImageElement>('.variant-preview img')
+      if (image && !image.complete) return
+      pendingProductScroll.current = false
+      const order = productSection.current?.querySelector<HTMLElement>('.purchase-row')
+      if (order) window.scrollTo({ top: order.getBoundingClientRect().bottom + window.scrollY - window.innerHeight + 12, behavior: 'smooth' })
+      else productSection.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    })
+  }
 
   function openProduct(next: Product) {
     const first = displayVariant(next)
@@ -61,7 +73,8 @@ function App() {
     setSelectedVariant(first.id)
     setSelectedImage(0)
     setQuantity(1)
-    requestAnimationFrame(() => productSection.current?.scrollIntoView({ behavior: 'smooth' }))
+    pendingProductScroll.current = true
+    scrollProductIntoView()
   }
 
   function chooseMaterial(next: Material) {
@@ -199,10 +212,10 @@ function App() {
               </div>
             </>}
             {chosenVariant && <>
-              <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} /></div>
               {chosenVariant.images.length > 1 && <div className="variant-thumbnails" role="group" aria-label="זוויות צילום של השילוב הנבחר">
                 {chosenVariant.images.map((image, index) => <button type="button" key={image} className={selectedImage === index ? 'selected' : ''} aria-label={`צילום ${index + 1} מתוך ${chosenVariant.images.length}`} aria-pressed={selectedImage === index} onClick={() => setSelectedImage(index)}><img src={image} alt="" loading="lazy" /></button>)}
               </div>}
+              <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} onLoad={() => { if (pendingProductScroll.current) scrollProductIntoView() }} /></div>
               <div className="purchase-row"><strong>{product.name} · {activeSize?.label} · {materialName[material]} · {chosenVariant.artworkName} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button></div>
             </>}
           </> : <p className="catalog-empty" role="status">אין כרגע צילומים זמינים של {product.name} ברקע {materialName[material]}.</p>}

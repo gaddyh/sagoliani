@@ -14,6 +14,13 @@ try {
   assert.match(await shayCard.locator('.product-photo img').getAttribute('src'), /shay-bowl\/smooth\/pink-dance\.webp$/)
   await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
   await page.getByRole('heading', { name: 'קערת שי' }).waitFor()
+  await page.waitForTimeout(900)
+  assert.equal(await page.evaluate(() => {
+    const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom
+    const title = document.querySelector('#product-title').getBoundingClientRect()
+    const order = document.querySelector('.purchase-row').getBoundingClientRect()
+    return title.top >= headerBottom && order.top >= 0 && order.bottom <= innerHeight
+  }), true, 'opening a product should auto-scroll to show the product name, the photo and the order row without further scrolling')
   await page.getByRole('radio', { name: 'חלק' }).waitFor()
   assert.equal(await page.getByRole('radio', { name: 'חלק' }).isChecked(), true)
   assert.equal(await page.locator('.finished-option').count(), 0, 'shay-bowl should not show an artwork picker')
