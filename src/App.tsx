@@ -149,6 +149,7 @@ function App() {
       <main id="top">
         <section className="hero page-content">
           <div className="hero-text">
+            <img className="hero-logo" src="/assets/logo.webp" alt="לוגו ART IN CLAY" />
             <h1 className="hero-title" dir="ltr">ART IN CLAY</h1>
             <p className="hero-tagline">כשהחומר פוגש את המכחול</p>
             <p className="hero-names">עירית סגול ואפרת ליאני</p>
