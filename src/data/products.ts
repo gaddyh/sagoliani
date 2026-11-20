@@ -1,5 +1,5 @@
 export type Material = 'smooth' | 'speckled'
-export type ProductId = 'cake-pan' | 'speckled-platter' | 'round-platter' | 'deep-bowl' | 'flat-bowl' | 'english-platter-straight' | 'english-platter-oval' | 'river-stones-large' | 'river-stones-medium' | 'river-stones-small' | 'vase' | 'shay-bowl' | 'irit-platter' | 'yael-bowl' | 'omer-bowl'
+export type ProductId = 'cake-pan' | 'speckled-platter' | 'round-platter' | 'deep-bowl' | 'flat-bowl' | 'english-platter-straight' | 'english-platter-oval' | 'river-stones' | 'vase' | 'shay-bowl' | 'irit-platter' | 'yael-bowl' | 'omer-bowl' | 'ella-platter' | 'mika-plate'
 
 export interface ProductSize {
   label: string
@@ -30,14 +30,14 @@ export const products: Product[] = [
   { id: 'flat-bowl', name: 'קערה שטוחה', detail: 'קוטר 17–20 · למרק או לסלטים', sizes: [{ label: 'קוטר 17–20', price: 75 }] },
   { id: 'english-platter-straight', name: 'צלחת הגשה אינגליש · ישר', detail: '35×15 ס״מ', sizes: [{ label: 'ישר', price: 140 }] },
   { id: 'english-platter-oval', name: 'צלחת הגשה אינגליש · אובאלי', detail: '35×15 ס״מ', sizes: [{ label: 'אובאלי', price: 140 }] },
-  { id: 'river-stones-large', name: 'צלחת הגשה ״אבני נחל״ · גדול', detail: 'גודל גדול', sizes: [{ label: 'גדול', price: 100 }] },
-  { id: 'river-stones-medium', name: 'צלחת הגשה ״אבני נחל״ · בינוני', detail: 'גודל בינוני', sizes: [{ label: 'בינוני', price: 75 }] },
-  { id: 'river-stones-small', name: 'צלחת הגשה ״אבני נחל״ · קטן', detail: 'גודל קטן', sizes: [{ label: 'קטן', price: 50 }] },
+  { id: 'river-stones', name: 'צלחת הגשה ״אבני נחל״', detail: 'בגדלים שונים', sizes: [{ label: 'גדול', price: 100 }, { label: 'בינוני', price: 75 }, { label: 'קטן', price: 50 }] },
   { id: 'vase', name: 'אגרטל', detail: 'גובה 13–20 ס״מ', sizes: [{ label: 'גובה 13–20', price: 110 }] },
   { id: 'shay-bowl', name: 'קערת שי', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }] },
   { id: 'irit-platter', name: 'מגש עירית', detail: 'מגש הגשה בעבודת יד', sizes: [{ label: 'מגש', price: 145 }] },
   { id: 'yael-bowl', name: 'קערת יעל', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }] },
   { id: 'omer-bowl', name: 'קערת עומר', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }] },
+  { id: 'ella-platter', name: 'מגש אלה', detail: 'מגש הגשה בעבודת יד', sizes: [{ label: 'מגש', price: 140 }] },
+  { id: 'mika-plate', name: 'צלחת מיקה', detail: 'צלחת הגשה בעבודת יד', sizes: [{ label: 'צלחת', price: 145 }] },
 ]
 
 export const finishedVariants: ProductVariant[] = [
@@ -52,6 +52,9 @@ export const finishedVariants: ProductVariant[] = [
   { id: 'yael-bowl-speckled-lions-maw', productId: 'yael-bowl', material: 'speckled', artworkId: 'lions-maw', artworkName: 'לוע הארי', images: ['/assets/products/yael-bowl/speckled/lions-maw.webp'] },
   { id: 'omer-bowl-smooth-field-whisper', productId: 'omer-bowl', material: 'smooth', artworkId: 'field-whisper', artworkName: 'לחישת השדה', images: ['/assets/products/omer-bowl/smooth/field-whisper-01.webp', '/assets/products/omer-bowl/smooth/field-whisper-02.webp'] },
   { id: 'omer-bowl-speckled-field-whisper', productId: 'omer-bowl', material: 'speckled', artworkId: 'field-whisper', artworkName: 'לחישת השדה', images: ['/assets/products/omer-bowl/speckled/field-whisper-01.webp', '/assets/products/omer-bowl/speckled/field-whisper-02.webp'] },
+  { id: 'river-stones-smooth-wild-magic', productId: 'river-stones', material: 'smooth', artworkId: 'wild-magic', artworkName: 'קסם בר', images: ['/assets/products/river-stones/smooth/wild-magic-01.webp', '/assets/products/river-stones/smooth/wild-magic-02.webp'] },
+  { id: 'ella-platter-smooth-field-dance', productId: 'ella-platter', material: 'smooth', artworkId: 'field-dance', artworkName: 'ריקוד בשדה', images: ['/assets/products/ella-platter/smooth/field-dance-01.webp', '/assets/products/ella-platter/smooth/field-dance-02.webp', '/assets/products/ella-platter/smooth/field-dance-03.webp'] },
+  { id: 'mika-plate-smooth-purple-touch', productId: 'mika-plate', material: 'smooth', artworkId: 'purple-touch', artworkName: 'נגיעה סגולה', images: ['/assets/products/mika-plate/smooth/purple-touch-01.webp', '/assets/products/mika-plate/smooth/purple-touch-02.webp', '/assets/products/mika-plate/smooth/purple-touch-03.webp', '/assets/products/mika-plate/smooth/purple-touch-04.webp', '/assets/products/mika-plate/smooth/purple-touch-05.webp'] },
 ]
 
 export const availableVariants = finishedVariants.filter((variant) => variant.images.length > 0)
