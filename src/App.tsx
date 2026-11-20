@@ -92,7 +92,7 @@ function App() {
   }
 
   const message = [
-    `שלום אפרת, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
+    `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
     `שם: ${name.trim()}`,
     `טלפון: ${phone.trim()}`,
     ...cartDetails.map(({ variant, product: entry, size, quantity: count }) => `${entry.name} | מידה: ${size.label} | ${materialName[variant.material]} | ציור: ${variant.artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
@@ -222,12 +222,12 @@ function App() {
             <p className="cart-total">סכום מוצרים: <strong>{total} ₪</strong></p>
             <p className="cart-caution">לא כולל משלוח. הזמנה וזמינות אינן מאושרות עד שאפרת תאשר את הפרטים והמחיר הסופי.</p>
             <form ref={orderForm} className="cart-form" onSubmit={(event) => event.preventDefault()}>
-              <h3>שליחת בקשה לאפרת</h3>
+              <h3>שליחת בקשה</h3>
               <div className="cart-fields"><label>שם <input autoComplete="name" required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} /></label><label>טלפון <input type="tel" autoComplete="tel" required maxLength={25} value={phone} onChange={(event) => setPhone(event.target.value)} /></label></div>
               <fieldset className="delivery-choices"><legend>אופן קבלה</legend><label><input type="radio" name="delivery" checked={delivery === 'pickup'} onChange={() => setDelivery('pickup')} /> איסוף עצמי</label><label><input type="radio" name="delivery" checked={delivery === 'delivery'} onChange={() => setDelivery('delivery')} /> משלוח בתיאום</label></fieldset>
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
               <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else setCart([]) }}>שליחת בקשה בוואטסאפ</a></div>
-              <p className="cart-caution">לאחר שתשלחו את הבקשה, אפרת תאשר את הזמינות ואת הסכום כולל משלוח במידת הצורך, ותשלח קישור PayBox לתשלום. התשלום מאומת על ידה, לא על ידי האתר. הפרטים לא נשמרים באתר.</p>
+              <p className="cart-assurance"><strong>לאחר שתשלח הבקשה, נאשר לכם את הזמינות ונשלח בקשה לתשלום דרך קישור PayBox.</strong></p>
             </form>
           </> : <p className="catalog-empty">העגלה עדיין ריקה. בחרו מוצר וציור מהקולקציה.</p>}
         </section>

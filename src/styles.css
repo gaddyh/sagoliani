@@ -358,6 +358,7 @@ h1, h2, h3, p { margin-top: 0; }
 .remove-item { border: 0; background: transparent; color: #824c3f; text-decoration: underline; }
 .cart-total { text-align: left; font: 22px var(--serif); margin: 22px 0 8px; }
 .cart-caution { color: var(--muted); line-height: 1.8; }
+.cart-assurance { text-align: center; font: 18px/1.8 var(--serif); color: var(--ink); }
 .cart-form { max-width: 720px; margin: 35px auto 0; padding: 28px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); display: grid; gap: 16px; }
 .cart-form h3 { margin: 0; font: 28px var(--serif); color: var(--olive); }
 .cart-form label:not(.delivery-choices label) { display: grid; gap: 7px; }
