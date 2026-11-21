@@ -21,6 +21,7 @@ export interface ProductVariant {
   artworkId: string
   artworkName: string
   images: [string, ...string[]]
+  imageArtworkNames?: string[]
 }
 
 export const products: Product[] = [
@@ -44,13 +45,13 @@ export const products: Product[] = [
 export const finishedVariants: ProductVariant[] = [
   { id: 'shay-bowl-smooth', productId: 'shay-bowl', material: 'smooth', artworkId: 'assorted', artworkName: 'מגוון ציורים', images: ['/assets/products/shay-bowl/smooth/pink-dance.webp', '/assets/products/shay-bowl/smooth/purple-embrace-01.webp', '/assets/products/shay-bowl/smooth/purple-embrace-02.webp', '/assets/products/shay-bowl/smooth/purple-embrace-03.webp', '/assets/products/shay-bowl/smooth/purple-embrace-04.webp'] },
   { id: 'shay-bowl-speckled', productId: 'shay-bowl', material: 'speckled', artworkId: 'assorted', artworkName: 'מגוון ציורים', images: ['/assets/products/shay-bowl/speckled/pink-dance.webp', '/assets/products/shay-bowl/speckled/purple-embrace-01.webp', '/assets/products/shay-bowl/speckled/purple-embrace-02.webp', '/assets/products/shay-bowl/speckled/purple-embrace-03.webp'] },
-  { id: 'irit-platter-smooth-wildflower-field', productId: 'irit-platter', material: 'smooth', artworkId: 'wildflower-field', artworkName: 'שדה פרחי בר', images: ['/assets/products/irit-platter/smooth/wildflower-field.webp'] },
-  { id: 'irit-platter-speckled-wildflower-field', productId: 'irit-platter', material: 'speckled', artworkId: 'wildflower-field', artworkName: 'שדה פרחי בר', images: ['/assets/products/irit-platter/speckled/wildflower-field.webp'] },
+  { id: 'irit-platter-smooth', productId: 'irit-platter', material: 'smooth', artworkId: 'assorted', artworkName: 'מגוון ציורים', images: ['/assets/products/irit-platter/smooth/wildflower-field.webp', '/assets/products/irit-platter/smooth/pink_whisper.webp'], imageArtworkNames: ['שדה פרחי בר', 'לחש ורוד'] },
+  { id: 'irit-platter-speckled', productId: 'irit-platter', material: 'speckled', artworkId: 'assorted', artworkName: 'מגוון ציורים', images: ['/assets/products/irit-platter/speckled/wildflower-field.webp', '/assets/products/irit-platter/speckled/pink_whisper.webp'], imageArtworkNames: ['שדה פרחי בר', 'לחש ורוד'] },
   { id: 'yael-bowl-smooth-lions-maw', productId: 'yael-bowl', material: 'smooth', artworkId: 'lions-maw', artworkName: 'לוע הארי', images: ['/assets/products/yael-bowl/smooth/lions-maw.webp'] },
   { id: 'yael-bowl-speckled-lions-maw', productId: 'yael-bowl', material: 'speckled', artworkId: 'lions-maw', artworkName: 'לוע הארי', images: ['/assets/products/yael-bowl/speckled/lions-maw.webp'] },
   { id: 'omer-bowl-smooth-field-whisper', productId: 'omer-bowl', material: 'smooth', artworkId: 'field-whisper', artworkName: 'לחישת השדה', images: ['/assets/products/omer-bowl/smooth/field-whisper-01.webp', '/assets/products/omer-bowl/smooth/field-whisper-02.webp'] },
   { id: 'omer-bowl-speckled-field-whisper', productId: 'omer-bowl', material: 'speckled', artworkId: 'field-whisper', artworkName: 'לחישת השדה', images: ['/assets/products/omer-bowl/speckled/field-whisper-01.webp', '/assets/products/omer-bowl/speckled/field-whisper-02.webp'] },
-  { id: 'river-stones-smooth-wild-magic', productId: 'river-stones', material: 'smooth', artworkId: 'wild-magic', artworkName: 'קסם בר', images: ['/assets/products/river-stones/smooth/wild-magic-01.webp', '/assets/products/river-stones/smooth/wild-magic-02.webp'] },
+  { id: 'river-stones-smooth-wild-magic', productId: 'river-stones', material: 'smooth', artworkId: 'wild-magic', artworkName: 'שדה פרחי בר', images: ['/assets/products/river-stones/smooth/wild-magic-01.webp', '/assets/products/river-stones/smooth/wild-magic-02.webp'] },
   { id: 'ella-platter-smooth-field-dance', productId: 'ella-platter', material: 'smooth', artworkId: 'field-dance', artworkName: 'ריקוד בשדה', images: ['/assets/products/ella-platter/smooth/field-dance-01.webp', '/assets/products/ella-platter/smooth/field-dance-02.webp', '/assets/products/ella-platter/smooth/field-dance-03.webp'] },
   { id: 'mika-plate-smooth-purple-touch', productId: 'mika-plate', material: 'smooth', artworkId: 'purple-touch', artworkName: 'נגיעה סגולה', images: ['/assets/products/mika-plate/smooth/purple-touch-01.webp', '/assets/products/mika-plate/smooth/purple-touch-02.webp', '/assets/products/mika-plate/smooth/purple-touch-03.webp', '/assets/products/mika-plate/smooth/purple-touch-04.webp', '/assets/products/mika-plate/smooth/purple-touch-05.webp'] },
 ]

@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import Ornament from './components/Ornament'
-import { artists, availableVariants, displayVariant, priceLabel, publishedProducts, sizeOf, type Material, type Product } from './data/products'
+import { artists, availableVariants, displayVariant, priceLabel, publishedProducts, sizeOf, type Material, type Product, type ProductVariant } from './data/products'
 
-type CartItem = { variantId: string; sizeLabel: string; quantity: number }
+type CartItem = { variantId: string; sizeLabel: string; artworkName: string; image: string; quantity: number }
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
 const materialName: Record<Material, string> = { smooth: 'חלק', speckled: 'מנוקד' }
 const cartKey = 'art-in-clay-cart-v3'
+
+function artworkNameOf(variant: ProductVariant, imageIndex: number): string {
+  return variant.imageArtworkNames?.[imageIndex] ?? variant.artworkName
+}
 
 function restoreCart(): CartItem[] {
   if (typeof window === 'undefined') return []
@@ -13,12 +17,15 @@ function restoreCart(): CartItem[] {
     const stored: unknown = JSON.parse(localStorage.getItem(cartKey) || '[]')
     if (!Array.isArray(stored)) return []
     const seen = new Set<string>()
-    return stored.filter((item): item is CartItem => {
+    return stored.flatMap((item): CartItem[] => {
       const variant = availableVariants.find((entry) => entry.id === item?.variantId)
       const product = variant && publishedProducts.find((entry) => entry.id === variant.productId)
-      if (!product || !product.sizes.some((size) => size.label === item.sizeLabel) || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 99 || seen.has(item.variantId + item.sizeLabel)) return false
-      seen.add(item.variantId + item.sizeLabel)
-      return true
+      if (!product || !product.sizes.some((size) => size.label === item?.sizeLabel) || !Number.isInteger(item?.quantity) || item.quantity < 1 || item.quantity > 99) return []
+      const artworkName = item?.artworkName ?? variant.artworkName
+      const key = item.variantId + item.sizeLabel + artworkName
+      if (seen.has(key)) return []
+      seen.add(key)
+      return [{ variantId: item.variantId, sizeLabel: item.sizeLabel, artworkName, image: item?.image ?? variant.images[0], quantity: item.quantity }]
     })
   } catch {
     return []
@@ -94,23 +101,24 @@ function App() {
 
   function addToCart() {
     if (!chosenVariant || !activeSize) return
+    const artworkName = artworkNameOf(chosenVariant, selectedImage)
     setCart((items) => {
-      const existing = items.find((item) => item.variantId === chosenVariant.id && item.sizeLabel === activeSize.label)
-      if (existing) return items.map((item) => item.variantId === chosenVariant.id && item.sizeLabel === activeSize.label ? { ...item, quantity: Math.min(99, item.quantity + quantity) } : item)
-      return [...items, { variantId: chosenVariant.id, sizeLabel: activeSize.label, quantity }]
+      const existing = items.find((item) => item.variantId === chosenVariant.id && item.sizeLabel === activeSize.label && item.artworkName === artworkName)
+      if (existing) return items.map((item) => item.variantId === chosenVariant.id && item.sizeLabel === activeSize.label && item.artworkName === artworkName ? { ...item, quantity: Math.min(99, item.quantity + quantity) } : item)
+      return [...items, { variantId: chosenVariant.id, sizeLabel: activeSize.label, artworkName, image: chosenVariant.images[selectedImage], quantity }]
     })
     document.getElementById('cart')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  function updateCart(variantId: string, cartSize: string, next: number) {
-    setCart((items) => items.map((item) => item.variantId === variantId && item.sizeLabel === cartSize ? { ...item, quantity: Math.max(1, Math.min(99, next)) } : item))
+  function updateCart(variantId: string, cartSize: string, artworkName: string, next: number) {
+    setCart((items) => items.map((item) => item.variantId === variantId && item.sizeLabel === cartSize && item.artworkName === artworkName ? { ...item, quantity: Math.max(1, Math.min(99, next)) } : item))
   }
 
   const message = [
     `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
     `שם: ${name.trim()}`,
     `טלפון: ${phone.trim()}`,
-    ...cartDetails.map(({ variant, product: entry, size, quantity: count }) => `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${variant.artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
+    ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count }) => `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
     `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
     `אספקה: ${delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח — לתיאום מחיר ופרטים'}`,
     ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
@@ -217,7 +225,7 @@ function App() {
                 {chosenVariant.images.map((image, index) => <button type="button" key={image} className={selectedImage === index ? 'selected' : ''} aria-label={`צילום ${index + 1} מתוך ${chosenVariant.images.length}`} aria-pressed={selectedImage === index} onClick={() => setSelectedImage(index)}><img src={image} alt="" loading="lazy" /></button>)}
               </div>}
               <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} onLoad={() => { if (pendingProductScroll.current) scrollProductIntoView() }} /></div>
-              <div className="purchase-row"><strong>{product.name}{product.sizes.length > 1 ? ` · ${activeSize?.label} ·` : ''} {materialName[material]} + ציור {chosenVariant.artworkName} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button></div>
+              <div className="purchase-row"><strong>{product.name}{product.sizes.length > 1 ? ` · ${activeSize?.label} ·` : ''} {materialName[material]} + ציור {chosenVariant ? artworkNameOf(chosenVariant, selectedImage) : ''} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button></div>
             </>}
           </> : <p className="catalog-empty" role="status">אין כרגע צילומים זמינים של {product.name} ברקע {materialName[material]}.</p>}
         </section>}
@@ -226,12 +234,12 @@ function App() {
           <h2 id="cart-title" className="section-title">העגלה שלכם</h2>
           <Ornament />
           {cartDetails.length ? <>
-            <ul className="cart-items">{cartDetails.map(({ variant, product: entry, size, quantity: count }) => <li key={`${variant.id}:${size.label}`}>
-              <img src={variant.images[0]} alt="" loading="lazy" />
-              <div><strong>{entry.name}</strong><span>{entry.sizes.length > 1 ? `מידה ${size.label} · ` : ''}{materialName[variant.material]} · ציור {variant.artworkName}</span><span>{size.price} ₪ ליחידה</span></div>
-              <label>כמות <input type="number" min="1" max="99" value={count} onChange={(event) => updateCart(variant.id, size.label, Number(event.target.value) || 1)} /></label>
+            <ul className="cart-items">{cartDetails.map(({ variant, product: entry, size, artworkName, image, quantity: count }) => <li key={`${variant.id}:${size.label}:${artworkName}`}>
+              <img src={image} alt="" loading="lazy" />
+              <div><strong>{entry.name}</strong><span>{entry.sizes.length > 1 ? `מידה ${size.label} · ` : ''}{materialName[variant.material]} · ציור {artworkName}</span><span>{size.price} ₪ ליחידה</span></div>
+              <label>כמות <input type="number" min="1" max="99" value={count} onChange={(event) => updateCart(variant.id, size.label, artworkName, Number(event.target.value) || 1)} /></label>
               <strong>{size.price * count} ₪</strong>
-              <button type="button" className="remove-item" onClick={() => setCart((items) => items.filter((item) => !(item.variantId === variant.id && item.sizeLabel === size.label)))}>הסרה</button>
+              <button type="button" className="remove-item" onClick={() => setCart((items) => items.filter((item) => !(item.variantId === variant.id && item.sizeLabel === size.label && item.artworkName === artworkName)))}>הסרה</button>
             </li>)}</ul>
             <p className="cart-total">סכום מוצרים: <strong>{total} ₪</strong></p>
             <p className="cart-caution">לא כולל משלוח. הזמנה וזמינות אינן מאושרות עד שאפרת תאשר את הפרטים והמחיר הסופי.</p>
