@@ -58,9 +58,11 @@ function App() {
       const image = productSection.current?.querySelector<HTMLImageElement>('.variant-preview img')
       if (image && !image.complete) return
       pendingProductScroll.current = false
-      const order = productSection.current?.querySelector<HTMLElement>('.purchase-row')
-      if (order) window.scrollTo({ top: order.getBoundingClientRect().bottom + window.scrollY - window.innerHeight + 12, behavior: 'smooth' })
-      else productSection.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      document.fonts.ready.then(() => {
+        const order = productSection.current?.querySelector<HTMLElement>('.purchase-row')
+        if (order) window.scrollTo({ top: order.getBoundingClientRect().bottom + window.scrollY - window.innerHeight + 4, behavior: 'smooth' })
+        else productSection.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      })
     })
   }
 
@@ -162,10 +164,8 @@ function App() {
         </section>
 
         <section className="story page-content" aria-labelledby="story-title">
-          <h2 id="story-title" className="section-title">רגע של חיבור</h2>
-          <Ornament />
-          <p>חברות שיצרה אומנות משותפת. קולקציה ייחודית המחברת בין עבודות יד וקדרות בקרמיקה לציורי מים מקוריים.</p>
-          <p>כל פריט הוא <span dir="ltr">One of a Kind</span>. ייתכנו הבדלים במידות, בצורה, בגוונים ובעיטור בין הפריטים.</p>
+          <h2 id="story-title" className="sr-only">רגע של חיבור</h2>
+          <img className="story-art" src="/assets/story.webp" alt="רגע של חיבור: חברות שיצרה אומנות משותפת. קולקציה ייחודית המחברת בין עבודות יד וקדרות בקרמיקה לציורי מים מקוריים. כל פריט הוא One of a Kind. ייתכנו הבדלים במידות, בצורה, בגוונים ובעיטור בין הפריטים." />
         </section>
 
         <section id="collection" className="collection page-content" aria-labelledby="collection-title">

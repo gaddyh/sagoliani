@@ -9,6 +9,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await page.goto(baseUrl)
   assert.match(await page.locator('.hero-logo').getAttribute('src'), /\/assets\/logo\.webp$/, 'the logo should appear above the hero title')
+  assert.match(await page.locator('.story-art').getAttribute('src'), /\/assets\/story\.webp$/, 'the story section should be the designed image')
   assert.ok((await page.locator('.product-card').count()) >= 1, 'only products with photographed variants should be listed')
   const shayCard = page.locator('.product-card').filter({ hasText: 'קערת שי' })
   assert.match(await shayCard.locator('.product-label').innerText(), /קערת שי/)
