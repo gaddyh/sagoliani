@@ -149,7 +149,6 @@ function App() {
             <a href="#gallery">הגלריה</a>
             <a href="#before-ordering">לפני שמזמינים</a>
             <a href="#contact">צרו קשר</a>
-            {import.meta.env.DEV && <a className="admin-back" href="/admin">הכנת נכסים ↗</a>}
           </nav>
           <div className="cart-tools">
             <a className="cart-link" href="#cart" aria-label={`עגלת קניות, ${itemCount} פריטים`}>עגלה <span aria-hidden="true">({itemCount})</span></a>
