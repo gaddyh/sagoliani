@@ -251,6 +251,7 @@ function App() {
         </section>
 
         <section id="cart" className="cart-section page-content" aria-labelledby="cart-title">
+          <button type="button" className="back-link" onClick={() => document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })}>← חזרה לקולקציה</button>
           <h2 id="cart-title" className="section-title">העגלה שלכם</h2>
           <Ornament />
           {cartDetails.length ? <>

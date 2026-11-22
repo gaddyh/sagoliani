@@ -56,6 +56,7 @@ h1, h2, h3, p { margin-top: 0; }
 .design-button:hover { background: var(--olive); color: white; border-color: var(--olive); }
 .catalog-note { text-align: center; font: 700 17px/1.8 var(--serif); color: var(--ink); max-width: 640px; margin: 48px auto 0; }
 .gallery { padding-top: 40px; padding-bottom: 80px; }
+.gallery .section-lead { font-weight: 700; }
 .gallery-poem { text-align: center; font: 500 24px/1.9 var(--serif); color: var(--olive-soft); margin: 0 auto 46px; }
 .gallery-poem p { margin: 0; }
 .gallery-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
