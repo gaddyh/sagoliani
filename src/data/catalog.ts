@@ -43,7 +43,7 @@ export interface Artwork {
 
 export const vessels: Vessel[] = [
   {
-    id: 'shay-clean', name: 'קערת שי · חלק', detail: 'חומר שמנת חלק',
+    id: 'shay-clean', name: 'קערת שי · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/shay-clean.webp', mask: '/assets/vessels/shay-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -53,7 +53,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'shay-dots', name: 'קערת שי · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'shay-dots', name: 'קערת שי · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/shay-dots.webp', mask: '/assets/vessels/shay-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -63,7 +63,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'omer-clean', name: 'קערת עומר · חלק', detail: 'חומר שמנת חלק',
+    id: 'omer-clean', name: 'קערת עומר · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/omer-clean.webp', mask: '/assets/vessels/omer-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -73,7 +73,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'omer-dots', name: 'קערת עומר · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'omer-dots', name: 'קערת עומר · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/omer-dots.webp', mask: '/assets/vessels/omer-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -83,7 +83,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'yael-clean', name: 'קערת יעל · חלק', detail: 'חומר שמנת חלק עם ציור "דק מן הדק"',
+    id: 'yael-clean', name: 'קערת יעל · חלק', detail: 'חומר חלק עם ציור "דק מן הדק"',
     image: '/assets/vessels/yael-clean.webp', mask: '/assets/vessels/yael-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -93,7 +93,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'yael-dots', name: 'קערת יעל · מנוקד', detail: 'חומר שמנת מנוקד עם ציור "דק מן הדק"',
+    id: 'yael-dots', name: 'קערת יעל · מנוקד', detail: 'חומר מנוקד עם ציור "דק מן הדק"',
     image: '/assets/vessels/yael-dots.webp', mask: '/assets/vessels/yael-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -103,7 +103,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'mika-clean', name: 'קערת מיקה · חלק', detail: 'חומר שמנת חלק',
+    id: 'mika-clean', name: 'קערת מיקה · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/mika-clean.webp', mask: '/assets/vessels/mika-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -113,7 +113,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'mika-dots', name: 'קערת מיקה · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'mika-dots', name: 'קערת מיקה · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/mika-dots.webp', mask: '/assets/vessels/mika-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -123,7 +123,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'ella-clean', name: 'צלחת אלה · חלק', detail: 'חומר שמנת חלק',
+    id: 'ella-clean', name: 'צלחת אלה · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/ella-clean.webp', mask: '/assets/vessels/ella-clean-mask.png',
     material: 'light', curve: 0.01, perspective: 0.04, wrap: 0.35,
     placements: {
@@ -133,7 +133,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'ella-dots', name: 'צלחת אלה · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'ella-dots', name: 'צלחת אלה · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/ella-dots.webp', mask: '/assets/vessels/ella-dots-mask.png',
     material: 'light', curve: 0.01, perspective: 0.04, wrap: 0.35,
     placements: {
@@ -143,7 +143,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'irit-clean', name: 'קערת עירית · חלק', detail: 'חומר שמנת חלק',
+    id: 'irit-clean', name: 'קערת עירית · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/irit-clean.webp', mask: '/assets/vessels/irit-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -153,7 +153,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'irit-dots', name: 'קערת עירית · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'irit-dots', name: 'קערת עירית · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/irit-dots.webp', mask: '/assets/vessels/irit-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -163,7 +163,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'pebbles-clean', name: 'קערת חלוקים · חלק', detail: 'חומר שמנת חלק',
+    id: 'pebbles-clean', name: 'קערת חלוקים · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/pebbles-clean.webp', mask: '/assets/vessels/pebbles-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -173,7 +173,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'pebbles-dots', name: 'קערת חלוקים · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'pebbles-dots', name: 'קערת חלוקים · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/pebbles-dots.webp', mask: '/assets/vessels/pebbles-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -183,7 +183,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'efrat-clean', name: 'קערת אפרת · חלק', detail: 'חומר שמנת חלק',
+    id: 'efrat-clean', name: 'קערת אפרת · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/efrat-clean.webp', mask: '/assets/vessels/efrat-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -193,7 +193,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'efrat-dots', name: 'קערת אפרת · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'efrat-dots', name: 'קערת אפרת · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/efrat-dots.webp', mask: '/assets/vessels/efrat-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -203,7 +203,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'gaddy-clean', name: 'קערת גדי · חלק', detail: 'חומר שמנת חלק',
+    id: 'gaddy-clean', name: 'קערת גדי · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/gaddy-clean.webp', mask: '/assets/vessels/gaddy-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -213,7 +213,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'gaddy-dots', name: 'קערת גדי · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'gaddy-dots', name: 'קערת גדי · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/gaddy-dots.webp', mask: '/assets/vessels/gaddy-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -223,7 +223,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'ari-clean', name: 'קערת ארי · חלק', detail: 'חומר שמנת חלק',
+    id: 'ari-clean', name: 'קערת ארי · חלק', detail: 'חומר חלק',
     image: '/assets/vessels/ari-clean.webp', mask: '/assets/vessels/ari-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -233,7 +233,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'ari-dots', name: 'קערת ארי · מנוקד', detail: 'חומר שמנת מנוקד',
+    id: 'ari-dots', name: 'קערת ארי · מנוקד', detail: 'חומר מנוקד',
     image: '/assets/vessels/ari-dots.webp', mask: '/assets/vessels/ari-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
