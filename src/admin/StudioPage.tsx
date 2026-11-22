@@ -27,7 +27,7 @@ export default function StudioPage() {
         </section>
       </main>
 
-      <footer className="site-footer"><span dir="ltr">ART IN CLAY ©</span><span>כשהחומר פוגש את המכחול</span><span>הדמיות להמחשה בלבד</span></footer>
+      <footer className="site-footer"><span dir="ltr">ART IN CLAY ©</span><span>כשמכחול פוגש את החומר</span><span>הדמיות להמחשה בלבד</span></footer>
     </div>
   )
 }

@@ -12,7 +12,7 @@ export function structuredData(siteUrl: string): object {
     '@context': 'https://schema.org',
     '@type': 'Store',
     name: 'ART IN CLAY',
-    description: 'כשהחומר פוגש את המכחול — קרמיקה בעבודת יד וציורי מים מקוריים של עירית סגול ואפרת ליאני.',
+    description: 'כשמכחול פוגש את החומר — קרמיקה בעבודת יד וציורי מים מקוריים של עירית סגול ואפרת ליאני.',
     url: siteUrl,
     image: `${siteUrl}og-image.jpg`,
     telephone: artists.map((artist) => `+${artist.whatsapp}`),

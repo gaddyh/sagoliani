@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Ornament from './components/Ornament'
 import { artists, availableVariants, displayVariant, priceLabel, publishedProducts, sizeOf, type Material, type Product, type ProductVariant } from './data/products'
+import { galleryArtworks } from './data/gallery'
 
 type CartItem = { variantId: string; sizeLabel: string; artworkName: string; image: string; quantity: number }
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
@@ -141,7 +142,7 @@ function App() {
           <a className="brand" href="#top" aria-label="ART IN CLAY, לראש העמוד">
             <span className="brand-name" dir="ltr">ART IN CLAY</span>
             <span className="brand-rule" />
-            <span className="brand-caption">כשהחומר פוגש את המכחול</span>
+            <span className="brand-caption">כשמכחול פוגש את החומר</span>
           </a>
           <nav className="site-nav" aria-label="ניווט ראשי">
             <a href="#collection">הקולקציה</a>
@@ -161,10 +162,10 @@ function App() {
           <div className="hero-text">
             <img className="hero-logo" src="/assets/logo.webp" alt="לוגו ART IN CLAY" />
             <h1 className="hero-title" dir="ltr">ART IN CLAY</h1>
-            <p className="hero-tagline">כשהחומר פוגש את המכחול</p>
+            <p className="hero-tagline">כשמכחול פוגש את החומר</p>
             <p className="hero-names">עירית סגול ואפרת ליאני</p>
             <Ornament />
-            <p className="hero-copy">קולקציה ייחודית המחברת בין עבודות יד וקדרות בקרמיקה לציורי מים מקוריים. בחרו כלי, חומר וציור מתוך צילומי המוצרים המוגמרים.</p>
+            <p className="hero-copy">קולקציה ייחודית המחברת בין  קדרות ועבודות יד בקרמיקה לציורי מים מקוריים. בחרו כלי, חומר וציור מתוך צילומי המוצרים המוגמרים.</p>
             <div className="hero-actions"><a className="primary-link" href="#collection">לקולקציה</a></div>
           </div>
           <div className="hero-image"><img src="/assets/hero.webp" alt="כלי קרמיקה בעבודת יד עם ציורי פרחים בצבעי מים" /></div>
@@ -173,7 +174,7 @@ function App() {
 
         <section className="story page-content" aria-labelledby="story-title">
           <h2 id="story-title" className="sr-only">רגע של חיבור</h2>
-          <img className="story-art" src="/assets/story.webp" alt="רגע של חיבור: חברות שיצרה אומנות משותפת. קולקציה ייחודית המחברת בין עבודות יד וקדרות בקרמיקה לציורי מים מקוריים. כל פריט הוא One of a Kind. ייתכנו הבדלים במידות, בצורה, בגוונים ובעיטור בין הפריטים." />
+          <img className="story-art" src="/assets/story.webp" alt="רגע של חיבור: חברות שיצרה אומנות משותפת. קולקציה ייחודית המחברת בין  קדרות ועבודות יד בקרמיקה לציורי מים מקוריים. כל פריט הוא One of a Kind. ייתכנו הבדלים במידות, בצורה, בגוונים ובעיטור בין הפריטים." />
         </section>
 
         <section id="collection" className="collection page-content" aria-labelledby="collection-title">
@@ -230,6 +231,25 @@ function App() {
           </> : <p className="catalog-empty" role="status">אין כרגע צילומים זמינים של {product.name} ברקע {materialName[material]}.</p>}
         </section>}
 
+        <section id="gallery" className="gallery page-content" aria-labelledby="gallery-title">
+          <h2 id="gallery-title" className="section-title">הגלריה</h2>
+          <Ornament />
+          <p className="section-lead">בחרתי להעניק לכל אחד מציוריי שם בהשראת שיריו של מאיר אריאל ז״ל, מתוך אהבה למילותיו, לעושר שפתו ולדרך המיוחדת שבה ידע לחבר בין הטבע לנפש האדם.</p>
+          <div className="gallery-poem">
+            <p>זרעי קיץ</p>
+            <p>נישאים ברוח</p>
+            <p>מעירים זכרונות</p>
+            <p>מעוררים ערגונות</p>
+            <p>זרעי קיץ</p>
+            <p>באים בנחיריים</p>
+            <p>ורומזים איזה קיץ</p>
+            <p>הולך להיות -</p>
+          </div>
+          <div className="gallery-grid">
+            {galleryArtworks.map((artwork) => <figure key={artwork.image} className="gallery-item"><span className="gallery-photo"><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" /></span><figcaption className="gallery-caption">{artwork.name}</figcaption></figure>)}
+          </div>
+        </section>
+
         <section id="cart" className="cart-section page-content" aria-labelledby="cart-title">
           <h2 id="cart-title" className="section-title">העגלה שלכם</h2>
           <Ornament />
@@ -263,7 +283,7 @@ function App() {
         <section id="care" className="care page-content" aria-labelledby="care-title">
           <h2 id="care-title" className="section-title">תתחדשו!</h2>
           <Ornament />
-          <p className="section-lead">הכלים שבידכם נוצרו בעבודת יד ובאהבה גדולה ❤️</p>
+          <p className="care-headline">הכלים שבידכם נוצרו בעבודת יד ובאהבה גדולה ❤️</p>
           <p className="care-intro">כדי שתוכלו ליהנות מהם לאורך זמן, הנה כמה דברים שכדאי לדעת:</p>
           <div className="info-grid">
             <div className="info-card"><h3>טיפול יומיומי</h3><p>הכלים מתאימים לשטיפה ידנית רגילה וגם למדיח כלים.</p></div>
@@ -274,11 +294,10 @@ function App() {
         </section>
 
         <section id="contact" className="contact page-content" aria-labelledby="contact-title">
-          <img className="artists-photo" src="/assets/artists.webp" alt="עירית סגול ואפרת ליאני" loading="lazy" />
           <div><img className="contact-logo" src="/assets/logo.webp" alt="לוגו ART IN CLAY" /><p className="one-of-a-kind" dir="ltr">One of a Kind</p><Ornament /><h2 id="contact-title" className="section-title">לפרטים</h2><ul className="contact-list">{artists.map((artist) => <li key={artist.phone}><strong>{artist.name}</strong><a href={`tel:+${artist.whatsapp}`} dir="ltr">{artist.phone}</a><a href={`https://wa.me/${artist.whatsapp}`} target="_blank" rel="noopener noreferrer">וואטסאפ ↗</a></li>)}</ul></div>
         </section>
       </main>
-      <footer className="site-footer"><span dir="ltr">ART IN CLAY ©</span><span>כשהחומר פוגש את המכחול</span><span>מוצרים בעבודת יד</span></footer>
+      <footer className="site-footer"><span dir="ltr">ART IN CLAY ©</span><span>כשמכחול פוגש את החומר</span><span>מוצרים בעבודת יד</span></footer>
     </div>
   )
 }
