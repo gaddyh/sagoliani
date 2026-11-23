@@ -19,4 +19,6 @@ export const galleryArtworks = [
   { image: '/assets/gallery/gallery-18.webp', name: 'בצהרי היום' },
   { image: '/assets/gallery/gallery-19.webp', name: 'בשדה הירוק' },
   { image: '/assets/gallery/gallery-20.webp', name: 'שדות גולדברג' },
+  { image: '/assets/gallery/gallery-21.webp', name: 'מים מתוקים' },
+  { image: '/assets/gallery/gallery-22.webp', name: 'ריקוד יסמין' },
 ]
