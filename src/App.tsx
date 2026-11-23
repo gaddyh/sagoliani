@@ -285,7 +285,7 @@ function App() {
         <section id="before-ordering" className="before-ordering page-content" aria-labelledby="before-title">
           <h2 id="before-title" className="section-title">כדאי לדעת לפני הזמנה</h2>
           <Ornament />
-          <div className="info-grid"><div className="info-card"><h3>בחירת החימר</h3><p>ניתן להזמין את הכלים בחימר חלק או מנוקד, לפי הצילומים הזמינים.</p></div><div className="info-card"><h3>בחירת הציור</h3><p>בחרו מתוך צילומי השילובים הזמינים. כל פריט מיוצר ביד וייתכנו הבדלים בין הפריטים.</p></div><div className="info-card"><h3>הזמנת סטים</h3><p>המעוניינים בסט הכולל עיטור זהה החוזר על עצמו, מתבקשים לציין זאת מראש.</p></div></div>
+          <div className="info-grid"><div className="info-card"><h3>בחירת החימר</h3><p>ניתן להזמין את הכלים בחימר חלק או מנוקד, לפי הצילומים הזמינים.</p></div><div className="info-card"><h3>בחירת הציור</h3><p>בחרו מתוך צילומי השילובים הזמינים.</p></div><div className="info-card"><h3>הזמנת סטים</h3><p>המעוניינים בסט הכולל עיטור זהה החוזר על עצמו, מתבקשים לציין זאת מראש.</p></div><div className="info-card"><h3>חשוב לדעת</h3><p>כל פריט מיוצר בעבודת יד ולכן ייתכנו הבדלים בין הפריטים.</p></div></div>
         </section>
 
         <section id="care" className="care page-content" aria-labelledby="care-title">
