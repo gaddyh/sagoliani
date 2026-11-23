@@ -108,7 +108,8 @@ function App() {
       if (existing) return items.map((item) => item.variantId === chosenVariant.id && item.sizeLabel === activeSize.label && item.artworkName === artworkName ? { ...item, quantity: Math.min(99, item.quantity + quantity) } : item)
       return [...items, { variantId: chosenVariant.id, sizeLabel: activeSize.label, artworkName, image: chosenVariant.images[selectedImage], quantity }]
     })
-    document.getElementById('cart')?.scrollIntoView({ behavior: 'smooth' })
+    setProduct(null)
+    document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   function updateCart(variantId: string, cartSize: string, artworkName: string, next: number) {
