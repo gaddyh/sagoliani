@@ -83,7 +83,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'yael-clean', name: 'קערת יעל · חלק', detail: 'חומר חלק עם ציור "דק מן הדק"',
+    id: 'yael-clean', name: 'תבנית יעל · חלק', detail: 'חומר חלק עם ציור "דק מן הדק"',
     image: '/assets/vessels/yael-clean.webp', mask: '/assets/vessels/yael-clean-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {
@@ -93,7 +93,7 @@ export const vessels: Vessel[] = [
     },
   },
   {
-    id: 'yael-dots', name: 'קערת יעל · מנוקד', detail: 'חומר מנוקד עם ציור "דק מן הדק"',
+    id: 'yael-dots', name: 'תבנית יעל · מנוקד', detail: 'חומר מנוקד עם ציור "דק מן הדק"',
     image: '/assets/vessels/yael-dots.webp', mask: '/assets/vessels/yael-dots-mask.png',
     material: 'light', curve: 0.02, perspective: 0.08, wrap: 1,
     placements: {

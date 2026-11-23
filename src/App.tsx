@@ -199,6 +199,7 @@ function App() {
           <button type="button" className="back-link" onClick={() => { setProduct(null); document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' }) }}>← חזרה לקולקציה</button>
           <h2 id="product-title" className="section-title">{product.name}</h2>
           <p className="section-lead">{product.detail} · {priceLabel(product)}</p>
+          {product.uses && <p className="product-uses"><strong>שימושים: </strong>{product.uses}</p>}
           {product.sizes.length > 1 && <label className="size-choice">מידה
             <select value={activeSize?.label} onChange={(event) => setSizeLabel(event.target.value)}>
               {product.sizes.map((size) => <option key={size.label} value={size.label}>{size.label} · {size.price} ₪</option>)}
