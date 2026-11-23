@@ -10,7 +10,7 @@ export const galleryArtworks = [
   { image: '/assets/gallery/gallery-09.webp', name: 'שלל שרב' },
   { image: '/assets/gallery/gallery-10.webp', name: 'שחר עולה' },
   { image: '/assets/gallery/gallery-11.webp', name: 'שיר געגועים' },
-  { image: '/assets/gallery/gallery-12.webp', name: 'נישאים ברוח' },
+  { image: '/assets/gallery/gallery-12.webp', name: 'דק מן הדק' },
   { image: '/assets/gallery/gallery-13.webp', name: 'נישאים ברוח' },
   { image: '/assets/gallery/gallery-14.webp', name: 'מעוררים ערגונות' },
   { image: '/assets/gallery/gallery-15.webp', name: 'פרדס רימונים' },
@@ -18,4 +18,5 @@ export const galleryArtworks = [
   { image: '/assets/gallery/gallery-17.webp', name: 'רוח של סוף יום' },
   { image: '/assets/gallery/gallery-18.webp', name: 'בצהרי היום' },
   { image: '/assets/gallery/gallery-19.webp', name: 'בשדה הירוק' },
+  { image: '/assets/gallery/gallery-20.webp', name: 'שדות גולדברג' },
 ]
