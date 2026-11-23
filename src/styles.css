@@ -59,8 +59,14 @@ h1, h2, h3, p { margin-top: 0; }
 .catalog-note { text-align: center; font: 700 17px/1.8 var(--serif); color: var(--ink); max-width: 640px; margin: 48px auto 0; }
 .gallery { padding-top: 40px; padding-bottom: 80px; }
 .gallery .section-lead { font-weight: 700; }
-.gallery-poem { text-align: center; font: 500 24px/1.9 var(--serif); color: var(--olive-soft); margin: 0 auto 46px; }
+.gallery-poem { text-align: center; font: 500 21px/1.85 "David Libre", var(--serif); color: #765b7d; margin: 0 auto 46px; }
 .gallery-poem p { margin: 0; }
+.gallery-poem .gallery-poem-credit { font: 500 16px/1.6 "David Libre", var(--serif); color: #5c4563; margin-top: 12px; }
+.gallery-intro { display: flex; align-items: center; justify-content: center; gap: 56px; flex-wrap: wrap; margin: 0 auto 46px; }
+.gallery-intro .gallery-poem { margin: 0; }
+.gallery-video { margin: 0 auto 46px; max-width: 380px; }
+.gallery-intro .gallery-video { margin: 0; max-width: 260px; }
+.gallery-video video { display: block; width: 100%; border-radius: 16px; background: var(--paper); }
 .gallery-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
 .gallery-item { margin: 0; }
 .gallery-photo { display: block; width: 100%; aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: var(--paper); }

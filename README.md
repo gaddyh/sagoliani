@@ -104,7 +104,7 @@ public/assets/products/english-platter-straight/speckled/spring.webp
 - `public/assets/hero.webp`: תצלום הפתיחה של האתר (המקור: `landing-hero.jpeg` בשורש הפרויקט, מחוץ ל־git).
 - `public/assets/artists.webp`: תצלום האמניות (המקור: `אפרת ועירית.png` בשורש הפרויקט, מחוץ ל־git); אינו מוצג כרגע באתר, נשמר לשימוש עתידי.
 - `public/assets/brochure/`: חיתוכי תמונות מתוך דפי החוברת שסופקו (`scripts/prepare_brochure.py`). אלו תמונות המחשה בלבד ואינן מפורסמות בקולקציה; הן משמשות את בדיקות החנות.
-- `public/assets/gallery/`: ציורי הגלריה (`gallery-NN.webp` לפי הסדר האלפביתי בתיקיית המקור), מיובאים מ־`assets-source/נישאים ברוח` עם `scripts/import_gallery.py`. אחרי הוספה או החלפת תמונות יש להריץ את הסקריפט מחדש ולעדכן את רשימת `galleryImages` ב־`src/data/gallery.ts` בהתאמה.
+- `public/assets/gallery/`: ציורי הגלריה (`gallery-NN.webp` לפי הסדר האלפביתי בתיקיית המקור), מיובאים מ־`assets-source/נישאים ברוח` עם `scripts/import_gallery.py`. אחרי הוספה או החלפת תמונות יש להריץ את הסקריפט מחדש ולעדכן את רשימת `galleryImages` ב־`src/data/gallery.ts` בהתאמה. בנוסף מוצג בגלריה סרטון קצר של עירית מציירת (`irit-is-painting.mp4`) לצד הפואמה, בשורה אחת.
 - `src/data/products.ts`: מוצרי הקולקציה, מחירים, שילובים מצולמים (`finishedVariants`) ופרטי היוצרות.
 - `src/components/Studio.tsx`: הקונפיגורטור; `src/admin/StudioPage.tsx`: עמוד הניהול שעוטף אותו; `src/App.tsx`: אתר הלקוחות.
 

@@ -235,15 +235,21 @@ function App() {
           <h2 id="gallery-title" className="section-title">הגלריה</h2>
           <Ornament />
           <p className="section-lead">בחרתי להעניק לכל אחד מציוריי שם בהשראת שיריו של מאיר אריאל ז״ל, מתוך אהבה למילותיו, לעושר שפתו ולדרך המיוחדת שבה ידע לחבר בין הטבע לנפש האדם.</p>
-          <div className="gallery-poem">
-            <p>זרעי קיץ</p>
-            <p>נישאים ברוח</p>
-            <p>מעירים זכרונות</p>
-            <p>מעוררים ערגונות</p>
-            <p>זרעי קיץ</p>
-            <p>באים בנחיריים</p>
-            <p>ורומזים איזה קיץ</p>
-            <p>הולך להיות -</p>
+          <div className="gallery-intro">
+            <div className="gallery-poem">
+              <p>״זרעי קיץ</p>
+              <p>נישאים ברוח</p>
+              <p>מעירים זכרונות</p>
+              <p>מעוררים ערגונות</p>
+              <p>זרעי קיץ</p>
+              <p>באים בנחיריים</p>
+              <p>ורומזים איזה קיץ</p>
+              <p>הולך להיות״</p>
+              <p className="gallery-poem-credit">זרעי קיץ / מאיר אריאל</p>
+            </div>
+            <figure className="gallery-video">
+              <video controls playsInline preload="metadata" src="/assets/gallery/irit-is-painting.mp4" aria-label="עירית מציירת ציור פרחים"></video>
+            </figure>
           </div>
           <div className="gallery-grid">
             {galleryArtworks.map((artwork) => <figure key={artwork.image} className="gallery-item"><span className="gallery-photo"><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" /></span><figcaption className="gallery-caption">{artwork.name}</figcaption></figure>)}
