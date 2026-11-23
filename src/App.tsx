@@ -189,7 +189,6 @@ function App() {
                 <button type="button" className="product-open" onClick={() => openProduct(entry)} aria-label={`לצפייה ב${entry.name}`}>
                   <span className="product-photo"><img src={variant.images[0]} alt={`${entry.name}, ${materialName[variant.material]}, ציור ${variant.artworkName}`} loading="lazy" /></span>
                   <span className="product-label"><strong>{entry.name}</strong><span>{entry.detail} | {priceLabel(entry)}</span></span>
-                  <span className="design-button">לצפייה בציורים</span>
                 </button>
               </article>
             })}
