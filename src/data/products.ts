@@ -1,5 +1,5 @@
 export type Material = 'smooth' | 'speckled'
-export type ProductId = 'cake-pan' | 'speckled-platter' | 'round-platter' | 'deep-bowl' | 'flat-bowl' | 'english-platter-straight' | 'english-platter-oval' | 'river-stones' | 'vase' | 'shay-bowl' | 'irit-platter' | 'yael-bowl' | 'omer-bowl' | 'ella-platter' | 'mika-plate'
+export type ProductId = 'cake-pan' | 'speckled-platter' | 'round-platter' | 'deep-bowl' | 'flat-bowl' | 'english-platter-straight' | 'english-platter-oval' | 'river-stones' | 'vase' | 'shay-bowl' | 'irit-platter' | 'yael-bowl' | 'omer-bowl' | 'ella-platter' | 'mika-plate' | 'gaddy-plate'
 
 export interface ProductSize {
   label: string
@@ -37,9 +37,10 @@ export const products: Product[] = [
   { id: 'shay-bowl', name: 'קערת שי', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }] },
   { id: 'irit-platter', name: 'מגש עירית', detail: 'מגש הגשה בעבודת יד', sizes: [{ label: 'מגש', price: 145 }] },
   { id: 'yael-bowl', name: 'קערת יעל', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }] },
-  { id: 'omer-bowl', name: 'קערת עומר', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }] },
+  { id: 'omer-bowl', name: 'קערת עומר', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }], coverVariantId: 'omer-bowl-speckled-field-whisper' },
   { id: 'ella-platter', name: 'מגש אלה', detail: 'מגש הגשה בעבודת יד', sizes: [{ label: 'מגש', price: 140 }] },
   { id: 'mika-plate', name: 'צלחת מיקה', detail: 'צלחת הגשה בעבודת יד', sizes: [{ label: 'צלחת', price: 145 }] },
+  { id: 'gaddy-plate', name: 'צלחת גדי', detail: 'צלחת הגשה בעבודת יד', sizes: [{ label: 'קוטר 25', price: 145 }] },
 ]
 
 export const finishedVariants: ProductVariant[] = [
@@ -49,11 +50,11 @@ export const finishedVariants: ProductVariant[] = [
   { id: 'irit-platter-speckled', productId: 'irit-platter', material: 'speckled', artworkId: 'assorted', artworkName: 'מגוון ציורים', images: ['/assets/products/irit-platter/speckled/wildflower-field.webp', '/assets/products/irit-platter/speckled/pink_whisper.webp'], imageArtworkNames: ['שדה פרחי בר', 'לחש ורוד'] },
   { id: 'yael-bowl-smooth-lions-maw', productId: 'yael-bowl', material: 'smooth', artworkId: 'lions-maw', artworkName: 'דק מן הדק', images: ['/assets/products/yael-bowl/smooth/lions-maw.webp'] },
   { id: 'yael-bowl-speckled-lions-maw', productId: 'yael-bowl', material: 'speckled', artworkId: 'lions-maw', artworkName: 'דק מן הדק', images: ['/assets/products/yael-bowl/speckled/lions-maw.webp'] },
-  { id: 'omer-bowl-smooth-field-whisper', productId: 'omer-bowl', material: 'smooth', artworkId: 'field-whisper', artworkName: 'לחישת השדה', images: ['/assets/products/omer-bowl/smooth/field-whisper-01.webp', '/assets/products/omer-bowl/smooth/field-whisper-02.webp'] },
-  { id: 'omer-bowl-speckled-field-whisper', productId: 'omer-bowl', material: 'speckled', artworkId: 'field-whisper', artworkName: 'לחישת השדה', images: ['/assets/products/omer-bowl/speckled/field-whisper-01.webp', '/assets/products/omer-bowl/speckled/field-whisper-02.webp'] },
+  { id: 'omer-bowl-speckled-field-whisper', productId: 'omer-bowl', material: 'speckled', artworkId: 'field-whisper', artworkName: 'לחישת השדה', images: ['/assets/products/omer-bowl/speckled/field-whisper-01.webp', '/assets/products/omer-bowl/speckled/field-whisper-02.webp', '/assets/products/omer-bowl/speckled/field-whisper-03.webp', '/assets/products/omer-bowl/speckled/field-whisper-04.webp'] },
   { id: 'river-stones-smooth-wild-magic', productId: 'river-stones', material: 'smooth', artworkId: 'wild-magic', artworkName: 'שדה פרחי בר', images: ['/assets/products/river-stones/smooth/wild-magic-01.webp', '/assets/products/river-stones/smooth/wild-magic-02.webp'] },
   { id: 'ella-platter-smooth-field-dance', productId: 'ella-platter', material: 'smooth', artworkId: 'field-dance', artworkName: 'ריקוד בשדה', images: ['/assets/products/ella-platter/smooth/field-dance-01.webp', '/assets/products/ella-platter/smooth/field-dance-02.webp', '/assets/products/ella-platter/smooth/field-dance-03.webp'] },
   { id: 'mika-plate-smooth-purple-touch', productId: 'mika-plate', material: 'smooth', artworkId: 'purple-touch', artworkName: 'נגיעה סגולה', images: ['/assets/products/mika-plate/smooth/purple-touch-01.webp', '/assets/products/mika-plate/smooth/purple-touch-02.webp', '/assets/products/mika-plate/smooth/purple-touch-03.webp', '/assets/products/mika-plate/smooth/purple-touch-04.webp', '/assets/products/mika-plate/smooth/purple-touch-05.webp'] },
+  { id: 'gaddy-plate-speckled-green-field', productId: 'gaddy-plate', material: 'speckled', artworkId: 'green-field', artworkName: 'בשדה ירוק', images: ['/assets/products/gaddy-plate/speckled/green-field-01.webp', '/assets/products/gaddy-plate/speckled/green-field-02.webp', '/assets/products/gaddy-plate/speckled/green-field-03.webp', '/assets/products/gaddy-plate/speckled/green-field-04.webp', '/assets/products/gaddy-plate/speckled/green-field-05.webp'] },
 ]
 
 export const availableVariants = finishedVariants.filter((variant) => variant.images.length > 0)
