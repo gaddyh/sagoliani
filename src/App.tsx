@@ -270,7 +270,7 @@ function App() {
               <button type="button" className="remove-item" onClick={() => setCart((items) => items.filter((item) => !(item.variantId === variant.id && item.sizeLabel === size.label && item.artworkName === artworkName)))}>הסרה</button>
             </li>)}</ul>
             <p className="cart-total">סכום מוצרים: <strong>{total} ₪</strong></p>
-            <p className="cart-caution">לא כולל משלוח. הזמנה וזמינות אינן מאושרות עד שאפרת תאשר את הפרטים והמחיר הסופי.</p>
+            <p className="cart-caution">המחיר אינו כולל משלוח. ההזמנה וזמינות המוצר יאושרו סופית רק לאחר אישור פרטי ההזמנה.</p>
             <form ref={orderForm} className="cart-form" onSubmit={(event) => event.preventDefault()}>
               <h3>שליחת בקשה</h3>
               <div className="cart-fields"><label>שם <input autoComplete="name" required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} /></label><label>טלפון <input type="tel" autoComplete="tel" required maxLength={25} value={phone} onChange={(event) => setPhone(event.target.value)} /></label></div>
