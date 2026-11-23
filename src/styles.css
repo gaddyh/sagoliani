@@ -342,7 +342,8 @@ h1, h2, h3, p { margin-top: 0; }
 .catalog-empty { max-width: 700px; margin: 30px auto; padding: 32px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); text-align: center; font: 19px/1.7 var(--serif); }
 .product-detail, .cart-section { padding-top: 55px; padding-bottom: 65px; scroll-margin-top: 90px; border-top: 1px solid var(--line); }
 .product-detail { padding-top: 30px; padding-bottom: 24px; }
-.back-link { border: 0; padding: 3px 0 6px; background: transparent; color: var(--olive); }
+.back-link { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--olive-soft); border-radius: 999px; background: var(--card); color: var(--olive); font: 700 17px/1.4 var(--serif); padding: 10px 26px; }
+.back-link:hover { border-color: var(--olive); background: var(--olive); color: var(--paper); }
 .product-detail .section-lead { margin-bottom: 12px; }
 .product-detail .product-uses { text-align: center; color: var(--muted); font: 17px/1.5 var(--serif); max-width: 720px; margin: 0 auto 8px; }
 .product-detail .product-uses strong { color: var(--ink); font-weight: 700; }
