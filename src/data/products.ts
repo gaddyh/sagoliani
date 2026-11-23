@@ -37,11 +37,11 @@ export const products: Product[] = [
   { id: 'vase', name: 'אגרטל', detail: 'גובה 13–20 ס״מ', sizes: [{ label: 'גובה 13–20', price: 110 }] },
   { id: 'shay-bowl', name: 'קערת שי', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 16', price: 78 }, { label: 'קוטר 20', price: 88 }], uses: 'מרק | סלטים | קורנפלקס | פיצוחים | מטבלים | גלידה | רטבים וממרחים | קינוחים | לשולחנות חג' },
   { id: 'irit-platter', name: 'מגש עירית', detail: 'מגש אינגליש אובלי בעבודת יד · כ־35×15 ס״מ', sizes: [{ label: 'מגש', price: 155 }], uses: 'הגשת עוגות | פירות | גבינות | חציל בטחינה | נתחי בשר | נקניקים' },
-  { id: 'yael-bowl', name: 'תבנית יעל', detail: 'תבנית בעבודת יד', sizes: [{ label: 'קוטר 17', price: 75 }, { label: 'קוטר 20', price: 85 }], uses: 'עוגה | קיש | פשטידה | קדרה פתוחה' },
+  { id: 'yael-bowl', name: 'תבנית יעל', detail: 'תבנית בעבודת יד · קוטר 25', sizes: [{ label: 'קוטר 25', price: 175 }], uses: 'עוגה | קיש | פשטידה | קדרה פתוחה' },
   { id: 'omer-bowl', name: 'קערת עומר', detail: 'קערה בעבודת יד', sizes: [{ label: 'קוטר 16', price: 78 }, { label: 'קוטר 20', price: 88 }], coverVariantId: 'omer-bowl-speckled-field-whisper', uses: 'מרק | סלטים | קורנפלקס | פיצוחים | מטבלים | גלידה | רטבים וממרחים | קינוחים | לשולחנות חג' },
-  { id: 'ella-platter', name: 'מגש אלה', detail: 'מגש הגשה בעבודת יד · כ־35×15 ס״מ', sizes: [{ label: 'מגש', price: 155 }] },
-  { id: 'mika-plate', name: 'צלחת מיקה', detail: 'צלחת הגשה בעבודת יד · קוטר כ־30 ס״מ', sizes: [{ label: 'צלחת', price: 165 }] },
-  { id: 'gaddy-plate', name: 'צלחת גדי', detail: 'צלחת הגשה קדרות', sizes: [{ label: 'קוטר 25', price: 145 }], uses: 'פירות | גבינות | חומס | נתחי בשר | נקניקים' },
+  { id: 'ella-platter', name: 'מגש אלה', detail: 'מגש הגשה בעבודת יד · כ־35×15 ס״מ', sizes: [{ label: 'מגש', price: 155 }], uses: 'הגשת עוגות | פירות | גבינות | חציל בטחינה | נתחי בשר | נקניקים' },
+  { id: 'mika-plate', name: 'צלחת מיקה', detail: 'צלחת הגשה בעבודת יד · קוטר כ־30 ס״מ', sizes: [{ label: 'צלחת', price: 165 }], uses: 'הגשת עוגה | סופגניות | דונט ספינג׳ | פירות | גבינות' },
+  { id: 'gaddy-plate', name: 'צלחת גדי', detail: 'צלחת הגשה קדרות · קוטר 25', sizes: [{ label: 'קוטר 25', price: 145 }], uses: 'פירות | גבינות | חומס | נתחי בשר | נקניקים' },
 ]
 
 export const finishedVariants: ProductVariant[] = [
