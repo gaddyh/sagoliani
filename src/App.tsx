@@ -166,9 +166,11 @@ function App() {
             <p className="hero-names">עירית סגול ואפרת ליאני</p>
             <Ornament />
             <p className="hero-copy">קולקציה ייחודית המחברת בין  קדרות ועבודות יד בקרמיקה לציורי מים מקוריים. בחרו כלי, חומר וציור מתוך צילומי המוצרים המוגמרים.</p>
+          </div>
+          <div className="hero-visual">
+            <div className="hero-image"><img src="/assets/hero.webp" alt="כלי קרמיקה בעבודת יד עם ציורי פרחים בצבעי מים" /></div>
             <div className="hero-actions"><a className="primary-link" href="#collection">לקולקציית הכלים</a><a className="secondary-link" href="#gallery">לגלריית הציורים</a></div>
           </div>
-          <div className="hero-image"><img src="/assets/hero.webp" alt="כלי קרמיקה בעבודת יד עם ציורי פרחים בצבעי מים" /></div>
           <img className="hero-sprig" src="/assets/brochure/sprig.webp" alt="" aria-hidden="true" />
         </section>
 
