@@ -227,6 +227,7 @@ function App() {
               </div>}
               <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} onLoad={() => { if (pendingProductScroll.current) scrollProductIntoView() }} /></div>
               <div className="purchase-row"><strong>{product.name}{product.sizes.length > 1 ? ` · ${activeSize?.label} ·` : ''} {materialName[material]} + ציור {chosenVariant ? artworkNameOf(chosenVariant, selectedImage) : ''} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button><button type="button" className="back-link" onClick={() => { setProduct(null); document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' }) }}>← חזרה לקולקציה</button></div>
+              <p className="product-disclaimer">התמונה להמחשה בלבד</p>
             </>}
           </> : <p className="catalog-empty" role="status">אין כרגע צילומים זמינים של {product.name} ברקע {materialName[material]}.</p>}
         </section>}
@@ -282,9 +283,9 @@ function App() {
         </section>
 
         <section id="before-ordering" className="before-ordering page-content" aria-labelledby="before-title">
-          <h2 id="before-title" className="section-title">כדאי לדעת לפני שמזמינים</h2>
+          <h2 id="before-title" className="section-title">כדאי לדעת לפני הזמנה</h2>
           <Ornament />
-          <div className="info-grid"><div className="info-card"><h3>בחירת החומר</h3><p>ניתן להזמין את הכלים בחומר חלק או מנוקד, לפי הצילומים הזמינים.</p></div><div className="info-card"><h3>בחירת הציור</h3><p>בחרו מתוך צילומי השילובים הזמינים. כל פריט מיוצר ביד וייתכנו הבדלים בין הפריטים.</p></div><div className="info-card"><h3>הזמנת סטים</h3><p>המעוניינים בסט הכולל עיטור זהה החוזר על עצמו, מתבקשים לציין זאת מראש.</p></div></div>
+          <div className="info-grid"><div className="info-card"><h3>בחירת החימר</h3><p>ניתן להזמין את הכלים בחימר חלק או מנוקד, לפי הצילומים הזמינים.</p></div><div className="info-card"><h3>בחירת הציור</h3><p>בחרו מתוך צילומי השילובים הזמינים. כל פריט מיוצר ביד וייתכנו הבדלים בין הפריטים.</p></div><div className="info-card"><h3>הזמנת סטים</h3><p>המעוניינים בסט הכולל עיטור זהה החוזר על עצמו, מתבקשים לציין זאת מראש.</p></div></div>
         </section>
 
         <section id="care" className="care page-content" aria-labelledby="care-title">

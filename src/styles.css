@@ -351,6 +351,7 @@ h1, h2, h3, p { margin-top: 0; }
 .back-link { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--olive-soft); border-radius: 999px; background: var(--card); color: var(--olive); font: 700 17px/1.4 var(--serif); padding: 10px 26px; }
 .back-link:hover { border-color: var(--olive); background: var(--olive); color: var(--paper); }
 .product-detail .section-lead { margin-bottom: 12px; }
+.product-disclaimer { margin: 10px 0 0; text-align: center; color: var(--muted); font-size: 13px; }
 .product-detail .product-uses { text-align: center; color: var(--muted); font: 17px/1.5 var(--serif); max-width: 720px; margin: 0 auto 8px; }
 .product-detail .product-uses strong { color: var(--ink); font-weight: 700; }
 .product-detail .material-choices { margin-bottom: 12px; }
