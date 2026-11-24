@@ -19,17 +19,33 @@ try {
   try {
     await page.waitForFunction(() => {
       const headerBottom = document.querySelector('.site-header').getBoundingClientRect().bottom
-      const title = document.querySelector('#product-title').getBoundingClientRect()
+      const preview = document.querySelector('.variant-preview').getBoundingClientRect()
       const order = document.querySelector('.purchase-row').getBoundingClientRect()
-      return title.top >= headerBottom && order.top >= 0 && order.bottom <= innerHeight
+      return preview.top >= headerBottom && order.top >= 0 && order.bottom <= innerHeight
     }, null, { timeout: 5000 })
   } catch {
-    assert.fail('opening a product should auto-scroll to show the product name, the photo and the order row without further scrolling')
+    assert.fail('opening a product should auto-scroll to show the artwork choices, the photo and the order row without further scrolling')
   }
   await page.getByRole('radio', { name: 'חלק' }).waitFor()
   assert.equal(await page.getByRole('radio', { name: 'חלק' }).isChecked(), true)
   assert.equal(await page.locator('.finished-option').count(), 0, 'shay-bowl should not show an artwork picker')
-  assert.equal(await page.locator('.gallery-heading').count(), 0, 'shay-bowl should not show the artwork-chooser rubric')
+  assert.equal(await page.locator('.material-choices .choice-label').innerText(), 'חומר', 'the material row should be labelled חומר')
+  assert.equal(await page.locator('.artwork-choices .choice-label').innerText(), 'ציור', 'the artwork row should be labelled ציור')
+  assert.ok((await page.locator('.artwork-add').innerText()).includes('בחירת ציור מהגלריה'), 'the plus button should read בחירת ציור מהגלריה')
+  assert.equal(await page.evaluate(() => {
+    const size = getComputedStyle(document.querySelector('.size-choice'))
+    const material = getComputedStyle(document.querySelector('.material-choices .choice-label'))
+    const artwork = getComputedStyle(document.querySelector('.artwork-choices .choice-label'))
+    const oneLine = (labelSel, controlSel) => {
+      const label = document.querySelector(labelSel).getBoundingClientRect()
+      const control = document.querySelector(controlSel).getBoundingClientRect()
+      return control.right <= label.left + 1 && Math.abs((label.top + label.bottom) / 2 - (control.top + control.bottom) / 2) <= 3
+    }
+    return size.fontSize === material.fontSize && size.fontSize === artwork.fontSize
+      && size.fontFamily === material.fontFamily && size.fontFamily === artwork.fontFamily
+      && oneLine('.material-choices .choice-label', '.material-choices label')
+      && oneLine('.artwork-choices .choice-label', '.artwork-add')
+  }), true, 'the חומר and ציור rows should match the מידה row: one centered line, same label size and font')
   assert.equal(await page.locator('.variant-thumbnails button').count(), 4, 'all existing smooth photos should show as thumbnails')
   assert.match(await page.locator('.variant-preview img').getAttribute('src'), /shay-bowl\/smooth\/purple-embrace-01\.webp$/)
   await page.locator('.variant-thumbnails button').nth(1).click()
@@ -113,12 +129,211 @@ try {
   await page.getByRole('button', { name: 'פינוי העגלה' }).click()
   await page.getByText('העגלה עדיין ריקה').waitFor()
 
+  // --- Custom artwork selection from the existing gallery ---
+  const galleryPick = (artworkName) => page.locator('.gallery-grid .gallery-item').filter({ hasText: artworkName }).locator('button.gallery-photo')
+  const plusButton = page.locator('.artwork-choices .artwork-add')
+  const customThumb = page.locator('.custom-artwork-thumb')
+
+  // the plus button also appears for a variant with a single photograph (irit-platter smooth)
+  await page.getByRole('button', { name: /לצפייה במגש עירית/ }).click()
+  await page.getByRole('radio', { name: 'חלק' }).check()
+  await page.getByRole('heading', { name: 'מגש עירית' }).waitFor()
+  assert.equal(await page.locator('.variant-thumbnails button').count(), 0, 'the smooth variant has a single photo, so no photo thumbnails')
+  assert.equal(await plusButton.count(), 1, 'the gallery-artwork plus button should appear even with one photograph')
+  await page.getByRole('button', { name: 'חזרה לקולקציה' }).first().click()
+
+  await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
+  await page.getByRole('heading', { name: 'קערת שי' }).waitFor()
+  await page.locator('.size-choice select').selectOption('קוטר 16')
+  await page.locator('.purchase-row input').fill('2')
+  await page.locator('.variant-thumbnails button').nth(1).click()
+  await page.waitForTimeout(400)
+  assert.equal(await plusButton.count(), 1, 'the plus button should appear for multi-photo variants too')
+  assert.equal(await page.evaluate(() => {
+    const thumbs = document.querySelector('.variant-thumbnails').getBoundingClientRect()
+    const preview = document.querySelector('.variant-preview').getBoundingClientRect()
+    return thumbs.right <= preview.left + 1 && thumbs.bottom > preview.top && preview.right > thumbs.right
+  }), true, 'the small photos should sit beside the large image (left side), not above it')
+  assert.equal(await page.evaluate(() => {
+    const label = document.querySelector('.artwork-choices .choice-label').getBoundingClientRect()
+    const plus = document.querySelector('.artwork-add').getBoundingClientRect()
+    const preview = document.querySelector('.variant-preview').getBoundingClientRect()
+    return plus.right <= label.left + 1 && Math.abs((label.top + label.bottom) / 2 - (plus.top + plus.bottom) / 2) <= 3 && plus.bottom <= preview.top + 2
+  }), true, 'the plus button should share the בחירת ציור מהגלריה row and sit above the photo area')
+
+  // entering selection mode scrolls to the gallery artworks and shows the notification
+  await plusButton.click()
+  await page.locator('.artwork-pick-bar').waitFor()
+  assert.ok((await page.locator('.artwork-pick-bar').innerText()).includes('בחרו ציור לקערת שי'), 'the notification should name the product')
+  assert.ok((await page.locator('.artwork-pick-bar').innerText()).includes('חלק · קוטר 16 · 78 ₪'), 'the notification should show the current combination')
+  assert.ok((await page.locator('.artwork-pick-bar').innerText()).includes('לחצו על הציור שתרצו לשלב בכלי שלכם'), 'the notification should instruct the customer')
+  try {
+    await page.waitForFunction(() => {
+      const bar = document.querySelector('.artwork-pick-bar')?.getBoundingClientRect()
+      const header = document.querySelector('.site-header').getBoundingClientRect()
+      const grid = document.querySelector('.gallery-grid').getBoundingClientRect()
+      return bar && header && grid && grid.top >= 0 && grid.top < innerHeight * 0.5 && grid.top >= bar.bottom - 2 && bar.top >= header.bottom - 1
+    }, null, { timeout: 5000 })
+  } catch {
+    assert.fail('the plus button should scroll to the gallery artworks below the sticky notification, without covering the header')
+  }
+  assert.equal(await page.evaluate(() => document.activeElement?.closest('.gallery-item') !== null), true, 'focus should move to the gallery artworks for keyboard selection')
+  assert.equal(await customThumb.count(), 0, 'no custom thumbnail yet')
+
+  // keyboard selection works: Enter on the focused artwork selects it
+  await page.keyboard.press('Enter')
+  await page.getByRole('heading', { name: 'קערת שי' }).waitFor()
+  assert.equal(await page.locator('.artwork-pick-bar').count(), 0, 'selecting an artwork should remove the notification')
+  try {
+    await page.waitForFunction(() => {
+      const header = document.querySelector('.site-header').getBoundingClientRect()
+      const title = document.querySelector('#product-title').getBoundingClientRect()
+      return title.top >= header.bottom && title.top < innerHeight
+    }, null, { timeout: 5000 })
+  } catch {
+    assert.fail('selecting an artwork should scroll back to the same product')
+  }
+  assert.equal(await page.getByRole('radio', { name: 'חלק' }).isChecked(), true, 'the material should be preserved')
+  assert.equal(await page.locator('.size-choice select').inputValue(), 'קוטר 16', 'the size should be preserved')
+  assert.equal(await page.locator('.purchase-row input').inputValue(), '2', 'the quantity should be preserved')
+  assert.match(await page.locator('.variant-preview img').getAttribute('src'), /purple-embrace-02\.webp$/, 'the product photograph should stay unchanged')
+  assert.match(await customThumb.locator('img').getAttribute('src'), /gallery\/gallery-01\.webp$/, 'the selected artwork should appear as a thumbnail next to the plus button')
+  assert.match(await page.locator('.purchase-row strong').innerText(), /עם הציור ״קסמי הפשטות״/, 'the purchase summary should reflect the custom artwork')
+  assert.ok(await page.getByText('בחרתם ציור בהזמנה אישית').isVisible(), 'the custom-order note should appear near the photograph')
+
+  // selecting another artwork replaces the previous selection
+  await plusButton.click()
+  await page.locator('.artwork-pick-bar').waitFor()
+  await galleryPick('ערב כחול עמוק').click()
+  await page.waitForTimeout(400)
+  assert.match(await customThumb.locator('img').getAttribute('src'), /gallery\/gallery-02\.webp$/, 'choosing another artwork should replace the selection')
+  assert.match(await page.locator('.purchase-row strong').innerText(), /קערת שי · קוטר 16 · חלק · עם הציור ״ערב כחול עמוק״ · 78 ₪/, 'the summary should follow the spec format')
+
+  // cancelling gallery selection preserves the previous artwork
+  await plusButton.click()
+  await page.locator('.artwork-pick-bar').waitFor()
+  await page.locator('.artwork-pick-cancel').click()
+  await page.waitForTimeout(400)
+  assert.equal(await page.locator('.artwork-pick-bar').count(), 0, 'cancelling should remove the notification')
+  assert.match(await customThumb.locator('img').getAttribute('src'), /gallery\/gallery-02\.webp$/, 'cancelling should preserve the previous artwork selection')
+  assert.equal(await page.getByRole('heading', { name: 'קערת שי' }).isVisible(), true, 'cancelling should return to the product')
+
+  // removing the custom artwork returns to the photographed selection
+  await page.locator('.custom-artwork-remove').click()
+  assert.equal(await customThumb.count(), 0, 'the remove button should clear the custom artwork')
+  assert.match(await page.locator('.purchase-row strong').innerText(), /\+ ציור/, 'removing the custom artwork should restore the photographed artwork summary')
+
+  // clicking a product photograph clears the custom artwork
+  await plusButton.click()
+  await galleryPick('ערב כחול עמוק').click()
+  await page.waitForTimeout(400)
+  await page.locator('.variant-thumbnails button').nth(0).click()
+  assert.equal(await customThumb.count(), 0, 'clicking a product photograph should return to the photographed selection')
+
+  // custom order is added to the cart correctly and coexists with a normal order
+  await plusButton.click()
+  await galleryPick('ערב כחול עמוק').click()
+  await page.waitForTimeout(400)
+  await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
+  await page.getByRole('heading', { name: 'קערת שי' }).waitFor()
+  await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  assert.equal(await page.locator('.cart-items li').count(), 2, 'normal and custom orders should coexist as separate cart lines')
+  const customLine = page.locator('.cart-items li').filter({ hasText: 'ערב כחול עמוק' })
+  assert.equal(await customLine.count(), 1, 'exactly one custom line')
+  assert.ok((await customLine.innerText()).includes('הזמנה אישית עם הציור ״ערב כחול עמוק״'), 'the custom line should carry the artwork name')
+  assert.ok((await customLine.innerText()).includes('מידה קוטר 16 · חלק'), 'the custom line should show size and material')
+  assert.ok((await customLine.innerText()).includes('78 ₪ ליחידה'), 'the custom line should use the existing size price')
+  assert.match(await customLine.locator('img').first().getAttribute('src'), /purple-embrace-01\.webp$/, 'the custom line should keep the ceramic product photograph')
+  assert.match(await customLine.locator('.cart-custom-artwork img').getAttribute('src'), /gallery\/gallery-02\.webp$/, 'the custom line should show the artwork thumbnail resolved from the gallery')
+
+  // a second, different custom artwork on the same product stays a separate line
+  await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
+  await page.getByRole('heading', { name: 'קערת שי' }).waitFor()
+  await plusButton.click()
+  await galleryPick('מים מתוקים').click()
+  await page.waitForTimeout(400)
+  await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  assert.equal(await page.locator('.cart-items li').count(), 3, 'different custom artworks on the same product must stay separate')
+
+  // adding the identical custom combination again increases its quantity
+  await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
+  await page.getByRole('heading', { name: 'קערת שי' }).waitFor()
+  await plusButton.click()
+  await galleryPick('ערב כחול עמוק').click()
+  await page.waitForTimeout(400)
+  await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  assert.equal(await page.locator('.cart-items li').count(), 3, 'an identical custom combination should merge into its cart line')
+  assert.equal(await customLine.locator('input').inputValue(), '3', 'adding the same custom combination twice should increase its quantity')
+
+  // custom artwork selections survive reload
+  const beforeReload = await page.locator('.cart-total').innerText()
+  await page.reload()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  assert.equal(await page.locator('.cart-total').innerText(), beforeReload, 'custom cart lines must survive reload')
+  assert.equal(await page.locator('.cart-items li').filter({ hasText: 'הזמנה אישית' }).count(), 2, 'both custom lines should survive reload')
+  assert.ok((await page.locator('.cart-items li').filter({ hasText: 'מים מתוקים' }).innerText()).includes('הזמנה אישית'), 'the second custom line should keep its artwork')
+
+  // quantity updates and removal target the correct cart item
+  await customLine.locator('input').fill('1')
+  await page.waitForTimeout(200)
+  await page.locator('.cart-items li').filter({ hasText: 'מים מתוקים' }).locator('input').fill('4')
+  await page.waitForTimeout(200)
+  assert.equal(await customLine.locator('input').inputValue(), '1', 'quantity updates must target the right line')
+  await page.locator('.cart-items li').filter({ hasText: 'מים מתוקים' }).getByRole('button', { name: 'הסרה' }).click()
+  assert.equal(await page.locator('.cart-items li').count(), 2, 'removal must remove only the targeted custom line')
+
+  // the WhatsApp message explicitly identifies the custom artwork request
+  await page.getByLabel('שם', { exact: true }).fill('דנה כהן')
+  await page.getByLabel('טלפון').fill('0501234567')
+  const customHref = await page.locator('.cart-actions a').getAttribute('href')
+  const customText = new URL(customHref).searchParams.get('text')
+  for (const part of [
+    'קערת שי | מידה: קוטר 16 | חלק | הזמנה אישית: מבקש/ת את הכלי עם הציור ״ערב כחול עמוק״ במקום הציור שבתמונה',
+    'קוד כלי: shay-bowl-smooth | קוד ציור: gallery-02',
+    'ציור: מגוון ציורים',
+  ]) assert.ok(customText.includes(part), `missing from custom order: ${part}`)
+
+  // previously stored cart items remain compatible, and invalid custom ids are dropped
+  await page.evaluate(() => localStorage.setItem('art-in-clay-cart-v3', JSON.stringify([
+    { variantId: 'shay-bowl-smooth', sizeLabel: 'קוטר 16', artworkName: 'מגוון ציורים', image: '/assets/products/shay-bowl/smooth/purple-embrace-01.webp', quantity: 1 },
+    { variantId: 'shay-bowl-smooth', sizeLabel: 'קוטר 16', artworkName: 'ערב כחול עמוק', image: '/assets/products/shay-bowl/smooth/purple-embrace-01.webp', quantity: 1 },
+  ])))
+  await page.reload()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  assert.equal(await page.locator('.cart-items li').count(), 2, 'legacy stored items should restore as-is')
+  assert.equal(await page.locator('.cart-items li').filter({ hasText: 'הזמנה אישית' }).count(), 0, 'legacy items are never re-labelled as custom orders')
+  await page.evaluate(() => localStorage.setItem('art-in-clay-cart-v3', JSON.stringify([
+    { variantId: 'shay-bowl-smooth', sizeLabel: 'קוטר 16', artworkName: 'ערב כחול עמוק', image: '/assets/products/shay-bowl/smooth/purple-embrace-01.webp', quantity: 1, customArtworkId: 'gallery-02' },
+    { variantId: 'shay-bowl-smooth', sizeLabel: 'קוטר 16', artworkName: 'ערב כחול עמוק', image: '/assets/products/shay-bowl/smooth/purple-embrace-01.webp', quantity: 2 },
+  ])))
+  await page.reload()
+  await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
+  assert.equal(await page.locator('.cart-items li').count(), 2, 'a normal and a custom line with the same artwork name must stay separate')
+  await page.evaluate(() => localStorage.setItem('art-in-clay-cart-v3', JSON.stringify([
+    { variantId: 'shay-bowl-smooth', sizeLabel: 'קוטר 16', artworkName: 'ערב כחול עמוק', image: '/assets/products/shay-bowl/smooth/purple-embrace-01.webp', quantity: 1, customArtworkId: 'gallery-99' },
+  ])))
+  await page.reload()
+  await page.getByText('העגלה עדיין ריקה').waitFor()
+  assert.equal(await page.evaluate(() => localStorage.getItem('art-in-clay-cart-v3')), '[]', 'an invalid custom artwork id must be dropped, not converted to a normal order')
+
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
   await page.getByRole('radio', { name: 'חלק' }).waitFor()
   await page.locator('.size-choice select').selectOption('קוטר 20')
   assert.match(await page.locator('.purchase-row strong').innerText(), /קוטר 20 .*88 ₪/)
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow')
+  await page.locator('.artwork-choices .artwork-add').click()
+  await page.locator('.artwork-pick-bar').waitFor()
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow with the pick bar')
+  await page.locator('.gallery-grid .gallery-item').filter({ hasText: 'ערב כחול עמוק' }).locator('button.gallery-photo').click()
+  await page.getByRole('heading', { name: 'קערת שי' }).waitFor()
+  assert.match(await page.locator('.purchase-row strong').innerText(), /עם הציור ״ערב כחול עמוק״/, 'mobile selection should update the summary')
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'mobile horizontal overflow with the custom thumbnail')
   await page.setViewportSize({ width: 360, height: 640 })
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, 'small mobile horizontal overflow')
   console.log('Shop: published products, material radios, size dropdown, cart lines per size, WhatsApp order, mobile: OK')

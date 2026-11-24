@@ -1,15 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import Ornament from './components/Ornament'
 import { artists, availableVariants, displayVariant, priceLabel, publishedProducts, sizeOf, type Material, type Product, type ProductVariant } from './data/products'
-import { galleryArtworks } from './data/gallery'
+import { galleryArtworks, galleryArtwork } from './data/gallery'
 
-type CartItem = { variantId: string; sizeLabel: string; artworkName: string; image: string; quantity: number }
+type CartItem = { variantId: string; sizeLabel: string; artworkName: string; image: string; quantity: number; customArtworkId?: string }
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
 const materialName: Record<Material, string> = { smooth: 'חלק', speckled: 'מנוקד' }
 const cartKey = 'art-in-clay-cart-v3'
 
 function artworkNameOf(variant: ProductVariant, imageIndex: number): string {
   return variant.imageArtworkNames?.[imageIndex] ?? variant.artworkName
+}
+
+// Shared identity for cart lines: photographed artwork and custom gallery artwork never collide.
+function cartItemKey(item: Pick<CartItem, 'variantId' | 'sizeLabel' | 'artworkName' | 'customArtworkId'>): string {
+  return item.customArtworkId ? `${item.variantId}|${item.sizeLabel}|custom:${item.customArtworkId}` : `${item.variantId}|${item.sizeLabel}|photo:${item.artworkName}`
 }
 
 function restoreCart(): CartItem[] {
@@ -22,11 +27,15 @@ function restoreCart(): CartItem[] {
       const variant = availableVariants.find((entry) => entry.id === item?.variantId)
       const product = variant && publishedProducts.find((entry) => entry.id === variant.productId)
       if (!product || !product.sizes.some((size) => size.label === item?.sizeLabel) || !Number.isInteger(item?.quantity) || item.quantity < 1 || item.quantity > 99) return []
-      const artworkName = item?.artworkName ?? variant.artworkName
-      const key = item.variantId + item.sizeLabel + artworkName
+      const custom = typeof item?.customArtworkId === 'string' ? galleryArtwork(item.customArtworkId) : undefined
+      if (item?.customArtworkId != null && !custom) return []
+      const artworkName = custom ? custom.name : item?.artworkName ?? variant.artworkName
+      const restored: CartItem = { variantId: item.variantId, sizeLabel: item.sizeLabel, artworkName, image: item?.image ?? variant.images[0], quantity: item.quantity }
+      if (custom) restored.customArtworkId = custom.id
+      const key = cartItemKey(restored)
       if (seen.has(key)) return []
       seen.add(key)
-      return [{ variantId: item.variantId, sizeLabel: item.sizeLabel, artworkName, image: item?.image ?? variant.images[0], quantity: item.quantity }]
+      return [restored]
     })
   } catch {
     return []
@@ -37,7 +46,8 @@ function detailsOf(items: CartItem[]) {
   return items.flatMap((item) => {
     const variant = availableVariants.find((entry) => entry.id === item.variantId)
     const entry = variant && publishedProducts.find((entry) => entry.id === variant.productId)
-    return variant && entry ? [{ ...item, variant, product: entry, size: sizeOf(entry, item.sizeLabel) }] : []
+    const customArtwork = item.customArtworkId ? galleryArtwork(item.customArtworkId) : undefined
+    return variant && entry ? [{ ...item, variant, product: entry, size: sizeOf(entry, item.sizeLabel), customArtwork }] : []
   })
 }
 
@@ -48,6 +58,8 @@ function App() {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [pickingArtwork, setPickingArtwork] = useState(false)
+  const [customArtworkId, setCustomArtworkId] = useState<string | null>(null)
   const [cart, setCart] = useState<CartItem[]>(restoreCart)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -55,11 +67,19 @@ function App() {
   const [notes, setNotes] = useState('')
   const orderForm = useRef<HTMLFormElement>(null)
   const productSection = useRef<HTMLElement>(null)
+  const galleryGrid = useRef<HTMLDivElement>(null)
   const pendingProductScroll = useRef(false)
 
   useEffect(() => {
     try { localStorage.setItem(cartKey, JSON.stringify(cart)) } catch { return }
   }, [cart])
+
+  // Entering artwork selection: jump straight to the gallery artworks, never to the intro or video.
+  useEffect(() => {
+    if (!pickingArtwork) return
+    galleryGrid.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    galleryGrid.current?.querySelector<HTMLButtonElement>('.gallery-photo')?.focus({ preventScroll: true })
+  }, [pickingArtwork])
 
   function scrollProductIntoView() {
     requestAnimationFrame(() => {
@@ -83,6 +103,8 @@ function App() {
     setSelectedVariant(first.id)
     setSelectedImage(0)
     setQuantity(1)
+    setPickingArtwork(false)
+    setCustomArtworkId(null)
     pendingProductScroll.current = true
     scrollProductIntoView()
   }
@@ -91,10 +113,36 @@ function App() {
     setMaterial(next)
     setSelectedVariant(availableVariants.find((variant) => variant.productId === product?.id && variant.material === next)?.id ?? null)
     setSelectedImage(0)
+    setCustomArtworkId(null)
+  }
+
+  function startPickingArtwork() {
+    setPickingArtwork(true)
+  }
+
+  function cancelPickingArtwork() {
+    setPickingArtwork(false)
+    returnToProduct()
+  }
+
+  function chooseArtwork(artworkId: string) {
+    setCustomArtworkId(artworkId)
+    setPickingArtwork(false)
+    returnToProduct()
+  }
+
+  function returnToProduct() {
+    requestAnimationFrame(() => {
+      productSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      const custom = productSection.current?.querySelector<HTMLButtonElement>('.custom-artwork-thumb')
+      const fallback = productSection.current?.querySelector<HTMLButtonElement>('.artwork-add')
+      ;(custom ?? fallback)?.focus({ preventScroll: true })
+    })
   }
 
   const visibleVariants = availableVariants.filter((variant) => variant.productId === product?.id && variant.material === material)
   const chosenVariant = visibleVariants.find((variant) => variant.id === selectedVariant)
+  const customArtwork = customArtworkId ? galleryArtwork(customArtworkId) ?? null : null
   const activeSize = product ? sizeOf(product, sizeLabel) : null
   const cartDetails = detailsOf(cart)
   const total = cartDetails.reduce((sum, item) => sum + item.size.price * item.quantity, 0)
@@ -102,25 +150,35 @@ function App() {
 
   function addToCart() {
     if (!chosenVariant || !activeSize) return
-    const artworkName = artworkNameOf(chosenVariant, selectedImage)
+    const artworkName = customArtwork ? customArtwork.name : artworkNameOf(chosenVariant, selectedImage)
+    const added: CartItem = { variantId: chosenVariant.id, sizeLabel: activeSize.label, artworkName, image: chosenVariant.images[selectedImage], quantity, ...(customArtwork ? { customArtworkId: customArtwork.id } : {}) }
+    const key = cartItemKey(added)
     setCart((items) => {
-      const existing = items.find((item) => item.variantId === chosenVariant.id && item.sizeLabel === activeSize.label && item.artworkName === artworkName)
-      if (existing) return items.map((item) => item.variantId === chosenVariant.id && item.sizeLabel === activeSize.label && item.artworkName === artworkName ? { ...item, quantity: Math.min(99, item.quantity + quantity) } : item)
-      return [...items, { variantId: chosenVariant.id, sizeLabel: activeSize.label, artworkName, image: chosenVariant.images[selectedImage], quantity }]
+      const existing = items.find((item) => cartItemKey(item) === key)
+      if (existing) return items.map((item) => cartItemKey(item) === key ? { ...item, quantity: Math.min(99, item.quantity + quantity) } : item)
+      return [...items, added]
     })
+    setCustomArtworkId(null)
+    setPickingArtwork(false)
     setProduct(null)
     document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  function updateCart(variantId: string, cartSize: string, artworkName: string, next: number) {
-    setCart((items) => items.map((item) => item.variantId === variantId && item.sizeLabel === cartSize && item.artworkName === artworkName ? { ...item, quantity: Math.max(1, Math.min(99, next)) } : item))
+  function updateCart(key: string, next: number) {
+    setCart((items) => items.map((item) => cartItemKey(item) === key ? { ...item, quantity: Math.max(1, Math.min(99, next)) } : item))
+  }
+
+  function removeCartItem(key: string) {
+    setCart((items) => items.filter((item) => cartItemKey(item) !== key))
   }
 
   const message = [
     `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
     `שם: ${name.trim()}`,
     `טלפון: ${phone.trim()}`,
-    ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count }) => `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
+    ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count, customArtwork }) => customArtwork
+      ? `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | הזמנה אישית: מבקש/ת את הכלי עם הציור ״${customArtwork.name}״ במקום הציור שבתמונה | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד כלי: ${variant.id} | קוד ציור: ${customArtwork.id})`
+      : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
     `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
     `אספקה: ${delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח — לתיאום מחיר ופרטים'}`,
     ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
@@ -206,29 +264,40 @@ function App() {
               {product.sizes.map((size) => <option key={size.label} value={size.label}>{size.label} · {size.price} ₪</option>)}
             </select>
           </label>}
-          <fieldset className="material-choices">
-            <legend>בחירת חומר</legend>
+          <div className="material-choices" role="radiogroup" aria-label="בחירת חומר">
+            <span className="choice-label">חומר</span>
             {(['smooth', 'speckled'] as const).map((option) => <label key={option}>
               <input type="radio" name="material" value={option} checked={material === option} onChange={() => chooseMaterial(option)} />
               {materialName[option]}
             </label>)}
-          </fieldset>
+          </div>
           {visibleVariants.length ? <>
             {visibleVariants.length > 1 && <>
               <p className="gallery-heading">בחרו ציור מתוך התמונות של {materialName[material]}:</p>
               <div className="finished-gallery">
-                {visibleVariants.map((variant) => <button type="button" key={variant.id} className={`finished-option ${selectedVariant === variant.id ? 'selected' : ''}`} aria-pressed={selectedVariant === variant.id} onClick={() => { setSelectedVariant(variant.id); setSelectedImage(0) }}>
+                {visibleVariants.map((variant) => <button type="button" key={variant.id} className={`finished-option ${selectedVariant === variant.id ? 'selected' : ''}`} aria-pressed={selectedVariant === variant.id} onClick={() => { setSelectedVariant(variant.id); setSelectedImage(0); setCustomArtworkId(null) }}>
                   <img src={variant.images[0]} alt={`${product.name} על רקע ${materialName[material]} עם ציור ${variant.artworkName}`} loading="lazy" />
                   <span>{variant.artworkName}</span>
                 </button>)}
               </div>
             </>}
             {chosenVariant && <>
-              {chosenVariant.images.length > 1 && <div className="variant-thumbnails" role="group" aria-label="זוויות צילום של השילוב הנבחר">
-                {chosenVariant.images.map((image, index) => <button type="button" key={image} className={selectedImage === index ? 'selected' : ''} aria-label={`צילום ${index + 1} מתוך ${chosenVariant.images.length}`} aria-pressed={selectedImage === index} onClick={() => setSelectedImage(index)}><img src={image} alt="" loading="lazy" /></button>)}
-              </div>}
-              <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} onLoad={() => { if (pendingProductScroll.current) scrollProductIntoView() }} /></div>
-              <div className="purchase-row"><strong>{product.name}{product.sizes.length > 1 ? ` · ${activeSize?.label} ·` : ''} {materialName[material]} + ציור {chosenVariant ? artworkNameOf(chosenVariant, selectedImage) : ''} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button><button type="button" className="back-link" onClick={() => { setProduct(null); document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' }) }}>← חזרה לקולקציה</button></div>
+              <div className="artwork-choices">
+                <span className="choice-label">ציור</span>
+                <button type="button" className="artwork-add" onClick={startPickingArtwork}><span className="artwork-add-icon" aria-hidden="true">+</span><span>בחירת ציור מהגלריה</span></button>
+                {customArtwork && <span className="custom-artwork-wrap">
+                  <button type="button" className="custom-artwork-thumb selected" aria-pressed="true" aria-label={`ציור נבחר: ${customArtwork.name}. לבחירת ציור אחר`} onClick={startPickingArtwork}><img src={customArtwork.image} alt={customArtwork.name} /></button>
+                  <button type="button" className="custom-artwork-remove" aria-label={`הסרת הציור ${customArtwork.name}`} onClick={() => setCustomArtworkId(null)}>×</button>
+                </span>}
+              </div>
+              <div className="variant-display">
+                <div className="variant-preview"><img src={chosenVariant.images[selectedImage]} alt={`${product.name}, ${materialName[material]}, ${chosenVariant.artworkName}, צילום ${selectedImage + 1} מתוך ${chosenVariant.images.length}`} onLoad={() => { if (pendingProductScroll.current) scrollProductIntoView() }} /></div>
+                {chosenVariant.images.length > 1 && <div className="variant-thumbnails" role="group" aria-label="זוויות צילום של השילוב הנבחר">
+                  {chosenVariant.images.map((image, index) => <button type="button" key={image} className={selectedImage === index && !customArtwork ? 'selected' : ''} aria-label={`צילום ${index + 1} מתוך ${chosenVariant.images.length}`} aria-pressed={selectedImage === index && !customArtwork} onClick={() => { setSelectedImage(index); setCustomArtworkId(null) }}><img src={image} alt="" loading="lazy" /></button>)}
+                </div>}
+              </div>
+              {customArtwork && <p className="custom-artwork-note">בחרתם ציור בהזמנה אישית. צילום הכלי להמחשה בלבד.</p>}
+              <div className="purchase-row"><strong>{product.name}{product.sizes.length > 1 ? ` · ${activeSize?.label} ·` : ''} {materialName[material]}{customArtwork ? ` · עם הציור ״${customArtwork.name}״` : ` + ציור ${chosenVariant ? artworkNameOf(chosenVariant, selectedImage) : ''}`} · {activeSize?.price} ₪</strong><label>כמות <input type="number" min="1" max="99" value={quantity} onChange={(event) => setQuantity(Math.max(1, Math.min(99, Number(event.target.value) || 1)))} /></label><button type="button" className="primary-link" onClick={addToCart}>הוספה לעגלה</button><button type="button" className="back-link" onClick={() => { setProduct(null); setPickingArtwork(false); setCustomArtworkId(null); document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth' }) }}>← חזרה לקולקציה</button></div>
               <p className="product-disclaimer">התמונה להמחשה בלבד</p>
             </>}
           </> : <p className="catalog-empty" role="status">אין כרגע צילומים זמינים של {product.name} ברקע {materialName[material]}.</p>}
@@ -254,8 +323,23 @@ function App() {
               <video controls playsInline preload="metadata" src="/assets/gallery/irit-is-painting.mp4" aria-label="עירית מציירת ציור פרחים"></video>
             </figure>
           </div>
-          <div className="gallery-grid">
-            {galleryArtworks.map((artwork) => <figure key={artwork.image} className="gallery-item"><span className="gallery-photo"><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" /></span><figcaption className="gallery-caption">{artwork.name}</figcaption></figure>)}
+          {pickingArtwork && product && <div className="artwork-pick-bar" role="status">
+            <div className="artwork-pick-text">
+              <strong>בחרו ציור ל{product.name}</strong>
+              <span>{materialName[material]}{product.sizes.length > 1 ? ` · ${activeSize?.label}` : ''} · {activeSize?.price} ₪</span>
+            </div>
+            <p className="artwork-pick-hint">לחצו על הציור שתרצו לשלב בכלי שלכם.</p>
+            <button type="button" className="artwork-pick-cancel" onClick={cancelPickingArtwork} aria-label="ביטול בחירת הציור וחזרה למוצר">×</button>
+          </div>}
+          <div className="gallery-grid" ref={galleryGrid}>
+            {galleryArtworks.map((artwork) => pickingArtwork ? (
+              <figure key={artwork.id} className="gallery-item picking">
+                <button type="button" className="gallery-photo" onClick={() => chooseArtwork(artwork.id)} aria-label={`בחירת הציור ${artwork.name} לכלי שנבחר`} aria-pressed={customArtworkId === artwork.id}><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" /></button>
+                <figcaption className="gallery-caption">{artwork.name}</figcaption>
+              </figure>
+            ) : (
+              <figure key={artwork.id} className="gallery-item"><span className="gallery-photo"><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" /></span><figcaption className="gallery-caption">{artwork.name}</figcaption></figure>
+            ))}
           </div>
         </section>
 
@@ -264,13 +348,17 @@ function App() {
           <h2 id="cart-title" className="section-title">העגלה שלכם</h2>
           <Ornament />
           {cartDetails.length ? <>
-            <ul className="cart-items">{cartDetails.map(({ variant, product: entry, size, artworkName, image, quantity: count }) => <li key={`${variant.id}:${size.label}:${artworkName}`}>
-              <img src={image} alt="" loading="lazy" />
-              <div><strong>{entry.name}</strong><span>{entry.sizes.length > 1 ? `מידה ${size.label} · ` : ''}{materialName[variant.material]} · ציור {artworkName}</span><span>{size.price} ₪ ליחידה</span></div>
-              <label>כמות <input type="number" min="1" max="99" value={count} onChange={(event) => updateCart(variant.id, size.label, artworkName, Number(event.target.value) || 1)} /></label>
-              <strong>{size.price * count} ₪</strong>
-              <button type="button" className="remove-item" onClick={() => setCart((items) => items.filter((item) => !(item.variantId === variant.id && item.sizeLabel === size.label && item.artworkName === artworkName)))}>הסרה</button>
-            </li>)}</ul>
+            <ul className="cart-items">{cartDetails.map((detail) => {
+              const key = cartItemKey(detail)
+              const { variant, product: entry, size, artworkName, image, quantity: count, customArtwork } = detail
+              return <li key={key}>
+                <img src={image} alt="" loading="lazy" />
+                <div><strong>{entry.name}</strong><span>{entry.sizes.length > 1 ? `מידה ${size.label} · ` : ''}{materialName[variant.material]}{customArtwork ? '' : ` · ציור ${artworkName}`}</span>{customArtwork && <span className="cart-custom-artwork"><img src={customArtwork.image} alt={customArtwork.name} loading="lazy" /><strong>הזמנה אישית עם הציור ״{customArtwork.name}״</strong></span>}<span>{size.price} ₪ ליחידה</span></div>
+                <label>כמות <input type="number" min="1" max="99" value={count} onChange={(event) => updateCart(key, Number(event.target.value) || 1)} /></label>
+                <strong>{size.price * count} ₪</strong>
+                <button type="button" className="remove-item" onClick={() => removeCartItem(key)}>הסרה</button>
+              </li>
+            })}</ul>
             <p className="cart-total">סכום מוצרים: <strong>{total} ₪</strong></p>
             <p className="cart-caution">המחיר אינו כולל משלוח. ההזמנה וזמינות המוצר יאושרו סופית רק לאחר אישור פרטי ההזמנה.</p>
             <form ref={orderForm} className="cart-form" onSubmit={(event) => event.preventDefault()}>
