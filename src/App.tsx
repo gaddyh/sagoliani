@@ -308,7 +308,7 @@ function App() {
         <section id="gallery" className="gallery page-content" aria-labelledby="gallery-title">
           <h2 id="gallery-title" className="section-title">הגלריה</h2>
           <Ornament />
-          <p className="section-lead">בחרתי להעניק לכל אחד מציוריי שם בהשראת שיריו של מאיר אריאל ז״ל, מתוך אהבה למילותיו, לעושר שפתו ולדרך המיוחדת שבה ידע לחבר בין הטבע לנפש האדם.</p>
+          <p className="section-lead">זה המקום לעצור לרגע, לנשום עמוק, להריח פרחים, לשאוב השראה, <strong>לחוש את רוח היצירה</strong> והחיבור המיוחד בין ציורי המים לעבודת הקדרות.<br />אנו מזמינות אתכם לשוטט בין הציורים, לבחור <strong>ציור שפותח לכם את הלב</strong>, ולשלב אותו בכלי שתבחרו לעצמכם או כמתנה לאהוביכם. כך ניצור יחד את הכלי הייחודי שלכם.<br />בחרנו להעניק לכל אחד מהציורים שם בהשראת שיריו של <strong>מאיר אריאל ז״ל</strong>, מתוך אהבה למילותיו, לעושר שפתו ולדרך המיוחדת שבה ידע לחבר בין הטבע לנפש האדם.</p>
           {pickingArtwork && product && <div className="artwork-pick-bar" role="status">
             <div className="artwork-pick-text">
               <strong>בחרו ציור ל{product.name}</strong>

@@ -57,7 +57,8 @@ h1, h2, h3, p { margin-top: 0; }
 .product-label span { font-size: 13px; color: var(--muted); }
 .catalog-note { text-align: center; font: 700 17px/1.8 var(--serif); color: var(--ink); max-width: 640px; margin: 48px auto 0; }
 .gallery { padding-top: 40px; padding-bottom: 80px; }
-.gallery .section-lead { font-weight: 700; }
+.gallery .section-lead { max-width: 1120px; }
+.gallery .section-lead strong { font-weight: 700; }
 .gallery-poem { text-align: center; font: 500 21px/1.85 "David Libre", var(--serif); color: #765b7d; margin: 0 auto 46px; }
 .gallery-poem p { margin: 0; }
 .gallery-poem .gallery-poem-credit { font: 500 16px/1.6 "David Libre", var(--serif); color: #5c4563; margin-top: 12px; }
