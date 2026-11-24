@@ -199,8 +199,8 @@ try {
   assert.equal(await page.locator('.size-choice select').inputValue(), 'קוטר 16', 'the size should be preserved')
   assert.equal(await page.locator('.purchase-row input').inputValue(), '2', 'the quantity should be preserved')
   assert.match(await page.locator('.variant-preview img').getAttribute('src'), /purple-embrace-02\.webp$/, 'the product photograph should stay unchanged')
-  assert.match(await customThumb.locator('img').getAttribute('src'), /gallery\/gallery-01\.webp$/, 'the selected artwork should appear as a thumbnail next to the plus button')
-  assert.match(await page.locator('.purchase-row strong').innerText(), /עם הציור ״קסמי הפשטות״/, 'the purchase summary should reflect the custom artwork')
+  assert.match(await customThumb.locator('img').getAttribute('src'), /gallery\/gallery-09\.webp$/, 'the selected artwork should appear as a thumbnail next to the plus button')
+  assert.match(await page.locator('.purchase-row strong').innerText(), /עם הציור ״שלל שרב״/, 'the purchase summary should reflect the custom artwork')
   assert.ok(await page.getByText('בחרתם ציור בהזמנה אישית').isVisible(), 'the custom-order note should appear near the photograph')
 
   // selecting another artwork replaces the previous selection
