@@ -61,7 +61,7 @@ h1, h2, h3, p { margin-top: 0; }
 .gallery-poem { text-align: center; font: 500 21px/1.85 "David Libre", var(--serif); color: #765b7d; margin: 0 auto 46px; }
 .gallery-poem p { margin: 0; }
 .gallery-poem .gallery-poem-credit { font: 500 16px/1.6 "David Libre", var(--serif); color: #5c4563; margin-top: 12px; }
-.gallery-intro { display: flex; align-items: center; justify-content: center; gap: 56px; flex-wrap: wrap; margin: 0 auto 46px; }
+.gallery-intro { display: flex; align-items: center; justify-content: center; gap: 56px; flex-wrap: wrap; margin: 46px auto 0; }
 .gallery-intro .gallery-poem { margin: 0; }
 .gallery-video { margin: 0 auto 46px; max-width: 380px; }
 .gallery-intro .gallery-video { margin: 0; max-width: 260px; }
