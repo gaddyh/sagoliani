@@ -83,7 +83,7 @@ try {
   const href = await page.locator('.cart-actions a').getAttribute('href')
   assert.match(href, /^https:\/\/wa\.me\/972523894291\?text=/)
   const text = new URL(href).searchParams.get('text')
-  for (const part of ['דנה כהן', '0501234567', 'קערת שי', 'מידה: קוטר 20', 'מגוון ציורים', '2 × 88 ₪ = 176 ₪', 'מידה: קוטר 16', '1 × 78 ₪ = 78 ₪', 'סכום מוצרים: 254 ₪', 'אספקה: משלוח בתיאום לפי איזור מגורים', 'אישור זמינות', 'PayBox']) assert.ok(text.includes(part), `missing from order: ${part}`)
+  for (const part of ['דנה כהן', '0501234567', 'קערת שי', 'מידה: קוטר 20', 'מודה אני', '2 × 88 ₪ = 176 ₪', 'מידה: קוטר 16', '1 × 78 ₪ = 78 ₪', 'סכום מוצרים: 254 ₪', 'אספקה: משלוח בתיאום לפי איזור מגורים', 'אישור זמינות', 'PayBox']) assert.ok(text.includes(part), `missing from order: ${part}`)
   assert.equal(await page.getByRole('button', { name: 'העתקת ההודעה' }).count(), 0, 'the order form should send only via WhatsApp without a copy button')
   await page.locator('.cart-items input').first().fill('1')
   assert.equal(await page.locator('.cart-total').innerText(), 'סכום מוצרים: 166 ₪', 'quantity change must update the line total')
@@ -111,22 +111,22 @@ try {
   assert.ok(ellaLine.includes('מגש אלה') && !ellaLine.includes('מידה'), 'single-size products should not repeat their size label in the cart')
   const ellaHref = await page.locator('.cart-actions a').getAttribute('href')
   const ellaText = new URL(ellaHref).searchParams.get('text')
-  assert.ok(ellaText.includes('מגש אלה | חלק | ציור: ריקוד בשדה') && !ellaText.includes('מידה:'), 'single-size products should not repeat their size label in the order message')
+  assert.ok(ellaText.includes('מגש אלה | חלק | ציור: נישאים ברוח') && !ellaText.includes('מידה:'), 'single-size products should not repeat their size label in the order message')
   await page.getByRole('button', { name: 'פינוי העגלה' }).click()
   await page.getByText('העגלה עדיין ריקה').waitFor()
 
   await page.getByRole('button', { name: /לצפייה במגש עירית/ }).click()
   await page.getByRole('heading', { name: 'מגש עירית' }).waitFor()
   await page.waitForTimeout(900)
-  assert.match(await page.locator('.purchase-row strong').innerText(), /מגש עירית חלק \+ ציור לחש ורוד · 155 ₪/, 'the purchase row should name the artwork of the selected photo')
+  assert.match(await page.locator('.purchase-row strong').innerText(), /מגש עירית חלק \+ ציור נוגה · 155 ₪/, 'the purchase row should name the artwork of the selected photo')
   await page.getByRole('radio', { name: 'מנוקד' }).check()
-  assert.match(await page.locator('.purchase-row strong').innerText(), /מגש עירית מנוקד \+ ציור שדה פרחי בר · 155 ₪/, 'switching the material should switch to its first photo artwork')
+  assert.match(await page.locator('.purchase-row strong').innerText(), /מגש עירית מנוקד \+ ציור שיר געגועים · 155 ₪/, 'switching the material should switch to its first photo artwork')
   await page.locator('.variant-thumbnails button').nth(2).click()
-  assert.match(await page.locator('.purchase-row strong').innerText(), /מגש עירית מנוקד \+ ציור לחש ורוד · 155 ₪/, 'switching the photo should switch the artwork name')
+  assert.match(await page.locator('.purchase-row strong').innerText(), /מגש עירית מנוקד \+ ציור נוגה · 155 ₪/, 'switching the photo should switch the artwork name')
   await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
   await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
   const iritLine = await page.locator('.cart-items li').first().innerText()
-  assert.ok(iritLine.includes('ציור לחש ורוד'), 'the cart line should carry the selected artwork name')
+  assert.ok(iritLine.includes('ציור נוגה'), 'the cart line should carry the selected artwork name')
   assert.match(await page.locator('.cart-items li img').first().getAttribute('src'), /pink_whisper\.webp$/, 'the cart line should show the selected artwork photo')
   await page.getByRole('button', { name: 'פינוי העגלה' }).click()
   await page.getByText('העגלה עדיין ריקה').waitFor()
@@ -312,7 +312,7 @@ try {
   for (const part of [
     'קערת שי | מידה: קוטר 16 | חלק | הזמנה אישית: מבקש/ת את הכלי עם הציור ״ערב כחול עמוק״ במקום הציור שבתמונה',
     'קוד כלי: shay-bowl-smooth | קוד ציור: gallery-02',
-    'ציור: מגוון ציורים',
+    'ציור: מודה אני',
   ]) assert.ok(customText.includes(part), `missing from custom order: ${part}`)
 
   // previously stored cart items remain compatible, and invalid custom ids are dropped

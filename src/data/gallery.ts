@@ -21,7 +21,7 @@ export const galleryArtworks: GalleryArtwork[] = [
   { id: 'gallery-21', image: '/assets/gallery/gallery-21.webp', name: 'מים מתוקים' },
   { id: 'gallery-15', image: '/assets/gallery/gallery-15.webp', name: 'פרדס רימונים' },
   { id: 'gallery-16', image: '/assets/gallery/gallery-16.webp', name: 'נוגה' },
-  { id: 'gallery-17', image: '/assets/gallery/gallery-17.webp', name: 'רוח של סוף יום' },
+  { id: 'gallery-17', image: '/assets/gallery/gallery-17.webp', name: 'מודה אני' },
   { id: 'gallery-18', image: '/assets/gallery/gallery-18.webp', name: 'בצהרי היום' },
   { id: 'gallery-19', image: '/assets/gallery/gallery-19.webp', name: 'בשדה הירוק' },
   { id: 'gallery-20', image: '/assets/gallery/gallery-20.webp', name: 'שדות גולדברג' },
