@@ -202,6 +202,12 @@ try {
   assert.match(await customThumb.locator('img').getAttribute('src'), /gallery\/gallery-09\.webp$/, 'the selected artwork should appear as a thumbnail next to the plus button')
   assert.match(await page.locator('.purchase-row strong').innerText(), /עם הציור ״שלל שרב״/, 'the purchase summary should reflect the custom artwork')
   assert.ok(await page.getByText('בחרתם ציור בהזמנה אישית').isVisible(), 'the custom-order note should appear near the photograph')
+  assert.equal(await page.evaluate(() => {
+    const img = document.querySelector('.custom-artwork-thumb img')
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+    img.dispatchEvent(event)
+    return event.defaultPrevented && img.draggable === false && getComputedStyle(img).userSelect === 'none'
+  }), true, 'the custom artwork thumbnail should block the context menu, dragging and selection')
 
   // selecting another artwork replaces the previous selection
   await plusButton.click()
@@ -250,6 +256,15 @@ try {
   assert.ok((await customLine.innerText()).includes('78 ₪ ליחידה'), 'the custom line should use the existing size price')
   assert.match(await customLine.locator('img').first().getAttribute('src'), /purple-embrace-01\.webp$/, 'the custom line should keep the ceramic product photograph')
   assert.match(await customLine.locator('.cart-custom-artwork img').getAttribute('src'), /gallery\/gallery-02\.webp$/, 'the custom line should show the artwork thumbnail resolved from the gallery')
+  assert.equal(await page.evaluate(() => {
+    const check = (img) => {
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+      img.dispatchEvent(event)
+      const style = getComputedStyle(img)
+      return event.defaultPrevented && img.draggable === false && style.userSelect === 'none' && style.webkitTouchCallout === 'none'
+    }
+    return check(document.querySelector('.gallery-grid .gallery-item img')) && check(document.querySelector('.cart-custom-artwork img'))
+  }), true, 'gallery and cart artwork images should block the context menu, dragging, selection and long-press callouts')
 
   // a second, different custom artwork on the same product stays a separate line
   await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()

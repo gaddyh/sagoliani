@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import Ornament from './components/Ornament'
 import { artists, availableVariants, displayVariant, priceLabel, publishedProducts, sizeOf, type Material, type Product, type ProductVariant } from './data/products'
 import { galleryArtworks, galleryArtwork } from './data/gallery'
@@ -8,6 +8,8 @@ const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
 type Delivery = 'binyamina' | 'sde-nehemia' | 'delivery'
 const deliveryLabel: Record<Delivery, string> = { binyamina: 'איסוף עצמי מבינימינה', 'sde-nehemia': 'איסוף עצמי משדה נחמיה', delivery: 'משלוח בתיאום לפי איזור מגורים' }
 const materialName: Record<Material, string> = { smooth: 'חלק', speckled: 'מנוקד' }
+// Casual copy protection for artwork images: no context menu, no native drag.
+const artworkImageProps = { draggable: false, onContextMenu: (event: MouseEvent<HTMLImageElement>) => event.preventDefault() }
 const cartKey = 'art-in-clay-cart-v3'
 
 function artworkNameOf(variant: ProductVariant, imageIndex: number): string {
@@ -288,7 +290,7 @@ function App() {
                 <span className="choice-label">ציור</span>
                 <button type="button" className="artwork-add" onClick={startPickingArtwork}><span className="artwork-add-icon" aria-hidden="true">+</span><span>בחירת ציור מהגלריה</span></button>
                 {customArtwork && <span className="custom-artwork-wrap">
-                  <button type="button" className="custom-artwork-thumb selected" aria-pressed="true" aria-label={`ציור נבחר: ${customArtwork.name}. לבחירת ציור אחר`} onClick={startPickingArtwork}><img src={customArtwork.image} alt={customArtwork.name} /></button>
+                  <button type="button" className="custom-artwork-thumb selected" aria-pressed="true" aria-label={`ציור נבחר: ${customArtwork.name}. לבחירת ציור אחר`} onClick={startPickingArtwork}><img src={customArtwork.image} alt={customArtwork.name} {...artworkImageProps} /></button>
                   <button type="button" className="custom-artwork-remove" aria-label={`הסרת הציור ${customArtwork.name}`} onClick={() => setCustomArtworkId(null)}>×</button>
                 </span>}
               </div>
@@ -320,11 +322,11 @@ function App() {
           <div className="gallery-grid" ref={galleryGrid}>
             {galleryArtworks.map((artwork) => pickingArtwork ? (
               <figure key={artwork.id} className="gallery-item picking">
-                <button type="button" className="gallery-photo" onClick={() => chooseArtwork(artwork.id)} aria-label={`בחירת הציור ${artwork.name} לכלי שנבחר`} aria-pressed={customArtworkId === artwork.id}><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" /></button>
+                <button type="button" className="gallery-photo" onClick={() => chooseArtwork(artwork.id)} aria-label={`בחירת הציור ${artwork.name} לכלי שנבחר`} aria-pressed={customArtworkId === artwork.id}><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" {...artworkImageProps} /></button>
                 <figcaption className="gallery-caption">{artwork.name}</figcaption>
               </figure>
             ) : (
-              <figure key={artwork.id} className="gallery-item"><span className="gallery-photo"><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" /></span><figcaption className="gallery-caption">{artwork.name}</figcaption></figure>
+              <figure key={artwork.id} className="gallery-item"><span className="gallery-photo"><img src={artwork.image} alt={artwork.name} loading="lazy" decoding="async" {...artworkImageProps} /></span><figcaption className="gallery-caption">{artwork.name}</figcaption></figure>
             ))}
           </div>
           <div className="gallery-intro">
@@ -354,7 +356,7 @@ function App() {
               const { variant, product: entry, size, artworkName, image, quantity: count, customArtwork } = detail
               return <li key={key}>
                 <img src={image} alt="" loading="lazy" />
-                <div><strong>{entry.name}</strong><span>{entry.sizes.length > 1 ? `מידה ${size.label} · ` : ''}{materialName[variant.material]}{customArtwork ? '' : ` · ציור ${artworkName}`}</span>{customArtwork && <span className="cart-custom-artwork"><img src={customArtwork.image} alt={customArtwork.name} loading="lazy" /><strong>הזמנה אישית עם הציור ״{customArtwork.name}״</strong></span>}<span>{size.price} ₪ ליחידה</span></div>
+                <div><strong>{entry.name}</strong><span>{entry.sizes.length > 1 ? `מידה ${size.label} · ` : ''}{materialName[variant.material]}{customArtwork ? '' : ` · ציור ${artworkName}`}</span>{customArtwork && <span className="cart-custom-artwork"><img src={customArtwork.image} alt={customArtwork.name} loading="lazy" {...artworkImageProps} /><strong>הזמנה אישית עם הציור ״{customArtwork.name}״</strong></span>}<span>{size.price} ₪ ליחידה</span></div>
                 <label>כמות <input type="number" min="1" max="99" value={count} onChange={(event) => updateCart(key, Number(event.target.value) || 1)} /></label>
                 <strong>{size.price * count} ₪</strong>
                 <button type="button" className="remove-item" onClick={() => removeCartItem(key)}>הסרה</button>

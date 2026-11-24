@@ -75,6 +75,8 @@ h1, h2, h3, p { margin-top: 0; }
   .gallery-item:hover .gallery-photo { transform: scale(1.6); z-index: 5; box-shadow: 0 18px 40px #6b5a3a33; }
 }
 .gallery-caption { margin: 10px 0 0; text-align: center; font: 500 16px var(--serif); color: var(--olive); }
+/* Casual copy protection for artwork images; clicks, taps and keyboard selection are untouched. */
+.gallery-photo img, .custom-artwork-thumb img, .cart-custom-artwork img { -webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select: none; user-select: none; }
 .studio { padding-top: 50px; padding-bottom: 70px; scroll-margin-top: 70px; }
 #collection, #gallery, #before-ordering, #care, #contact { scroll-margin-top: 70px; }
 .before-ordering { padding-top: 40px; padding-bottom: 70px; }
