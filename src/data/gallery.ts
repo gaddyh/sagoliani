@@ -9,7 +9,7 @@ export const galleryArtworks: GalleryArtwork[] = [
   { id: 'gallery-11', image: '/assets/gallery/gallery-11.webp', name: 'שיר געגועים' },
   { id: 'gallery-03', image: '/assets/gallery/gallery-03.webp', name: 'עכשיו להתאהב' },
   { id: 'gallery-13', image: '/assets/gallery/gallery-13.webp', name: 'נישאים ברוח' },
-  { id: 'gallery-05', image: '/assets/gallery/gallery-05.webp', name: 'השדה הפורח' },
+  { id: 'gallery-05', image: '/assets/gallery/gallery-05.webp', name: 'השדה המוזהב' },
   { id: 'gallery-22', image: '/assets/gallery/gallery-22.webp', name: 'כמה כחול הערב' },
   { id: 'gallery-07', image: '/assets/gallery/gallery-07.webp', name: 'ילדתי שלי' },
   { id: 'gallery-08', image: '/assets/gallery/gallery-08.webp', name: 'אגדת דשא' },
@@ -25,7 +25,7 @@ export const galleryArtworks: GalleryArtwork[] = [
   { id: 'gallery-18', image: '/assets/gallery/gallery-18.webp', name: 'בצהרי היום' },
   { id: 'gallery-19', image: '/assets/gallery/gallery-19.webp', name: 'בשדה הירוק' },
   { id: 'gallery-20', image: '/assets/gallery/gallery-20.webp', name: 'שדות גולדברג' },
-  { id: 'gallery-14', image: '/assets/gallery/gallery-14.webp', name: 'מעוררים ערגונות' },
+  { id: 'gallery-14', image: '/assets/gallery/gallery-14.webp', name: 'לגמרי במקרה' },
   { id: 'gallery-06', image: '/assets/gallery/gallery-06.webp', name: 'זרעי קיץ' },
 ]
 
