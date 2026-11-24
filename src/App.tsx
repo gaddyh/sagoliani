@@ -5,6 +5,8 @@ import { galleryArtworks, galleryArtwork } from './data/gallery'
 
 type CartItem = { variantId: string; sizeLabel: string; artworkName: string; image: string; quantity: number; customArtworkId?: string }
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
+type Delivery = 'binyamina' | 'sde-nehemia' | 'delivery'
+const deliveryLabel: Record<Delivery, string> = { binyamina: 'איסוף עצמי מבינימינה', 'sde-nehemia': 'איסוף עצמי משדה נחמיה', delivery: 'משלוח בתיאום לפי איזור מגורים' }
 const materialName: Record<Material, string> = { smooth: 'חלק', speckled: 'מנוקד' }
 const cartKey = 'art-in-clay-cart-v3'
 
@@ -63,7 +65,7 @@ function App() {
   const [cart, setCart] = useState<CartItem[]>(restoreCart)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [delivery, setDelivery] = useState<'pickup' | 'delivery'>('pickup')
+  const [delivery, setDelivery] = useState<Delivery>('binyamina')
   const [notes, setNotes] = useState('')
   const orderForm = useRef<HTMLFormElement>(null)
   const productSection = useRef<HTMLElement>(null)
@@ -180,7 +182,7 @@ function App() {
       ? `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | הזמנה אישית: מבקש/ת את הכלי עם הציור ״${customArtwork.name}״ במקום הציור שבתמונה | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד כלי: ${variant.id} | קוד ציור: ${customArtwork.id})`
       : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
     `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
-    `אספקה: ${delivery === 'pickup' ? 'איסוף עצמי' : 'משלוח — לתיאום מחיר ופרטים'}`,
+    `אספקה: ${deliveryLabel[delivery]}`,
     ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
     'אבקש אישור זמינות, מחיר סופי וקישור PayBox לתשלום לאחר האישור.',
   ].join('\n')
@@ -363,7 +365,7 @@ function App() {
             <form ref={orderForm} className="cart-form" onSubmit={(event) => event.preventDefault()}>
               <h3>שליחת בקשה</h3>
               <div className="cart-fields"><label>שם <input autoComplete="name" required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} /></label><label>טלפון <input type="tel" autoComplete="tel" required maxLength={25} value={phone} onChange={(event) => setPhone(event.target.value)} /></label></div>
-              <fieldset className="delivery-choices"><legend>אופן קבלה</legend><label><input type="radio" name="delivery" checked={delivery === 'pickup'} onChange={() => setDelivery('pickup')} /> איסוף עצמי</label><label><input type="radio" name="delivery" checked={delivery === 'delivery'} onChange={() => setDelivery('delivery')} /> משלוח בתיאום</label></fieldset>
+              <fieldset className="delivery-choices"><legend>אופן קבלה</legend>{(Object.keys(deliveryLabel) as Delivery[]).map((option) => <label key={option}><input type="radio" name="delivery" checked={delivery === option} onChange={() => setDelivery(option)} /> {deliveryLabel[option]}</label>)}</fieldset>
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
               <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else setCart([]) }}>שליחת בקשה בוואטסאפ</a></div>
               <p className="cart-assurance"><strong>לאחר שתשלח הבקשה, נאשר לכם את הזמינות ונשלח בקשה לתשלום דרך קישור PayBox.</strong></p>
