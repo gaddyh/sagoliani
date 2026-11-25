@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "logo4.jpeg"
+SOURCE = ROOT / "logo7.jpeg"
 TARGET = ROOT / "public" / "assets" / "logo.webp"
 
 SITE_CREAM = np.array([242, 234, 223], dtype=np.float32)  # --cream in styles.css
