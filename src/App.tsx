@@ -370,7 +370,9 @@ function App() {
               <fieldset className="delivery-choices"><legend>אופן קבלה</legend>{(Object.keys(deliveryLabel) as Delivery[]).map((option) => <label key={option}><input type="radio" name="delivery" checked={delivery === option} onChange={() => setDelivery(option)} /> {deliveryLabel[option]}</label>)}</fieldset>
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
               <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else setCart([]) }}>שליחת בקשה בוואטסאפ</a></div>
-              <p className="cart-assurance"><strong>לאחר שתשלח הבקשה, נאשר לכם את הזמינות ונשלח בקשה לתשלום דרך קישור PayBox.</strong></p>
+              <p className="cart-assurance"><strong>
+                  לאחר אישור הזמנתך תשלח בקשת תשלום דרך קישור PayBox
+              </strong></p>
             </form>
           </> : <p className="catalog-empty">העגלה עדיין ריקה. בחרו מוצר וציור מהקולקציה.</p>}
         </section>
