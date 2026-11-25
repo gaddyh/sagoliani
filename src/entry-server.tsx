@@ -14,7 +14,7 @@ export function structuredData(siteUrl: string): object {
     name: 'ART IN CLAY',
     description: 'כשמכחול פוגש את החומר — קרמיקה בעבודת יד וציורי מים מקוריים של עירית סגול ואפרת ליאני.',
     url: siteUrl,
-    image: `${siteUrl}og-image-v2.jpg`,
+    image: `${siteUrl}og-image-v3.jpg`,
     telephone: artists.map((artist) => `+${artist.whatsapp}`),
     founder: artists.map((artist) => ({ '@type': 'Person', name: artist.name })),
     ...(publishedProducts.length ? { priceRange: `₪${Math.min(...publishedProducts.flatMap((product) => product.sizes.map((size) => size.price)))}–₪${Math.max(...publishedProducts.flatMap((product) => product.sizes.map((size) => size.price)))}` } : {}),
