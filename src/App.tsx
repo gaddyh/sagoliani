@@ -6,7 +6,7 @@ import { galleryArtworks, galleryArtwork } from './data/gallery'
 type CartItem = { variantId: string; sizeLabel: string; artworkName: string; image: string; quantity: number; customArtworkId?: string }
 const EFRAT = artists.find((artist) => artist.name.startsWith('אפרת'))!
 type Delivery = 'binyamina' | 'sde-nehemia' | 'delivery'
-const deliveryLabel: Record<Delivery, string> = { binyamina: 'איסוף עצמי מבינימינה', 'sde-nehemia': 'איסוף עצמי משדה נחמיה', delivery: 'משלוח בתיאום לפי איזור מגורים' }
+const deliveryLabel: Record<Delivery, string> = { binyamina: 'איסוף עצמי מבנימינה', 'sde-nehemia': 'איסוף עצמי משדה נחמיה', delivery: 'משלוח בתיאום לפי איזור מגורים' }
 const materialName: Record<Material, string> = { smooth: 'חלק', speckled: 'מנוקד' }
 // Casual copy protection for artwork images: no context menu, no native drag.
 const artworkImageProps = { draggable: false, onContextMenu: (event: MouseEvent<HTMLImageElement>) => event.preventDefault() }

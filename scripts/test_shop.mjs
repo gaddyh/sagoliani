@@ -77,7 +77,7 @@ try {
   assert.equal(page.context().pages().length, 1, 'invalid order must not open WhatsApp')
   await page.getByLabel('שם', { exact: true }).fill('דנה כהן')
   await page.getByLabel('טלפון').fill('0501234567')
-  assert.equal(await page.getByRole('radio', { name: 'איסוף עצמי מבינימינה' }).isChecked(), true, 'בינימינה self pickup should be the default')
+  assert.equal(await page.getByRole('radio', { name: 'איסוף עצמי מבנימינה' }).isChecked(), true, 'בנימינה self pickup should be the default')
   assert.equal(await page.getByRole('radio', { name: 'איסוף עצמי משדה נחמיה' }).count(), 1, 'the שדה נחמיה pickup option should exist')
   await page.getByRole('radio', { name: 'משלוח בתיאום לפי איזור מגורים' }).check()
   const href = await page.locator('.cart-actions a').getAttribute('href')
