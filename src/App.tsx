@@ -189,12 +189,12 @@ function App() {
     `מספר הזמנה: ${orderNumber}`,
     `שם: ${name.trim()}`,
     `טלפון: ${phone.trim()}`,
+    ...(delivery === 'delivery' ? [`כתובת למשלוח: עיר ${city.trim()}, רחוב ${street.trim()}`] : []),
     ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count, customArtwork }) => customArtwork
       ? `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | הזמנה אישית: מבקש/ת את הכלי עם הציור ״${customArtwork.name}״ במקום הציור שבתמונה | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד כלי: ${variant.id} | קוד ציור: ${customArtwork.id})`
       : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
     `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
     `אספקה: ${deliveryLabel[delivery]}`,
-    ...(delivery === 'delivery' ? [`כתובת למשלוח: עיר ${city.trim()}, רחוב ${street.trim()}`] : []),
     ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
     'אבקש אישור זמינות, מחיר סופי וקישור PayBox לתשלום לאחר האישור.',
   ].join('\n')
