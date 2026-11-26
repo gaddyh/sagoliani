@@ -377,8 +377,8 @@ function App() {
             <form ref={orderForm} className="cart-form" onSubmit={(event) => event.preventDefault()}>
               <h3>שליחת בקשה</h3>
               <div className="cart-fields"><label>שם <input autoComplete="name" required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} /></label><label>טלפון <input type="tel" autoComplete="tel" required maxLength={25} value={phone} onChange={(event) => setPhone(event.target.value)} /></label></div>
-              <fieldset className="delivery-choices"><legend>אופן קבלה</legend>{(Object.keys(deliveryLabel) as Delivery[]).map((option) => <label key={option}><input type="radio" name="delivery" checked={delivery === option} onChange={() => setDelivery(option)} /> {deliveryLabel[option]}</label>)}</fieldset>
               {delivery === 'delivery' && <div className="cart-fields"><label>עיר <input required maxLength={60} value={city} onChange={(event) => setCity(event.target.value)} /></label><label>רחוב <input required maxLength={100} value={street} onChange={(event) => setStreet(event.target.value)} /></label></div>}
+              <fieldset className="delivery-choices"><legend>אופן קבלה</legend>{(Object.keys(deliveryLabel) as Delivery[]).map((option) => <label key={option}><input type="radio" name="delivery" checked={delivery === option} onChange={() => setDelivery(option)} /> {deliveryLabel[option]}</label>)}</fieldset>
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
               <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else { setCart([]); setOrderNumber(generateOrderNumber()) } }}>שליחת בקשה בוואטסאפ</a></div>
               <p className="cart-assurance"><strong>
