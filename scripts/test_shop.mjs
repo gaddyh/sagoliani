@@ -79,11 +79,22 @@ try {
   await page.getByLabel('טלפון').fill('0501234567')
   assert.equal(await page.getByRole('radio', { name: 'איסוף עצמי מבנימינה' }).isChecked(), true, 'בנימינה self pickup should be the default')
   assert.equal(await page.getByRole('radio', { name: 'איסוף עצמי משדה נחמיה' }).count(), 1, 'the שדה נחמיה pickup option should exist')
+  assert.equal(await page.getByLabel('עיר', { exact: true }).count(), 0, 'the city field should stay hidden for pickup')
   await page.getByRole('radio', { name: 'משלוח בתיאום לפי איזור מגורים' }).check()
+  assert.equal(await page.getByLabel('עיר', { exact: true }).count(), 1, 'selecting delivery should reveal the city field')
+  assert.equal(await page.getByLabel('רחוב', { exact: true }).count(), 1, 'selecting delivery should reveal the street field')
+  await page.locator('.cart-actions a').click()
+  assert.equal(page.context().pages().length, 1, 'an empty city must not open WhatsApp')
+  await page.getByLabel('עיר', { exact: true }).fill('חיפה')
+  await page.locator('.cart-actions a').click()
+  assert.equal(page.context().pages().length, 1, 'an empty street must not open WhatsApp')
+  await page.getByLabel('רחוב', { exact: true }).fill('שדרות הכרמל 12')
   const href = await page.locator('.cart-actions a').getAttribute('href')
   assert.match(href, /^https:\/\/wa\.me\/972523894291\?text=/)
   const text = new URL(href).searchParams.get('text')
-  for (const part of ['דנה כהן', '0501234567', 'קערת שי', 'מידה: קוטר 20', 'מודה אני', '2 × 88 ₪ = 176 ₪', 'מידה: קוטר 16', '1 × 78 ₪ = 78 ₪', 'סכום מוצרים: 254 ₪', 'אספקה: משלוח בתיאום לפי איזור מגורים', 'אישור זמינות', 'PayBox']) assert.ok(text.includes(part), `missing from order: ${part}`)
+  for (const part of ['דנה כהן', '0501234567', 'קערת שי', 'מידה: קוטר 20', 'מודה אני', '2 × 88 ₪ = 176 ₪', 'מידה: קוטר 16', '1 × 78 ₪ = 78 ₪', 'סכום מוצרים: 254 ₪', 'אספקה: משלוח בתיאום לפי איזור מגורים', 'כתובת למשלוח: עיר חיפה, רחוב שדרות הכרמל 12', 'אישור זמינות', 'PayBox']) assert.ok(text.includes(part), `missing from order: ${part}`)
+  const firstOrderNumber = text.match(/מספר הזמנה: (\d{1,6})/)?.[1]
+  assert.match(firstOrderNumber ?? '', /^\d{1,6}$/, 'the order message should carry a generated order number')
   assert.equal(await page.getByRole('button', { name: 'העתקת ההודעה' }).count(), 0, 'the order form should send only via WhatsApp without a copy button')
   await page.locator('.cart-items input').first().fill('1')
   assert.equal(await page.locator('.cart-total').innerText(), 'סכום מוצרים: 166 ₪', 'quantity change must update the line total')
@@ -112,6 +123,8 @@ try {
   const ellaHref = await page.locator('.cart-actions a').getAttribute('href')
   const ellaText = new URL(ellaHref).searchParams.get('text')
   assert.ok(ellaText.includes('מגש אלה | חלק | ציור: נישאים ברוח') && !ellaText.includes('מידה:'), 'single-size products should not repeat their size label in the order message')
+  const ellaOrderNumber = ellaText.match(/מספר הזמנה: (\d{1,6})/)?.[1]
+  assert.ok(ellaOrderNumber && ellaOrderNumber !== firstOrderNumber, 'a new order after a send must get a fresh order number')
   await page.getByRole('button', { name: 'פינוי העגלה' }).click()
   await page.getByText('העגלה עדיין ריקה').waitFor()
 
@@ -261,7 +274,7 @@ try {
       const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
       img.dispatchEvent(event)
       const style = getComputedStyle(img)
-      return event.defaultPrevented && img.draggable === false && style.userSelect === 'none' && style.webkitTouchCallout === 'none'
+      return event.defaultPrevented && img.draggable === false && style.userSelect === 'none' && (style.webkitTouchCallout ?? 'none') === 'none'
     }
     return check(document.querySelector('.gallery-grid .gallery-item img')) && check(document.querySelector('.cart-custom-artwork img'))
   }), true, 'gallery and cart artwork images should block the context menu, dragging, selection and long-press callouts')

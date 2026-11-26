@@ -21,6 +21,11 @@ function cartItemKey(item: Pick<CartItem, 'variantId' | 'sizeLabel' | 'artworkNa
   return item.customArtworkId ? `${item.variantId}|${item.sizeLabel}|custom:${item.customArtworkId}` : `${item.variantId}|${item.sizeLabel}|photo:${item.artworkName}`
 }
 
+// Order reference for the WhatsApp request; regenerated after each send so two orders never share a number.
+function generateOrderNumber(): string {
+  return String(100000 + Math.floor(Math.random() * 900000))
+}
+
 function restoreCart(): CartItem[] {
   if (typeof window === 'undefined') return []
   try {
@@ -68,6 +73,9 @@ function App() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [delivery, setDelivery] = useState<Delivery>('binyamina')
+  const [city, setCity] = useState('')
+  const [street, setStreet] = useState('')
+  const [orderNumber, setOrderNumber] = useState(generateOrderNumber)
   const [notes, setNotes] = useState('')
   const orderForm = useRef<HTMLFormElement>(null)
   const productSection = useRef<HTMLElement>(null)
@@ -178,6 +186,7 @@ function App() {
 
   const message = [
     `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
+    `מספר הזמנה: ${orderNumber}`,
     `שם: ${name.trim()}`,
     `טלפון: ${phone.trim()}`,
     ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count, customArtwork }) => customArtwork
@@ -185,6 +194,7 @@ function App() {
       : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
     `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
     `אספקה: ${deliveryLabel[delivery]}`,
+    ...(delivery === 'delivery' ? [`כתובת למשלוח: עיר ${city.trim()}, רחוב ${street.trim()}`] : []),
     ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
     'אבקש אישור זמינות, מחיר סופי וקישור PayBox לתשלום לאחר האישור.',
   ].join('\n')
@@ -368,8 +378,9 @@ function App() {
               <h3>שליחת בקשה</h3>
               <div className="cart-fields"><label>שם <input autoComplete="name" required maxLength={60} value={name} onChange={(event) => setName(event.target.value)} /></label><label>טלפון <input type="tel" autoComplete="tel" required maxLength={25} value={phone} onChange={(event) => setPhone(event.target.value)} /></label></div>
               <fieldset className="delivery-choices"><legend>אופן קבלה</legend>{(Object.keys(deliveryLabel) as Delivery[]).map((option) => <label key={option}><input type="radio" name="delivery" checked={delivery === option} onChange={() => setDelivery(option)} /> {deliveryLabel[option]}</label>)}</fieldset>
+              {delivery === 'delivery' && <div className="cart-fields"><label>עיר <input required maxLength={60} value={city} onChange={(event) => setCity(event.target.value)} /></label><label>רחוב <input required maxLength={100} value={street} onChange={(event) => setStreet(event.target.value)} /></label></div>}
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
-              <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else setCart([]) }}>שליחת בקשה בוואטסאפ</a></div>
+              <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else { setCart([]); setOrderNumber(generateOrderNumber()) } }}>שליחת בקשה בוואטסאפ</a></div>
               <p className="cart-assurance"><strong>
                   לאחר אישור הזמנתך תשלח בקשת תשלום דרך קישור PayBox
               </strong></p>
