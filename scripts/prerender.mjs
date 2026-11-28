@@ -19,13 +19,30 @@ try {
     .replace('</head>', `    <script type="application/ld+json">${jsonLd}</script>\n  </head>`)
     .replace('<div id="root"></div>', `<div id="root">${render()}</div>`)
   await writeFile(new URL('index.html', dist), html)
-  // /admin/studio renders on the client; a static copy of the shell makes the deep link work on any host.
-  const studioHtml = template
+  // /admin/* pages render on the client; static copies of the shell make
+  // every deep link work on any static host (no rewrite rule needed).
+  const adminShell = (title) => template
     .replaceAll('__SITE_URL__', siteUrl)
-    .replace(/<title>.*?<\/title>/, '<title>ART IN CLAY | הסטודיו</title>')
+    .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
     .replace('<meta name="viewport"', '<meta name="robots" content="noindex" />\n    <meta name="viewport"')
-  await mkdir(new URL('admin/studio/', dist), { recursive: true })
-  await writeFile(new URL('admin/studio/index.html', dist), studioHtml)
+  const adminRoutes = [
+    ['admin/studio', 'ART IN CLAY | הסטודיו'],
+    ['admin', 'ART IN CLAY | ניהול הסטודיו'],
+    ['admin/orders/new', 'ART IN CLAY | הזמנה חדשה'],
+    ['admin/orders', 'ART IN CLAY | הזמנות'],
+    ['admin/inventory', 'ART IN CLAY | מלאי'],
+    ['admin/artworks', 'ART IN CLAY | יצירות'],
+    ['admin/mappings', 'ART IN CLAY | שילובים'],
+    ['admin/print', 'ART IN CLAY | הדפסות'],
+    ['admin/kiln', 'ART IN CLAY | תנורים'],
+  ]
+  for (const [route, title] of adminRoutes) {
+    await mkdir(new URL(route + '/', dist), { recursive: true })
+    await writeFile(new URL(route + '/index.html', dist), adminShell(title))
+  }
+  // Unmatched paths (e.g. /admin/orders/<id>) fall back to the SPA shell on
+  // static hosts that serve 404.html — the router then renders the page.
+  await writeFile(new URL('404.html', dist), adminShell('ART IN CLAY'))
   await writeFile(new URL('robots.txt', dist), `User-agent: *\nAllow: /\nDisallow: /admin\n\nSitemap: ${siteUrl}sitemap.xml\n`)
   await writeFile(new URL('sitemap.xml', dist), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${siteUrl}</loc></url>\n</urlset>\n`)
   console.log(`Prerendered dist/index.html (${Math.round(html.length / 1024)} KB) for ${siteUrl}`)
