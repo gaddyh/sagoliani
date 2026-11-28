@@ -71,13 +71,13 @@ function buildPrintList(header: string, items: OrderItemRow[], mappings: Mapping
   const links = [...artworkIds]
     .map((id) => catalog?.artworks.find((a) => a.id === id))
     .filter((a): a is NonNullable<typeof a> => Boolean(a?.source_url))
-    .map((a) => `${a.name}: ${a.source_url}`)
+    .map((a) => `${a.name}:\n${a.source_url}`)
 
   return [
     header,
     ...body,
     ...(unchosen.length ? ['', `⚠ פריטים ללא ציור שנבחר: ${unchosen.join(', ')}`] : []),
-    ...(links.length ? ['', 'קישורים להורדת הציורים:', ...links] : []),
+    ...(links.length ? ['', 'קישורים להורדת הציורים:', '', ...links.map((l) => l + '\n')] : []),
   ].join('\n')
 }
 
