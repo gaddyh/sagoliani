@@ -58,15 +58,20 @@ const ANY = 'id=neq.00000000-0000-0000-0000-000000000000'
 
 async function cleanup() {
   // Orders cascade to items and allocations; batches cascade to their items.
-  // PostgREST requires a WHERE clause on DELETE; failures are loud on purpose.
+  // Only TEST artifacts are deleted: imported real inventory (import_ref is
+  // not null) is never touched. PostgREST requires a WHERE clause on DELETE;
+  // failures are loud on purpose.
   const deletions = [
     `/rest/v1/orders?customer_phone=eq.${PHONE}`,
     `/rest/v1/orders?customer_phone=eq.${OTHER_PHONE}`,
     '/rest/v1/orders?customer_phone=eq.0508675084',
-    `/rest/v1/production_events?${ANY}`,
+    '/rest/v1/orders?customer_phone=eq.0520000001',
+    '/rest/v1/orders?customer_phone=eq.0520000002',
+    '/rest/v1/orders?customer_phone=eq.0501234567',
+    '/rest/v1/production_events?kiln_batch_id=not.is.null',
     `/rest/v1/kiln_batches?${ANY}`,
-    `/rest/v1/ceramic_units?${ANY}`,
-    `/rest/v1/artwork_mapping_versions?${ANY}`,
+    '/rest/v1/ceramic_units?import_ref=is.null',
+    `/rest/v1/artwork_mapping_versions?product_id=eq.yael-bowl&artwork_id=eq.gallery-12`,
     `/rest/v1/customers?phone=eq.${PHONE}`,
     `/rest/v1/customers?phone=eq.${OTHER_PHONE}`,
   ]
@@ -80,7 +85,7 @@ const payload = (overrides = {}) => ({
   name: 'מבחן אינטגרציה',
   phone: PHONE,
   delivery_type: 'binyamina',
-  items: [{ variant_id: 'shay-bowl-smooth', size_label: 'קוטר 16', quantity: 1 }],
+  items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 1 }],
   ...overrides,
 })
 
@@ -113,7 +118,9 @@ async function captureTests() {
   const { json: orderRows } = await api(`/rest/v1/orders?idempotency_key=eq.${key1}&select=*`)
   const { json: itemRows } = await api(`/rest/v1/order_items?order_id=eq.${orderRows[0].id}&select=*`)
   const order = orderRows[0]
-  ok('order + items stored atomically with canonical price', order && itemRows.length === 1 && Number(itemRows[0].unit_price_ils) === 78)
+  ok('order + items stored atomically with canonical price', order && itemRows.length === 1 && Number(itemRows[0].unit_price_ils) === 165)
+  ok('order items snapshot the artwork print dimensions', Number(itemRows[0].print_width_cm) === 12 && Number(itemRows[0].print_height_cm) === 15)
+  ok('items without an explicit artwork get the vessel default', itemRows[0].artwork_id === 'gallery-12')
 
   const replay = await rpc('submit_order_request', { p_payload: payload(), p_key: key1 }, ANON)
   ok('idempotent replay returns the same order', replay.status === 200 && replay.json.replayed === true && replay.json.number === first.json.number)
@@ -157,7 +164,7 @@ async function captureTests() {
   }, ANON)
   ok('unknown variant is rejected', badVariant.status !== 200 && /קיים בקטלוג/.test(badVariant.json?.message ?? ''))
   const badQuantity = await rpc('submit_order_request', {
-    p_payload: payload({ items: [{ variant_id: 'shay-bowl-smooth', size_label: 'קוטר 16', quantity: 500 }] }),
+    p_payload: payload({ items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 500 }] }),
     p_key: crypto.randomUUID(),
   }, ANON)
   ok('invalid quantity is rejected', badQuantity.status !== 200)
@@ -180,39 +187,39 @@ async function denialTests() {
   ok('artists cannot update orders directly (RPC only)', patch.status >= 400)
   const unitInsert = await api('/rest/v1/ceramic_units', {
     method: 'POST',
-    body: { product_id: 'shay-bowl', size_label: 'קוטר 16', material: 'smooth', stage_id: 1 },
+    body: { product_id: 'yael-bowl', size_label: 'קוטר כ-25 ס״מ', material: 'speckled', stage_id: 1 },
   })
   ok('artists cannot insert ceramic units directly (RPC only)', unitInsert.status >= 400)
-  const helpers = await rpc('resolve_mapping_version', { p_product_id: 'shay-bowl', p_size_label: 'קוטר 16', p_material: 'smooth', p_artwork_id: 'gallery-17' })
+  const helpers = await rpc('resolve_mapping_version', { p_product_id: 'yael-bowl', p_size_label: 'קוטר כ-25 ס״מ', p_material: 'speckled', p_artwork_id: 'gallery-12' })
   ok('internal helper functions are not callable', helpers.status === 404 || helpers.status === 403)
 }
 
 async function allocationTests() {
   // One finished artwork-specific unit, one generic at stage 5, one at stage 2.
-  const finished = await rpc('create_units', { p_product_id: 'shay-bowl', p_size_label: 'קוטר 16', p_material: 'smooth', p_quantity: 1, p_stage_id: 5, p_notes: 'integration finished' })
+  const finished = await rpc('create_units', { p_product_id: 'yael-bowl', p_size_label: 'קוטר כ-25 ס״מ', p_material: 'speckled', p_quantity: 1, p_stage_id: 5, p_notes: 'integration finished' })
   const finishedIds = finished.json.unit_ids
   const artworkUnit = finishedIds[0]
-  await rpc('apply_artwork', { p_unit_id: artworkUnit, p_artwork_id: 'gallery-17' })
+  await rpc('apply_artwork', { p_unit_id: artworkUnit, p_artwork_id: 'gallery-12' })
   for (let stage = 6; stage <= 7; stage += 1) await rpc('advance_units_stage', { p_unit_ids: [artworkUnit], p_result: 'completed' })
   const { json: mapping } = await api('/rest/v1/ceramic_units?id=eq.' + artworkUnit + '&select=stage_id,quality,applied_artwork_id')
-  ok('artwork application pins the artwork and advances the unit', mapping[0].stage_id === 8 && mapping[0].applied_artwork_id === 'gallery-17')
+  ok('artwork application pins the artwork and advances the unit', mapping[0].stage_id === 8 && mapping[0].applied_artwork_id === 'gallery-12')
 
-  const generic = await rpc('create_units', { p_product_id: 'shay-bowl', p_size_label: 'קוטר 16', p_material: 'smooth', p_quantity: 2, p_stage_id: 5, p_notes: 'integration generic advanced' })
+  const generic = await rpc('create_units', { p_product_id: 'yael-bowl', p_size_label: 'קוטר כ-25 ס״מ', p_material: 'speckled', p_quantity: 2, p_stage_id: 5, p_notes: 'integration generic advanced' })
   const advancedIds = generic.json.unit_ids
-  const early = await rpc('create_units', { p_product_id: 'shay-bowl', p_size_label: 'קוטר 16', p_material: 'smooth', p_quantity: 1, p_stage_id: 2, p_notes: 'integration generic early' })
+  const early = await rpc('create_units', { p_product_id: 'yael-bowl', p_size_label: 'קוטר כ-25 ס״מ', p_material: 'speckled', p_quantity: 1, p_stage_id: 2, p_notes: 'integration generic early' })
   const earlyIds = early.json.unit_ids
 
   // Mapping for the combination (wildcard size + exact material).
   const savedMapping = await rpc('save_mapping_version', {
-    p_product_id: 'shay-bowl', p_size_label: 'קוטר 16', p_material: 'smooth', p_artwork_id: 'gallery-17',
-    p_print_width_cm: 12, p_print_height_cm: 8, p_rotation_deg: 0,
+    p_product_id: 'yael-bowl', p_size_label: 'קוטר כ-25 ס״מ', p_material: 'speckled', p_artwork_id: 'gallery-12',
+    p_print_width_cm: 12, p_print_height_cm: 15, p_rotation_deg: 0,
   })
   ok('mapping version is saved', savedMapping.status === 200)
 
   // Order A: 2 units — expects finished stock first, then the most advanced generic.
   const orderA = await rpc('create_order', { p_payload: {
     name: 'מבחן א', phone: OTHER_PHONE, delivery_type: 'binyamina',
-    items: [{ variant_id: 'shay-bowl-smooth', size_label: 'קוטר 16', quantity: 2, artwork_id: 'gallery-17' }],
+    items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 2, artwork_id: 'gallery-12' }],
   } })
   await rpc('confirm_order', { p_order_id: orderA.json.order_id })
   const { json: allocationsA } = await api(`/rest/v1/order_item_allocations?order_item_id=eq.${(await firstItemId(orderA.json.order_id))}&select=*,ceramic_units(stage_id,applied_artwork_id)`)
@@ -227,11 +234,11 @@ async function allocationTests() {
   // Order B (1 unit) — parallel confirm against remaining stock.
   const orderB = await rpc('create_order', { p_payload: {
     name: 'מבחן ב', phone: OTHER_PHONE, delivery_type: 'binyamina',
-    items: [{ variant_id: 'shay-bowl-smooth', size_label: 'קוטר 16', quantity: 1, artwork_id: 'gallery-17' }],
+    items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 1, artwork_id: 'gallery-12' }],
   } })
   const orderC = await rpc('create_order', { p_payload: {
     name: 'מבחן ג', phone: OTHER_PHONE, delivery_type: 'binyamina',
-    items: [{ variant_id: 'shay-bowl-smooth', size_label: 'קוטר 16', quantity: 1, artwork_id: 'gallery-17' }],
+    items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 1, artwork_id: 'gallery-12' }],
   } })
   await Promise.all([
     rpc('confirm_order', { p_order_id: orderB.json.order_id }),
@@ -246,7 +253,7 @@ async function allocationTests() {
   // Missing mapping -> pending_mapping for a different artwork.
   const orderD = await rpc('create_order', { p_payload: {
     name: 'מבחן ד', phone: OTHER_PHONE, delivery_type: 'binyamina',
-    items: [{ variant_id: 'shay-bowl-speckled', size_label: 'קוטר 16', quantity: 1, artwork_id: 'gallery-09' }],
+    items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 1, artwork_id: 'gallery-09' }],
   } })
   await rpc('confirm_order', { p_order_id: orderD.json.order_id })
   const { json: allocationsD } = await api(`/rest/v1/order_item_allocations?order_item_id=eq.${(await firstItemId(orderD.json.order_id))}&select=print_status,ceramic_units(stage_id)`)
@@ -269,7 +276,7 @@ async function allocationTests() {
 
 async function kilnTests(context) {
   // Two fresh units waiting for their first firing.
-  const units = await rpc('create_units', { p_product_id: 'shay-bowl', p_size_label: 'קוטר 20', p_material: 'smooth', p_quantity: 2, p_stage_id: 2, p_notes: 'integration kiln' })
+  const units = await rpc('create_units', { p_product_id: 'yael-bowl', p_size_label: 'קוטר כ-25 ס״מ', p_material: 'speckled', p_quantity: 2, p_stage_id: 2, p_notes: 'integration kiln' })
   const [k1, k2] = units.json.unit_ids
 
   const batch = await rpc('create_kiln_batch', { p_stage_id: 2, p_unit_ids: [k1, k2] })
@@ -291,7 +298,7 @@ async function kilnTests(context) {
   // Rejected unit tied to an order flags it and supports replacement.
   const orderE = await rpc('create_order', { p_payload: {
     name: 'מבחן ה', phone: OTHER_PHONE, delivery_type: 'binyamina',
-    items: [{ variant_id: 'shay-bowl-smooth', size_label: 'קוטר 16', quantity: 1, artwork_id: 'gallery-17' }],
+    items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 1, artwork_id: 'gallery-12' }],
   } })
   await rpc('confirm_order', { p_order_id: orderE.json.order_id })
   const { json: eAlloc } = await api(`/rest/v1/order_item_allocations?order_item_id=eq.${(await firstItemId(orderE.json.order_id))}&select=ceramic_unit_id`)
@@ -316,7 +323,7 @@ async function kilnTests(context) {
   // A short order (more quantity than ready units) is never ready.
   const orderF = await rpc('create_order', { p_payload: {
     name: 'מבחן ו', phone: OTHER_PHONE, delivery_type: 'binyamina',
-    items: [{ variant_id: 'shay-bowl-smooth', size_label: 'קוטר 16', quantity: 3, artwork_id: 'gallery-17' }],
+    items: [{ variant_id: 'yael-bowl-speckled-lions-maw', size_label: 'קוטר כ-25 ס״מ', quantity: 3, artwork_id: 'gallery-12' }],
   } })
   await rpc('confirm_order', { p_order_id: orderF.json.order_id })
   const { json: fOrder } = await api(`/rest/v1/orders?id=eq.${orderF.json.order_id}&select=status`)

@@ -84,6 +84,8 @@ export interface OrderItemRow {
   artwork_name_snapshot: string | null
   unit_price_ils: number
   quantity: number
+  print_width_cm: number | null
+  print_height_cm: number | null
   created_at: string
 }
 

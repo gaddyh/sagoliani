@@ -119,6 +119,7 @@ try {
   assert.match(href, /^https:\/\/wa\.me\/972523894291\?text=/)
   const text = new URL(href).searchParams.get('text')
   for (const part of ['דנה כהן', '0501234567', 'קערת שי', 'מידה: קוטר 20', 'מודה אני', '2 × 88 ₪ = 176 ₪', 'מידה: קוטר 16', '1 × 78 ₪ = 78 ₪', 'סכום מוצרים: 254 ₪', 'אספקה: משלוח בתיאום לפי איזור מגורים', 'כתובת למשלוח: עיר חיפה, רחוב שדרות הכרמל 12', 'אישור זמינות', 'PayBox']) assert.ok(text.includes(part), `missing from order: ${part}`)
+  assert.ok(text.includes('הדפסה: 5×12 ס' + String.fromCharCode(34) + 'מ'), 'the order message carries the artwork print size that fits the vessel')
   const firstOrderNumber = text.match(/מספר הזמנה: ((?:R-)?\d+)/)?.[1]
   assert.match(firstOrderNumber ?? '', /^(?:R-)?\d+$/, 'the order message should carry the captured order number')
   assert.equal(await page.getByRole('button', { name: 'העתקת ההודעה' }).count(), 0, 'the order form should send only via WhatsApp without a copy button')

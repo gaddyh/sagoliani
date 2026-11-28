@@ -72,32 +72,16 @@ await rest('ceramic_products?on_conflict=id', products.map((product, index) => (
   sort_order: index,
 })))
 
-// Artwork print sizes (cm) that fit each vessel, provided by the artists
-// (Nov 2026) — these are the default PRINT dimensions of the artwork for a
-// mapping on that vessel, NOT the physical dimensions of the vessel itself.
-// Width = רוחב/אורך (the longer dimension), height = גובה.
-const PRINT_AREAS = {
-  'shay-bowl': { 'קוטר 16': [5, 12], 'קוטר 20': [5, 12] },
-  'omer-bowl': { 'קוטר 16': [5, 12], 'קוטר 20': [5, 12] },
-  'river-stones': { 'גדול': [8, 9], 'בינוני': [7, 8], 'קטן': [4, 5] },
-  'irit-platter': { 'מגש': [23, 6] },
-  'ella-platter': { 'מגש': [23, 6] },
-  'yael-bowl': { 'קוטר כ-25 ס״מ': [12, 15] },
-  'mika-plate': { 'צלחת': [8, 12] },
-  'gaddy-plate': { 'קוטר כ-25 ס״מ': [18, 10] },
-}
-
+// Artwork print dimensions live in src/data/products.ts (single source) —
+// the storefront message and the studio mapping prefill both read them.
 await rest('product_sizes?on_conflict=product_id,label', products.flatMap((product) =>
-  product.sizes.map((size) => {
-    const area = PRINT_AREAS[product.id]?.[size.label]
-    return {
-      product_id: product.id,
-      label: size.label,
-      price_ils: size.price,
-      print_width_cm: area ? area[0] : null,
-      print_height_cm: area ? area[1] : null,
-    }
-  })))
+  product.sizes.map((size) => ({
+    product_id: product.id,
+    label: size.label,
+    price_ils: size.price,
+    print_width_cm: size.printWidthCm ?? null,
+    print_height_cm: size.printHeightCm ?? null,
+  }))))
 
 await rest('artworks?on_conflict=id', galleryArtworks.map((artwork) => ({
   id: artwork.id,
@@ -111,13 +95,17 @@ await rest('artworks?on_conflict=id', galleryArtworks.map((artwork) => ({
   notes: null,
 })))
 
-// Photographed combos are not linked to gallery artworks by ID; the concrete
-// artwork for an order item is chosen at confirmation (update_order_item_artwork).
+// Photographed combos link to their default gallery artwork (every vessel
+// ships with one): the artwork of the combo's first photo, matched by name.
+const galleryByName = new Map(galleryArtworks.map((artwork) => [artwork.name, artwork.id]))
+const defaultArtworkId = (variant) =>
+  galleryByName.get(variant.imageArtworkNames?.[0] ?? variant.artworkName) ?? null
+
 await rest('catalog_variants?on_conflict=id', finishedVariants.map((variant) => ({
   id: variant.id,
   product_id: variant.productId,
   material: variant.material,
-  artwork_id: null,
+  artwork_id: defaultArtworkId(variant),
   display_name: variant.artworkName,
   images: variant.images,
   image_artwork_names: variant.imageArtworkNames ?? null,

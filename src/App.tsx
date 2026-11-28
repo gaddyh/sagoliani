@@ -190,7 +190,12 @@ function App() {
   // Order message shared by the captured flow (server-issued number) and the
   // legacy fallback (locally generated number when the studio system is not
   // configured, or when the customer chooses to proceed without saving).
+  // Each item carries the artwork print size that fits the vessel (the
+  // artists' vessel-to-artwork mapping), so the message doubles as the
+  // studio's print list.
   function orderMessage(requestNumber: string) {
+    const printLabel = (size: { printWidthCm?: number; printHeightCm?: number }) =>
+      size.printWidthCm && size.printHeightCm ? ` | הדפסה: ${size.printWidthCm}×${size.printHeightCm} ס"מ` : ''
     return [
       `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
       `מספר הזמנה: ${requestNumber}`,
@@ -198,8 +203,8 @@ function App() {
       `טלפון: ${phone.trim()}`,
       ...(delivery === 'delivery' ? [`כתובת למשלוח: עיר ${city.trim()}, רחוב ${street.trim()}`] : []),
       ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count, customArtwork }) => customArtwork
-        ? `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | הזמנה אישית: מבקש/ת את הכלי עם הציור ״${customArtwork.name}״ במקום הציור שבתמונה | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד כלי: ${variant.id} | קוד ציור: ${customArtwork.id})`
-        : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
+        ? `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | הזמנה אישית: מבקש/ת את הכלי עם הציור ״${customArtwork.name}״ במקום הציור שבתמונה${printLabel(size)} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד כלי: ${variant.id} | קוד ציור: ${customArtwork.id})`
+        : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName}${printLabel(size)} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
       `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
       `אספקה: ${deliveryLabel[delivery]}`,
       ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),

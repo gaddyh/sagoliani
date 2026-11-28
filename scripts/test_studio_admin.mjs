@@ -24,7 +24,7 @@ const chrome = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Conte
 
 // Deterministic artwork used for the mapping leg; its mapping is cleaned up
 // before each run so the prep-queue flow is repeatable.
-const testArtworkName = '\u05de\u05d9\u05dd \u05de\u05ea\u05d5\u05e7\u05d9\u05dd' // מים מתוקים
+const testArtworkName = 'דק מן הדק' // the vessel's default artwork
 
 function loadEnvLocal() {
   try {
@@ -39,8 +39,23 @@ loadEnvLocal()
 if (process.env.SUPABASE_SERVICE_KEY) {
   const url = process.env.SUPABASE_URL || 'http://127.0.0.1:54321'
   const headers = { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
-  await fetch(`${url}/rest/v1/orders?customer_phone=eq.0520000001`, { method: 'DELETE', headers }).catch(() => {})
-  await fetch(`${url}/rest/v1/artwork_mapping_versions?product_id=eq.shay-bowl&artwork_id=eq.gallery-21`, { method: 'DELETE', headers }).catch(() => {})
+  // Test residue only: imported real inventory (import_ref set) is never
+  // touched. Failures are loud — a silent miss leaves stale stock that
+  // breaks the deterministic flow below.
+  const phones = ['0520000001', '0520000002', '0529990001', '0529990002', '0501234567', '0508675084']
+  for (const phone of phones) {
+    const response = await fetch(`${url}/rest/v1/orders?customer_phone=eq.${phone}`, { method: 'DELETE', headers })
+    if (response.status >= 400) throw new Error(`cleanup failed (${response.status}): orders ${phone}`)
+  }
+  for (const path of [
+    '/rest/v1/production_events?kiln_batch_id=not.is.null',
+    '/rest/v1/kiln_batches?id=neq.00000000-0000-0000-0000-000000000000',
+    '/rest/v1/ceramic_units?import_ref=is.null',
+    '/rest/v1/artwork_mapping_versions?product_id=eq.yael-bowl&artwork_id=eq.gallery-12',
+  ]) {
+    const response = await fetch(`${url}${path}`, { method: 'DELETE', headers })
+    if (response.status >= 400) throw new Error(`cleanup failed (${response.status}): ${path}`)
+  }
 }
 
 
@@ -52,7 +67,7 @@ const fail = (message) => { console.error(`✘ ${message}`); process.exitCode = 
 try {
   // --- 1. Storefront: capture an order request -----------------------------
   await page.goto(baseUrl)
-  await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
+  await page.getByRole('button', { name: /לצפייה בתבנית יעל/ }).click()
   await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
   await page.getByLabel('שם', { exact: true }).fill('בדיקה אוטומטית')
   await page.getByLabel('טלפון').fill('052-0000001')
@@ -65,6 +80,8 @@ try {
   const popupUrl = popup.url()
   assert.ok(popupUrl.startsWith('https://wa.me/'), `WhatsApp popup opened: ${popupUrl}`)
   assert.ok(popupUrl.includes('R-'), 'server-issued order number appears in the message')
+  const messageText = decodeURIComponent(popupUrl.split('text=')[1] ?? '')
+  assert.ok(messageText.includes('הדפסה: 12×15 ס"מ'), 'the order message carries the artwork print size that fits the vessel')
   await popup.close()
   assert.equal(await page.locator('.capture-error').count(), 0, 'no capture error shown')
   console.log('✔ storefront captured the request and opened WhatsApp with a server number')
@@ -85,14 +102,22 @@ try {
   console.log('✔ captured request visible in the orders queue and detail page')
 
   await page.getByRole('button', { name: 'אישור הזמנה' }).click()
-  const artworkSelect = page.locator('.sa-confirm-panel select').first()
-  if (await artworkSelect.count()) {
-    await artworkSelect.selectOption({ label: testArtworkName })
-  }
   await page.getByRole('button', { name: 'אישור סופי' }).click()
   await page.locator('.sa-notice').getByText('ההזמנה אושרה').waitFor()
   await page.locator('.sa-units li').first().waitFor({ timeout: 15000 })
   console.log('✔ order confirmed and physical units allocated')
+
+  // --- 3b. Print list for the order (aggregated by artwork and size) -------
+  await page.getByRole('button', { name: 'רשימת הדפסות להזמנה' }).click()
+  const printList = page.locator('.sa-print-list textarea')
+  await printList.waitFor()
+  const printListText = await printList.inputValue()
+  assert.ok(printListText.includes(`רשימת הדפסות · R-`), 'the print list is titled with the order number')
+  assert.ok(printListText.includes(`${testArtworkName}: צריכה מהציור הזה 1 יחי'. גובה 15 ורוחה 12 ס"מ.`), `aggregated print line per artwork and size: ${printListText}`)
+  await page.getByRole('button', { name: 'העתקה ללוח' }).click()
+  await page.getByText('✔ הועתק ללוח').waitFor()
+  console.log('✔ order print list aggregates artwork and print size with copy-to-clipboard')
+  await page.getByRole('button', { name: 'רשימת הדפסות להזמנה' }).click()
 
   // --- 4. Mapping prep queue -> print queue (M2) -----------------------------
   await page.goto(`${baseUrl}/admin/mappings`)
@@ -100,7 +125,7 @@ try {
   await page.locator('.sa-item-row').filter({ hasText: testArtworkName }).getByRole('button', { name: 'הכנה' }).click()
   const widthInput = page.locator('.sa-form-grid input[type="number"]').first()
   await widthInput.waitFor()
-  assert.equal(await widthInput.inputValue(), '5', 'print width prefilled from the vessel decoration area')
+  assert.equal(await widthInput.inputValue(), '12', 'print width prefilled from the vessel decoration area')
   await page.getByRole('button', { name: 'שמירת ההכנה' }).click()
   await page.locator('.sa-notice').getByText('ההכנה נשמרה').waitFor()
   console.log('✔ mapping saved with prefilled decoration-area dimensions')

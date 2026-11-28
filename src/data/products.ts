@@ -4,6 +4,10 @@ export type ProductId = 'cake-pan' | 'speckled-platter' | 'round-platter' | 'dee
 export interface ProductSize {
   label: string
   price: number
+  // Artwork print size (cm) that fits this vessel size — the artists' mapping
+  // of vessel to fitting artwork dimensions (not the vessel's own size).
+  printWidthCm?: number
+  printHeightCm?: number
 }
 
 export interface Product {
@@ -33,15 +37,15 @@ export const products: Product[] = [
   { id: 'flat-bowl', name: 'קערה שטוחה', detail: 'קוטר 17–20 · למרק או לסלטים', sizes: [{ label: 'קוטר 17–20', price: 75 }] },
   { id: 'english-platter-straight', name: 'צלחת הגשה אינגליש · ישר', detail: '35×15 ס״מ', sizes: [{ label: 'ישר', price: 140 }] },
   { id: 'english-platter-oval', name: 'צלחת הגשה אינגליש · אובאלי', detail: '35×15 ס״מ', sizes: [{ label: 'אובאלי', price: 140 }] },
-  { id: 'river-stones', name: 'סט צלחות להגשה ״אבני נחל״', detail: 'בגדלים שונים', sizes: [{ label: 'גדול', price: 100 }, { label: 'בינוני', price: 75 }, { label: 'קטן', price: 50 }], uses: 'פיצוחים | דבש | רטבים | פירות | סלט פירות | סלטים | טאפסים | מטבלים' },
+  { id: 'river-stones', name: 'סט צלחות להגשה ״אבני נחל״', detail: 'בגדלים שונים', sizes: [{ label: 'גדול', price: 100, printWidthCm: 8, printHeightCm: 9 }, { label: 'בינוני', price: 75, printWidthCm: 7, printHeightCm: 8 }, { label: 'קטן', price: 50, printWidthCm: 4, printHeightCm: 5 }], uses: 'פיצוחים | דבש | רטבים | פירות | סלט פירות | סלטים | טאפסים | מטבלים' },
   { id: 'vase', name: 'אגרטל', detail: 'גובה 13–20 ס״מ', sizes: [{ label: 'גובה 13–20', price: 110 }] },
-  { id: 'shay-bowl', name: 'קערת שי', detail: 'קערה בקדרות', sizes: [{ label: 'קוטר 16', price: 78 }, { label: 'קוטר 20', price: 88 }], uses: 'מרק | סלטים | קורנפלקס | פיצוחים | מטבלים | גלידה | רטבים וממרחים | קינוחים | לשולחנות חג' },
-  { id: 'irit-platter', name: 'מגש עירית', detail: 'מגש אינגליש אובלי בעבודת יד · כ־35×15 ס״מ', sizes: [{ label: 'מגש', price: 155 }], uses: 'הגשת עוגות | פירות | גבינות | חציל בטחינה | נתחי בשר | נקניקים' },
-  { id: 'yael-bowl', name: 'תבנית יעל', detail: 'תבנית בקדרות · קוטר כ-25 ס״מ', sizes: [{ label: 'קוטר כ-25 ס״מ', price: 165 }], uses: 'עוגה | קיש | פשטידה | קדרה פתוחה' },
-  { id: 'omer-bowl', name: 'קערת עומר', detail: 'קערה בקדרות', sizes: [{ label: 'קוטר 16', price: 78 }, { label: 'קוטר 20', price: 88 }], coverVariantId: 'omer-bowl-speckled-field-whisper', uses: 'מרק | סלטים | קורנפלקס | פיצוחים | מטבלים | גלידה | רטבים וממרחים | קינוחים | לשולחנות חג' },
-  { id: 'ella-platter', name: 'מגש אלה', detail: 'מגש הגשה בעבודת יד · כ־35×15 ס״מ', sizes: [{ label: 'מגש', price: 155 }], uses: 'הגשת עוגות | פירות | גבינות | חציל בטחינה | נתחי בשר | נקניקים' },
-  { id: 'mika-plate', name: 'מגש מיקה', detail: 'צלחת הגשה בעבודת יד · קוטר כ־30 ס״מ', sizes: [{ label: 'צלחת', price: 165 }], uses: 'הגשת עוגה | סופגניות | דונט ספינג׳ | פירות | גבינות' },
-  { id: 'gaddy-plate', name: 'צלחת גדי', detail: 'צלחת הגשה קדרות · קוטר כ-25 ס״מ', sizes: [{ label: 'קוטר כ-25 ס״מ', price: 145 }], uses: 'פירות | גבינות | חומס | נתחי בשר | נקניקים' },
+  { id: 'shay-bowl', name: 'קערת שי', detail: 'קערה בקדרות', sizes: [{ label: 'קוטר 16', price: 78, printWidthCm: 5, printHeightCm: 12 }, { label: 'קוטר 20', price: 88, printWidthCm: 5, printHeightCm: 12 }], uses: 'מרק | סלטים | קורנפלקס | פיצוחים | מטבלים | גלידה | רטבים וממרחים | קינוחים | לשולחנות חג' },
+  { id: 'irit-platter', name: 'מגש עירית', detail: 'מגש אינגליש אובלי בעבודת יד · כ־35×15 ס״מ', sizes: [{ label: 'מגש', price: 155, printWidthCm: 23, printHeightCm: 6 }], uses: 'הגשת עוגות | פירות | גבינות | חציל בטחינה | נתחי בשר | נקניקים' },
+  { id: 'yael-bowl', name: 'תבנית יעל', detail: 'תבנית בקדרות · קוטר כ-25 ס״מ', sizes: [{ label: 'קוטר כ-25 ס״מ', price: 165, printWidthCm: 12, printHeightCm: 15 }], uses: 'עוגה | קיש | פשטידה | קדרה פתוחה' },
+  { id: 'omer-bowl', name: 'קערת עומר', detail: 'קערה בקדרות', sizes: [{ label: 'קוטר 16', price: 78, printWidthCm: 5, printHeightCm: 12 }, { label: 'קוטר 20', price: 88, printWidthCm: 5, printHeightCm: 12 }], coverVariantId: 'omer-bowl-speckled-field-whisper', uses: 'מרק | סלטים | קורנפלקס | פיצוחים | מטבלים | גלידה | רטבים וממרחים | קינוחים | לשולחנות חג' },
+  { id: 'ella-platter', name: 'מגש אלה', detail: 'מגש הגשה בעבודת יד · כ־35×15 ס״מ', sizes: [{ label: 'מגש', price: 155, printWidthCm: 23, printHeightCm: 6 }], uses: 'הגשת עוגות | פירות | גבינות | חציל בטחינה | נתחי בשר | נקניקים' },
+  { id: 'mika-plate', name: 'מגש מיקה', detail: 'צלחת הגשה בעבודת יד · קוטר כ־30 ס״מ', sizes: [{ label: 'צלחת', price: 165, printWidthCm: 8, printHeightCm: 12 }], uses: 'הגשת עוגה | סופגניות | דונט ספינג׳ | פירות | גבינות' },
+  { id: 'gaddy-plate', name: 'צלחת גדי', detail: 'צלחת הגשה קדרות · קוטר כ-25 ס״מ', sizes: [{ label: 'קוטר כ-25 ס״מ', price: 145, printWidthCm: 18, printHeightCm: 10 }], uses: 'פירות | גבינות | חומס | נתחי בשר | נקניקים' },
 ]
 
 export const finishedVariants: ProductVariant[] = [
@@ -54,7 +58,7 @@ export const finishedVariants: ProductVariant[] = [
   { id: 'river-stones-smooth-wild-magic', productId: 'river-stones', material: 'smooth', artworkId: 'wild-magic', artworkName: 'שיר געגועים', images: ['/assets/products/river-stones/smooth/wild-magic-01.webp', '/assets/products/river-stones/smooth/wild-magic-02.webp'] },
   { id: 'ella-platter-smooth-field-dance', productId: 'ella-platter', material: 'smooth', artworkId: 'field-dance', artworkName: 'נישאים ברוח', images: ['/assets/products/ella-platter/smooth/field-dance-01.webp', '/assets/products/ella-platter/smooth/field-dance-02.webp'] },
   { id: 'mika-plate-smooth-purple-touch', productId: 'mika-plate', material: 'smooth', artworkId: 'purple-touch', artworkName: 'אגדת דשא', images: ['/assets/products/mika-plate/smooth/purple-touch-01.webp', '/assets/products/mika-plate/smooth/purple-touch-02.webp', '/assets/products/mika-plate/smooth/purple-touch-03.webp', '/assets/products/mika-plate/smooth/purple-touch-04.webp', '/assets/products/mika-plate/smooth/purple-touch-05.webp'] },
-  { id: 'gaddy-plate-speckled-green-field', productId: 'gaddy-plate', material: 'speckled', artworkId: 'green-field', artworkName: 'בשדה ירוק', images: ['/assets/products/gaddy-plate/speckled/green-field-01.webp', '/assets/products/gaddy-plate/speckled/green-field-02.webp', '/assets/products/gaddy-plate/speckled/green-field-03.webp', '/assets/products/gaddy-plate/speckled/green-field-04.webp', '/assets/products/gaddy-plate/speckled/green-field-05.webp'] },
+  { id: 'gaddy-plate-speckled-green-field', productId: 'gaddy-plate', material: 'speckled', artworkId: 'green-field', artworkName: 'בשדה הירוק', images: ['/assets/products/gaddy-plate/speckled/green-field-01.webp', '/assets/products/gaddy-plate/speckled/green-field-02.webp', '/assets/products/gaddy-plate/speckled/green-field-03.webp', '/assets/products/gaddy-plate/speckled/green-field-04.webp', '/assets/products/gaddy-plate/speckled/green-field-05.webp'] },
 ]
 
 export const availableVariants = finishedVariants.filter((variant) => variant.images.length > 0)
