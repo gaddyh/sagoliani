@@ -1,9 +1,33 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { chromium } from 'playwright-core'
 
 const baseUrl = process.env.POC_URL || 'http://127.0.0.1:5173'
 const chrome = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const browser = await chromium.launch({ executablePath: chrome, headless: true })
+
+// The send flow now captures the request in the local Supabase stack first,
+// so the storefront regression is also an integration test. Purge the orders
+// created by previous test runs so per-phone rate limits never trip.
+function loadEnvLocal() {
+  try {
+    const raw = readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
+    for (const line of raw.split('\n')) {
+      const match = line.match(/^([A-Z_]+)=(.*)$/)
+      if (match && !process.env[match[1]]) process.env[match[1]] = match[2].trim()
+    }
+  } catch { /* optional */ }
+}
+loadEnvLocal()
+async function purgeOrders(phones) {
+  if (!process.env.SUPABASE_SERVICE_KEY) return
+  const url = process.env.SUPABASE_URL || 'http://127.0.0.1:54321'
+  const headers = { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
+  for (const phone of phones) {
+    await fetch(`${url}/rest/v1/orders?customer_phone=eq.${phone}`, { method: 'DELETE', headers }).catch(() => {})
+  }
+}
+await purgeOrders(['0501234567', '0520000001'])
 
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
@@ -73,7 +97,7 @@ try {
   assert.equal(await page.locator('.cart-total').innerText(), 'סכום מוצרים: 254 ₪', 'cart must survive reload')
 
   await page.context().route('https://wa.me/**', (route) => route.fulfill({ status: 200, body: 'ok' }))
-  await page.locator('.cart-actions a').click()
+  await page.locator('.cart-actions button').click()
   assert.equal(page.context().pages().length, 1, 'invalid order must not open WhatsApp')
   await page.getByLabel('שם', { exact: true }).fill('דנה כהן')
   await page.getByLabel('טלפון').fill('0501234567')
@@ -83,19 +107,36 @@ try {
   await page.getByRole('radio', { name: 'משלוח בתיאום לפי איזור מגורים' }).check()
   assert.equal(await page.getByLabel('עיר', { exact: true }).count(), 1, 'selecting delivery should reveal the city field')
   assert.equal(await page.getByLabel('רחוב', { exact: true }).count(), 1, 'selecting delivery should reveal the street field')
-  await page.locator('.cart-actions a').click()
+  await page.locator('.cart-actions button').click()
   assert.equal(page.context().pages().length, 1, 'an empty city must not open WhatsApp')
   await page.getByLabel('עיר', { exact: true }).fill('חיפה')
-  await page.locator('.cart-actions a').click()
+  await page.locator('.cart-actions button').click()
   assert.equal(page.context().pages().length, 1, 'an empty street must not open WhatsApp')
   await page.getByLabel('רחוב', { exact: true }).fill('שדרות הכרמל 12')
-  const href = await page.locator('.cart-actions a').getAttribute('href')
+  const [orderPopup] = await Promise.all([page.context().waitForEvent('page'), page.locator('.cart-actions button').click()])
+  await orderPopup.waitForURL((url) => url.href.startsWith('https://wa.me/'))
+  const href = orderPopup.url()
   assert.match(href, /^https:\/\/wa\.me\/972523894291\?text=/)
   const text = new URL(href).searchParams.get('text')
   for (const part of ['דנה כהן', '0501234567', 'קערת שי', 'מידה: קוטר 20', 'מודה אני', '2 × 88 ₪ = 176 ₪', 'מידה: קוטר 16', '1 × 78 ₪ = 78 ₪', 'סכום מוצרים: 254 ₪', 'אספקה: משלוח בתיאום לפי איזור מגורים', 'כתובת למשלוח: עיר חיפה, רחוב שדרות הכרמל 12', 'אישור זמינות', 'PayBox']) assert.ok(text.includes(part), `missing from order: ${part}`)
-  const firstOrderNumber = text.match(/מספר הזמנה: (\d{1,6})/)?.[1]
-  assert.match(firstOrderNumber ?? '', /^\d{1,6}$/, 'the order message should carry a generated order number')
+  const firstOrderNumber = text.match(/מספר הזמנה: ((?:R-)?\d+)/)?.[1]
+  assert.match(firstOrderNumber ?? '', /^(?:R-)?\d+$/, 'the order message should carry the captured order number')
   assert.equal(await page.getByRole('button', { name: 'העתקת ההודעה' }).count(), 0, 'the order form should send only via WhatsApp without a copy button')
+  await orderPopup.close()
+  await page.getByText('העגלה עדיין ריקה').waitFor()
+  assert.equal(await page.evaluate(() => localStorage.getItem('art-in-clay-cart-v3')), '[]', 'cart must be cleared after a successful send')
+
+  // Refill the cart to keep testing line editing after the send.
+  await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
+  await page.locator('.size-choice select').selectOption('קוטר 20')
+  await page.locator('.purchase-row input').fill('2')
+  await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
+  await page.getByRole('button', { name: /לצפייה בקערת שי/ }).click()
+  await page.locator('.size-choice select').selectOption('קוטר 16')
+  await page.locator('.purchase-row input').fill('1')
+  await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
+  await page.getByText('סכום מוצרים: 254 ₪').waitFor()
+
   await page.locator('.cart-items input').first().fill('1')
   assert.equal(await page.locator('.cart-total').innerText(), 'סכום מוצרים: 166 ₪', 'quantity change must update the line total')
   await page.getByRole('button', { name: 'הסרה' }).first().click()
@@ -109,24 +150,26 @@ try {
   await page.locator('.size-choice select').selectOption('קוטר 20')
   await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
   await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
-  const [whatsappPage] = await Promise.all([page.context().waitForEvent('page'), page.locator('.cart-actions a').click()])
+  const [whatsappPage] = await Promise.all([page.context().waitForEvent('page'), page.locator('.cart-actions button').click()])
   await whatsappPage.close()
   await page.getByText('העגלה עדיין ריקה').waitFor()
   assert.equal(await page.evaluate(() => localStorage.getItem('art-in-clay-cart-v3')), '[]', 'cart must be cleared after sending')
-  await page.context().unroute('https://wa.me/**')
 
   await page.getByRole('button', { name: /לצפייה במגש אלה/ }).click()
   await page.getByRole('button', { name: 'הוספה לעגלה' }).click()
   await page.getByText('סכום מוצרים:', { exact: false }).first().waitFor()
   const ellaLine = await page.locator('.cart-items li').first().innerText()
   assert.ok(ellaLine.includes('מגש אלה') && !ellaLine.includes('מידה'), 'single-size products should not repeat their size label in the cart')
-  const ellaHref = await page.locator('.cart-actions a').getAttribute('href')
+  const [ellaPopup] = await Promise.all([page.context().waitForEvent('page'), page.locator('.cart-actions button').click()])
+  await ellaPopup.waitForURL((url) => url.href.startsWith('https://wa.me/'))
+  const ellaHref = ellaPopup.url()
   const ellaText = new URL(ellaHref).searchParams.get('text')
   assert.ok(ellaText.includes('מגש אלה | חלק | ציור: נישאים ברוח') && !ellaText.includes('מידה:'), 'single-size products should not repeat their size label in the order message')
-  const ellaOrderNumber = ellaText.match(/מספר הזמנה: (\d{1,6})/)?.[1]
+  const ellaOrderNumber = ellaText.match(/מספר הזמנה: ((?:R-)?\d+)/)?.[1]
   assert.ok(ellaOrderNumber && ellaOrderNumber !== firstOrderNumber, 'a new order after a send must get a fresh order number')
-  await page.getByRole('button', { name: 'פינוי העגלה' }).click()
+  await ellaPopup.close()
   await page.getByText('העגלה עדיין ריקה').waitFor()
+  assert.equal(await page.evaluate(() => localStorage.getItem('art-in-clay-cart-v3')), '[]', 'cart must be cleared after the Ella send')
 
   await page.getByRole('button', { name: /לצפייה במגש עירית/ }).click()
   await page.getByRole('heading', { name: 'מגש עירית' }).waitFor()
@@ -320,13 +363,18 @@ try {
   // the WhatsApp message explicitly identifies the custom artwork request
   await page.getByLabel('שם', { exact: true }).fill('דנה כהן')
   await page.getByLabel('טלפון').fill('0501234567')
-  const customHref = await page.locator('.cart-actions a').getAttribute('href')
+await purgeOrders(['0501234567'])
+  const [customPopup] = await Promise.all([page.context().waitForEvent('page'), page.locator('.cart-actions button').click()])
+  await customPopup.waitForURL((url) => url.href.startsWith('https://wa.me/'))
+  const customHref = customPopup.url()
   const customText = new URL(customHref).searchParams.get('text')
   for (const part of [
     'קערת שי | מידה: קוטר 16 | חלק | הזמנה אישית: מבקש/ת את הכלי עם הציור ״ערב כחול עמוק״ במקום הציור שבתמונה',
     'קוד כלי: shay-bowl-smooth | קוד ציור: gallery-02',
     'ציור: מודה אני',
   ]) assert.ok(customText.includes(part), `missing from custom order: ${part}`)
+  await customPopup.close()
+  await page.getByText('העגלה עדיין ריקה').waitFor()
 
   // previously stored cart items remain compatible, and invalid custom ids are dropped
   await page.evaluate(() => localStorage.setItem('art-in-clay-cart-v3', JSON.stringify([

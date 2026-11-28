@@ -13,7 +13,7 @@ export default function StudioPage() {
           </a>
           <nav className="site-nav" aria-label="ניווט ראשי">
             <a className="admin-back" href="/">חזרה לאתר ←</a>
-            {import.meta.env.DEV && <a className="admin-back" href="/admin">הכנת נכסים ↗</a>}
+            {import.meta.env.DEV && <a className="admin-back" href="/admin/assets">הכנת נכסים ↗</a>}
           </nav>
         </div>
       </header>

@@ -269,7 +269,7 @@ begin
   end if;
 
   for v_item in select * from public.order_items where order_id = p_order_id for update loop
-    v_artwork_id := nullif(coalesce(p_artwork_overrides ->> v_item.id, ''), '');
+    v_artwork_id := nullif(coalesce(p_artwork_overrides ->> (v_item.id::text), ''), '');
     if v_artwork_id is null then v_artwork_id := v_item.artwork_id; end if;
     if v_artwork_id is not null
        and not exists (select 1 from public.artworks where id = v_artwork_id and is_active) then
@@ -836,7 +836,7 @@ begin
   for v_item in select kbi.*, (select stage_id from public.ceramic_units u where u.id = kbi.unit_id) as unit_stage
                 from public.kiln_batch_items kbi where kbi.batch_id = p_batch_id
                 for update of kbi loop
-    v_result := coalesce(p_results ->> v_item.unit_id, 'ok');
+    v_result := coalesce(p_results ->> (v_item.unit_id::text), 'ok');
     if v_result not in ('ok', 'rejected', 'rework') then
       raise exception 'תוצאה לא תקינה עבור הפריט %.', v_item.unit_id;
     end if;

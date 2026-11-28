@@ -77,6 +77,9 @@ function App() {
   const [street, setStreet] = useState('')
   const [orderNumber, setOrderNumber] = useState(generateOrderNumber)
   const [notes, setNotes] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sendFailed, setSendFailed] = useState<string | null>(null)
+  const [captureKey, setCaptureKey] = useState<string | null>(null)
   const orderForm = useRef<HTMLFormElement>(null)
   const productSection = useRef<HTMLElement>(null)
   const galleryGrid = useRef<HTMLDivElement>(null)
@@ -184,21 +187,26 @@ function App() {
     setCart((items) => items.filter((item) => cartItemKey(item) !== key))
   }
 
-  const message = [
-    `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
-    `מספר הזמנה: ${orderNumber}`,
-    `שם: ${name.trim()}`,
-    `טלפון: ${phone.trim()}`,
-    ...(delivery === 'delivery' ? [`כתובת למשלוח: עיר ${city.trim()}, רחוב ${street.trim()}`] : []),
-    ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count, customArtwork }) => customArtwork
-      ? `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | הזמנה אישית: מבקש/ת את הכלי עם הציור ״${customArtwork.name}״ במקום הציור שבתמונה | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד כלי: ${variant.id} | קוד ציור: ${customArtwork.id})`
-      : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
-    `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
-    `אספקה: ${deliveryLabel[delivery]}`,
-    ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
-    'אבקש אישור זמינות, מחיר סופי וקישור PayBox לתשלום לאחר האישור.',
-  ].join('\n')
-  const whatsapp = `https://wa.me/${EFRAT.whatsapp}?text=${encodeURIComponent(message)}`
+  // Order message shared by the captured flow (server-issued number) and the
+  // legacy fallback (locally generated number when the studio system is not
+  // configured, or when the customer chooses to proceed without saving).
+  function orderMessage(requestNumber: string) {
+    return [
+      `שלום, אשמח לבדוק הזמנה מ-ART IN CLAY.`,
+      `מספר הזמנה: ${requestNumber}`,
+      `שם: ${name.trim()}`,
+      `טלפון: ${phone.trim()}`,
+      ...(delivery === 'delivery' ? [`כתובת למשלוח: עיר ${city.trim()}, רחוב ${street.trim()}`] : []),
+      ...cartDetails.map(({ variant, product: entry, size, artworkName, quantity: count, customArtwork }) => customArtwork
+        ? `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | הזמנה אישית: מבקש/ת את הכלי עם הציור ״${customArtwork.name}״ במקום הציור שבתמונה | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד כלי: ${variant.id} | קוד ציור: ${customArtwork.id})`
+        : `${entry.name}${entry.sizes.length > 1 ? ` | מידה: ${size.label}` : ''} | ${materialName[variant.material]} | ציור: ${artworkName} | ${count} × ${size.price} ₪ = ${count * size.price} ₪ (קוד: ${variant.id})`),
+      `סכום מוצרים: ${total} ₪ (לא כולל משלוח)`,
+      `אספקה: ${deliveryLabel[delivery]}`,
+      ...(notes.trim() ? [`הערות: ${notes.trim()}`] : []),
+      'אבקש אישור זמינות, מחיר סופי וקישור PayBox לתשלום לאחר האישור.',
+    ].join('\n')
+  }
+  const whatsapp = `https://wa.me/${EFRAT.whatsapp}?text=${encodeURIComponent(orderMessage(orderNumber))}`
 
   function validOrder(): boolean {
     return Boolean(cartDetails.length && orderForm.current?.reportValidity())
@@ -206,6 +214,64 @@ function App() {
 
   function clearCart() {
     setCart([])
+  }
+
+  // --- Reliable order capture (v3) -----------------------------------------
+  // The window is opened synchronously inside the click handler (Safari/iOS
+  // popup-blocker requirement) and pointed at WhatsApp only after the request
+  // is safely stored. On failure the blank window closes, the cart and form
+  // stay intact, and the customer can retry with the same idempotency key or
+  // explicitly proceed without saving (legacy behaviour).
+  async function sendRequest() {
+    if (sending || !validOrder()) return
+    setSending(true)
+    setSendFailed(null)
+    const key = captureKey ?? crypto.randomUUID()
+    if (!captureKey) setCaptureKey(key)
+    const win = window.open('', '_blank')
+    try {
+      const { isCaptureConfigured, captureOrderRequest } = await import('./data/orderRequest')
+      if (!isCaptureConfigured()) {
+        // Studio system not wired for this deployment: legacy flow, no error UI.
+        if (win) win.location.href = whatsapp
+        else window.open(whatsapp, '_blank', 'noopener')
+        setCart([])
+        setOrderNumber(generateOrderNumber())
+        return
+      }
+      const result = await captureOrderRequest({
+        name: name.trim(),
+        phone: phone.trim(),
+        delivery_type: delivery,
+        ...(delivery === 'delivery' ? { city: city.trim(), street: street.trim() } : {}),
+        ...(notes.trim() ? { notes: notes.trim() } : {}),
+        items: cartDetails.map(({ variant, size, quantity: count, customArtwork }) => ({
+          variant_id: variant.id,
+          size_label: size.label,
+          quantity: count,
+          ...(customArtwork ? { artwork_id: customArtwork.id } : {}),
+        })),
+      }, key)
+      const link = `https://wa.me/${EFRAT.whatsapp}?text=${encodeURIComponent(orderMessage(result.number))}`
+      if (win) win.location.href = link
+      else window.open(link, '_blank', 'noopener')
+      setCart([])
+      setCaptureKey(null)
+      setOrderNumber(generateOrderNumber())
+    } catch (error) {
+      win?.close()
+      setSendFailed(error instanceof Error ? error.message : 'שגיאה לא צפויה.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  function proceedWithoutSaving() {
+    window.open(whatsapp, '_blank', 'noopener')
+    setCart([])
+    setSendFailed(null)
+    setCaptureKey(null)
+    setOrderNumber(generateOrderNumber())
   }
 
   return (
@@ -380,7 +446,15 @@ function App() {
               {delivery === 'delivery' && <div className="cart-fields"><label>עיר <input required maxLength={60} value={city} onChange={(event) => setCity(event.target.value)} /></label><label>רחוב <input required maxLength={100} value={street} onChange={(event) => setStreet(event.target.value)} /></label></div>}
               <fieldset className="delivery-choices"><legend>אופן קבלה</legend>{(Object.keys(deliveryLabel) as Delivery[]).map((option) => <label key={option}><input type="radio" name="delivery" checked={delivery === option} onChange={() => setDelivery(option)} /> {deliveryLabel[option]}</label>)}</fieldset>
               <label>הערות (רשות) <textarea maxLength={500} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
-              <div className="cart-actions"><a className="primary-link" href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!validOrder()) event.preventDefault(); else { setCart([]); setOrderNumber(generateOrderNumber()) } }}>שליחת בקשה בוואטסאפ</a></div>
+              <div className="cart-actions"><button type="button" className="primary-link" onClick={sendRequest} disabled={sending}>{sending ? 'שולחים…' : 'שליחת בקשה בוואטסאפ'}</button></div>
+              {sendFailed && <div className="capture-error" role="alert">
+                <p><strong>הבקשה לא נשמרה במערכת.</strong> {sendFailed}</p>
+                <p className="capture-error-hint">אפשר לנסות שוב — הפרטים נשמרו בטופס. אם זה לא מצליח, אפשר להמשיך לוואטסאפ בלי לשמור, והפרטים יוקלדו בסטודיו בנפרד.</p>
+                <div className="capture-error-actions">
+                  <button type="button" className="primary-link" onClick={sendRequest} disabled={sending}>נסיון נוסף</button>
+                  <button type="button" className="secondary-link" onClick={proceedWithoutSaving}>המשך לוואטסאפ בלי לשמור</button>
+                </div>
+              </div>}
               <p className="cart-assurance"><strong>
                   לאחר אישור הזמנתך תשלח בקשת תשלום דרך קישור PayBox
               </strong></p>
