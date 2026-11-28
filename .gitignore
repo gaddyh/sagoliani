@@ -7,3 +7,5 @@ assets-source/
 validation/
 .devin/
 __pycache__/
+.env
+.env.*
