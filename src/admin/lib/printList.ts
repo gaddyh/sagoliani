@@ -56,7 +56,7 @@ function buildPrintList(header: string, items: OrderItemRow[], mappings: Mapping
 
   const body = [...lines.values()].map((line) =>
     line.width && line.height
-      ? `${line.artwork}: צריכה מהציור הזה ${line.quantity} יחי'. גובה ${line.height} ורוחה ${line.width} ס"מ.`
+      ? `${line.artwork}: צריכה מהציור הזה ${line.quantity} יחי'. גובה ${line.height} ורוחב ${line.width} ס"מ.`
       : `${line.artwork}: צריכה מהציור הזה ${line.quantity} יחי'. (חסרות מידות הדפסה לכלי זה.)`)
 
   return [
