@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 import { orderStatusLabel, type OrderItemRow, type OrderRow } from '../lib/types'
 import { orderTotal } from '../lib/whatsapp'
 
@@ -20,11 +21,13 @@ export default function OrdersPage() {
   const [items, setItems] = useState<OrderItemRow[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [ready, setReady] = useState(false)
 
   const statusFilter = searchParams.get('status') ?? 'all'
   const attentionFilter = searchParams.get('filter') === 'attention'
 
   useEffect(() => { void load() }, [])
+  useAutoRefresh(load)
 
   async function load() {
     setLoading(true)
@@ -35,6 +38,7 @@ export default function OrdersPage() {
     setOrders(orderRows.data ?? [])
     setItems(itemRows.data ?? [])
     setLoading(false)
+    setReady(true)
   }
 
   const itemsByOrder = useMemo(() => {
@@ -85,7 +89,7 @@ export default function OrdersPage() {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
-      {loading ? <p className="sa-loading">טוען…</p> : filtered.length === 0 ? (
+      {(loading && !ready) ? <p className="sa-loading">טוען…</p> : filtered.length === 0 ? (
         <p className="sa-hint">אין הזמנות מתאימות לתצוגה.</p>
       ) : (
         <ul className="sa-order-list">

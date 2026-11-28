@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 import { fetchCatalog, stageName, type Catalog } from '../lib/catalog'
 import {
   lifecycleLabel, materialLabel, qualityLabel, type Material, type UnitLifecycle, type UnitRow,
@@ -14,6 +15,7 @@ export default function InventoryPage() {
   const [units, setUnits] = useState<UnitRow[]>([])
   const [allocations, setAllocations] = useState<Map<string, AllocationBadge>>(new Map())
   const [loading, setLoading] = useState(true)
+  const [ready, setReady] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -24,6 +26,7 @@ export default function InventoryPage() {
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => { void load() }, [])
+  useAutoRefresh(load)
 
   async function load() {
     setLoading(true)
@@ -43,6 +46,7 @@ export default function InventoryPage() {
     }
     setAllocations(map)
     setLoading(false)
+    setReady(true)
   }
 
   async function run(action: () => PromiseLike<{ error: { message: string } | null }>, successNotice: string) {
@@ -123,7 +127,7 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {loading ? <p className="sa-loading">טוען…</p> : filtered.length === 0 ? <p className="sa-hint">אין יחידות מתאימות.</p> : (
+        {(loading && !ready) ? <p className="sa-loading">טוען…</p> : filtered.length === 0 ? <p className="sa-hint">אין יחידות מתאימות.</p> : (
           <ul className="sa-unit-list">
             {filtered.map((unit) => {
               const product = catalog?.products.find((entry) => entry.id === unit.product_id)

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 import { orderStatusLabel, type OrderRow } from '../lib/types'
 
 interface UnitSummary { stage_id: number; waiting: number }
@@ -10,8 +11,10 @@ export default function DashboardPage() {
   const [units, setUnits] = useState<UnitSummary[]>([])
   const [prints, setPrints] = useState({ pending_mapping: 0, ready_to_print: 0, print_failed: 0 })
   const [loading, setLoading] = useState(true)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => { void load() }, [])
+  useAutoRefresh(load)
 
   async function load() {
     setLoading(true)
@@ -35,6 +38,7 @@ export default function DashboardPage() {
     }
     setPrints(counts)
     setLoading(false)
+    setLoaded(true)
   }
 
   const count = (statuses: string[]) => orders.filter((order) => statuses.includes(order.status)).length
@@ -49,7 +53,7 @@ export default function DashboardPage() {
     && new Date(order.expected_delivery_date).getTime() - now < 7 * 24 * 3600 * 1000,
   )
 
-  if (loading) return <p className="sa-loading">טוען…</p>
+  if (loading && !loaded) return <p className="sa-loading">טוען…</p>
 
   return (
     <section>
