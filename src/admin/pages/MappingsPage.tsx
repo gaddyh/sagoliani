@@ -221,10 +221,11 @@ export default function MappingsPage() {
             </label>
           </div>
           <div className="sa-form-grid">
-            <label>רוחב הדפסה (ס״מ) <input type="number" step="0.1" min="0.1" value={editor.width} onChange={(event) => setEditor({ ...editor, width: event.target.value })} placeholder="למשל 12" /></label>
-            <label>גובה הדפסה (ס״מ) <input type="number" step="0.1" min="0.1" value={editor.height} onChange={(event) => setEditor({ ...editor, height: event.target.value })} placeholder="למשל 8" /></label>
+            <label>רוחב הציור בהדפסה (ס״מ) <input type="number" step="0.1" min="0.1" value={editor.width} onChange={(event) => setEditor({ ...editor, width: event.target.value })} placeholder="למשל 12" /></label>
+            <label>גובה הציור בהדפסה (ס״מ) <input type="number" step="0.1" min="0.1" value={editor.height} onChange={(event) => setEditor({ ...editor, height: event.target.value })} placeholder="למשל 8" /></label>
             <label>סיבוב (מעלות) <input type="number" step="1" value={editor.rotation} onChange={(event) => setEditor({ ...editor, rotation: event.target.value })} /></label>
           </div>
+          <p className="sa-hint">גודל הציור המודפס שמתאים לכלי זה — מוצע אוטומטית לפי הכלי, וניתן לכוונן לכל ציור. (אלה אינן מידות הכלי עצמו.)</p>
           <label>מיקום על הכלי <input value={editor.placement} onChange={(event) => setEditor({ ...editor, placement: event.target.value })} placeholder="למשל: מרכז הדופן החיצונית" /></label>
           <label>הוראות הכנה <textarea rows={2} value={editor.instructions} onChange={(event) => setEditor({ ...editor, instructions: event.target.value })} placeholder="הוראות להדפסה וליישום" /></label>
           <label>הערות <input value={editor.notes} onChange={(event) => setEditor({ ...editor, notes: event.target.value })} /></label>
@@ -252,7 +253,7 @@ export default function MappingsPage() {
                   <strong>{productName(mapping.product_id)}</strong>
                   {mapping.size_label ?? 'כל מידה'} · {mapping.material ? materialLabel[mapping.material as Material] : 'שני החומרים'} · ציור {artworkName(mapping.artwork_id)}
                 </span>
-                <span className="sa-chip">{mapping.print_width_cm}×{mapping.print_height_cm} ס״מ{Number(mapping.rotation_deg) ? ` · ${mapping.rotation_deg}°` : ''}</span>
+                <span className="sa-chip">ציור בהדפסה {mapping.print_width_cm}×{mapping.print_height_cm} ס״מ{Number(mapping.rotation_deg) ? ` · ${mapping.rotation_deg}°` : ''}</span>
                 <span className={`sa-chip ${mapping.print_file_path ? 'sa-chip-print-printed' : 'sa-chip-print-pending_mapping'}`}>
                   {mapping.print_file_path ? 'קובץ הדפסה צורף' : 'חסר קובץ הדפסה'}
                 </span>

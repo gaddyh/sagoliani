@@ -146,7 +146,7 @@ export default function PrintQueuePage() {
                   {group.sizeLabel} · {materialLabel[group.material]} · ציור {group.artworkName}
                 </span>
                 {group.mapping ? (
-                  <span className="sa-chip">{group.mapping.printWidthCm}×{group.mapping.printHeightCm} ס״מ{group.mapping.rotation ? ` · ${group.mapping.rotation}°` : ''}</span>
+                  <span className="sa-chip">ציור {group.mapping.printWidthCm}×{group.mapping.printHeightCm} ס״מ{group.mapping.rotation ? ` · ${group.mapping.rotation}°` : ''}</span>
                 ) : <span className="sa-chip sa-chip-print-pending_mapping">חסרה הכנה</span>}
               </div>
               <ul className="sa-print-allocations">

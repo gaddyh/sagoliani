@@ -72,8 +72,10 @@ await rest('ceramic_products?on_conflict=id', products.map((product, index) => (
   sort_order: index,
 })))
 
-// Default decoration areas (cm) per vessel size, provided by the artists
-// (Nov 2026). Width = רוחב/אורך (the longer dimension), height = גובה.
+// Artwork print sizes (cm) that fit each vessel, provided by the artists
+// (Nov 2026) — these are the default PRINT dimensions of the artwork for a
+// mapping on that vessel, NOT the physical dimensions of the vessel itself.
+// Width = רוחב/אורך (the longer dimension), height = גובה.
 const PRINT_AREAS = {
   'shay-bowl': { 'קוטר 16': [5, 12], 'קוטר 20': [5, 12] },
   'omer-bowl': { 'קוטר 16': [5, 12], 'קוטר 20': [5, 12] },

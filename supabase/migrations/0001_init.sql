@@ -45,8 +45,9 @@ create table public.product_sizes (
   product_id text not null references public.ceramic_products(id) on delete cascade,
   label text not null,
   price_ils numeric(10,2) not null check (price_ils >= 0),
-  -- Default decoration area (cm) for artwork prints on this vessel size.
-  -- Used to prefill artwork-product mappings; can be refined per artwork.
+  -- Default PRINT size (cm) of the artwork that fits this vessel size —
+  -- used to prefill artwork-product mapping dimensions. These are NOT the
+  -- physical dimensions of the vessel itself.
   print_width_cm numeric(6,2) check (print_width_cm is null or print_width_cm > 0),
   print_height_cm numeric(6,2) check (print_height_cm is null or print_height_cm > 0),
   primary key (product_id, label)
