@@ -75,22 +75,22 @@ export default function DashboardPage() {
           <span className="sa-card-label">דורש תשומת לב</span>
           <span className="sa-card-hint">פריטים שנפסלו או נתקעו</span>
         </Link>
-        <div className="sa-card">
+        <Link to="/admin/mappings" className={`sa-card sa-card-action ${prints.pending_mapping ? 'sa-card-hot' : 'sa-card-muted'}`}>
           <span className="sa-card-count">{prints.pending_mapping}</span>
           <span className="sa-card-label">שילובי ציור להכנה</span>
           <span className="sa-card-hint">חסר מיפוי מידות להדפסה</span>
-        </div>
-        <div className="sa-card">
+        </Link>
+        <Link to="/admin/print" className={`sa-card sa-card-action ${prints.ready_to_print ? 'sa-card-hot' : 'sa-card-muted'}`}>
           <span className="sa-card-count">{prints.ready_to_print}</span>
           <span className="sa-card-label">מוכן להדפסה</span>
           <span className="sa-card-hint">קבצים מוכנים להדפסה</span>
-        </div>
+        </Link>
         {units.filter((unit) => [2, 4, 6].includes(unit.stage_id) && unit.waiting > 0).map((unit) => (
-          <div key={unit.stage_id} className="sa-card">
+          <Link key={unit.stage_id} to={`/admin/inventory?stage=${unit.stage_id}`} className="sa-card sa-card-action">
             <span className="sa-card-count">{unit.waiting}</span>
             <span className="sa-card-label">{stageLabelOf(unit.stage_id)}</span>
             <span className="sa-card-hint">כלים שממתינים לתנור</span>
-          </div>
+          </Link>
         ))}
       </div>
 

@@ -129,6 +129,8 @@ export interface SizeRow {
   product_id: string
   label: string
   price_ils: number
+  print_width_cm: number | null
+  print_height_cm: number | null
 }
 
 export interface VariantRow {

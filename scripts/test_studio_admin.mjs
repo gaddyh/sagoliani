@@ -1,21 +1,48 @@
-// Studio admin end-to-end test (M1).
+// Studio admin end-to-end test (M1 + M2).
 //
 // Drives the real storefront against the local Supabase stack:
 //   1. Customer adds to cart and sends a WhatsApp request (capture path).
 //   2. Artist logs into /admin and sees the request on the dashboard.
 //   3. Artist opens the order, confirms it (choosing artwork for assorted
 //      items) and stock is allocated / production units created.
-//   4. Cancel releases the inventory.
+//   4. The missing artwork mapping appears in the prep queue; saving it
+//      (dims prefilled from the vessel's decoration area) flips the order's
+//      print to ready, and the print queue marks it printed.
+//   5. Inventory: stage filter cards and bulk unit creation.
+//   6. Cancel releases the inventory.
 //
 // Requires: `supabase start`, `node scripts/seed_catalog.mjs`, `npm run dev`.
 
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { chromium } from 'playwright-core'
 
 const baseUrl = process.env.POC_URL || 'http://127.0.0.1:5173'
 const adminEmail = process.env.ADMIN_EMAIL || 'irit@sagoliani.art'
 const adminPassword = process.env.ADMIN_PASSWORD || 'studio-dev-2026'
 const chrome = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+
+// Deterministic artwork used for the mapping leg; its mapping is cleaned up
+// before each run so the prep-queue flow is repeatable.
+const testArtworkName = '\u05de\u05d9\u05dd \u05de\u05ea\u05d5\u05e7\u05d9\u05dd' // מים מתוקים
+
+function loadEnvLocal() {
+  try {
+    const raw = readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
+    for (const line of raw.split('\n')) {
+      const match = line.match(/^([A-Z_]+)=(.*)$/)
+      if (match && !process.env[match[1]]) process.env[match[1]] = match[2].trim()
+    }
+  } catch { /* optional */ }
+}
+loadEnvLocal()
+if (process.env.SUPABASE_SERVICE_KEY) {
+  const url = process.env.SUPABASE_URL || 'http://127.0.0.1:54321'
+  const headers = { apikey: process.env.SUPABASE_SERVICE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_KEY}` }
+  await fetch(`${url}/rest/v1/orders?customer_phone=eq.0520000001`, { method: 'DELETE', headers }).catch(() => {})
+  await fetch(`${url}/rest/v1/artwork_mapping_versions?product_id=eq.shay-bowl&artwork_id=eq.gallery-21`, { method: 'DELETE', headers }).catch(() => {})
+}
+
 
 const browser = await chromium.launch({ executablePath: chrome, headless: true })
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
@@ -60,14 +87,50 @@ try {
   await page.getByRole('button', { name: 'אישור הזמנה' }).click()
   const artworkSelect = page.locator('.sa-confirm-panel select').first()
   if (await artworkSelect.count()) {
-    await artworkSelect.selectOption({ index: 1 })
+    await artworkSelect.selectOption({ label: testArtworkName })
   }
   await page.getByRole('button', { name: 'אישור סופי' }).click()
   await page.locator('.sa-notice').getByText('ההזמנה אושרה').waitFor()
   await page.locator('.sa-units li').first().waitFor({ timeout: 15000 })
   console.log('✔ order confirmed and physical units allocated')
 
-  // --- 4. Cancel releases the inventory ---------------------------------------
+  // --- 4. Mapping prep queue -> print queue (M2) -----------------------------
+  await page.goto(`${baseUrl}/admin/mappings`)
+  await page.getByRole('heading', { name: 'שילובי הכנה' }).waitFor()
+  await page.locator('.sa-item-row').filter({ hasText: testArtworkName }).getByRole('button', { name: 'הכנה' }).click()
+  const widthInput = page.locator('.sa-form-grid input[type="number"]').first()
+  await widthInput.waitFor()
+  assert.equal(await widthInput.inputValue(), '5', 'print width prefilled from the vessel decoration area')
+  await page.getByRole('button', { name: 'שמירת ההכנה' }).click()
+  await page.locator('.sa-notice').getByText('ההכנה נשמרה').waitFor()
+  console.log('✔ mapping saved with prefilled decoration-area dimensions')
+
+  await page.goto(`${baseUrl}/admin/print`)
+  await page.getByRole('heading', { name: 'תור הדפסות' }).waitFor()
+  await page.locator('.sa-print-groups > li').filter({ hasText: testArtworkName }).waitFor()
+  await page.getByRole('button', { name: 'סימון כל ההדפסות כבוצעו' }).click()
+  await page.locator('.sa-notice').getByText('סומנו כבוצעו').waitFor()
+  assert.equal(await page.locator('.sa-print-groups > li').count(), 0, 'print queue empties after marking printed')
+  console.log('✔ print queue marked printed and emptied')
+
+  // --- 5. Inventory: stage filters + bulk creation (M2) -----------------------
+  await page.goto(`${baseUrl}/admin/inventory`)
+  await page.getByRole('heading', { name: 'מלאי קרמיקה' }).waitFor()
+  await page.locator('.sa-unit-list li').first().waitFor({ timeout: 15000 })
+  const before = await page.locator('.sa-unit-list li').count()
+  await page.getByRole('button', { name: '+ הוספת יחידות' }).click()
+  await page.getByLabel('כמות').fill('2')
+  await page.getByRole('button', { name: 'הוספת 2 יחידות' }).click()
+  await page.locator('.sa-notice').getByText('2 יחידות נוספו').waitFor()
+  await page.locator('.sa-unit-list li').first().waitFor()
+  assert.equal(await page.locator('.sa-unit-list li').count(), before + 2, 'bulk creation adds the units')
+  await page.getByRole('button', { name: /שריפה ראשונה/ }).click()
+  await page.locator('.sa-unit-list li').first().waitFor()
+  console.log('✔ inventory list, bulk creation and stage filter work')
+
+  // --- 6. Cancel releases the inventory ---------------------------------------
+  await page.goto(`${baseUrl}/admin/orders`)
+  await page.getByRole('link', { name: /^R-/ }).first().click()
   await page.getByRole('button', { name: 'ביטול ההזמנה' }).click()
   await page.getByLabel('סיבת הביטול').fill('בדיקה')
   await page.getByRole('button', { name: 'אישור ביטול' }).click()

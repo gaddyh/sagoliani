@@ -12,7 +12,8 @@
     "preview": "vite preview --host 127.0.0.1",
     "test:integration": "node scripts/test_integration.mjs",
     "test:studio-admin": "node scripts/test_studio_admin.mjs",
-    "reset:dev": "supabase db reset && node scripts/seed_catalog.mjs"
+    "reset:dev": "supabase db reset && node scripts/seed_catalog.mjs",
+    "demo:dev": "supabase db reset && node scripts/seed_catalog.mjs && node scripts/import_inventory.mjs sagoliani_inventory_2026-11-28.json --apply"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",

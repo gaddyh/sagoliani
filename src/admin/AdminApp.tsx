@@ -7,6 +7,10 @@ import DashboardPage from './pages/DashboardPage'
 import OrdersPage from './pages/OrdersPage'
 import NewOrderPage from './pages/NewOrderPage'
 import OrderDetailPage from './pages/OrderDetailPage'
+import InventoryPage from './pages/InventoryPage'
+import ArtworksPage from './pages/ArtworksPage'
+import MappingsPage from './pages/MappingsPage'
+import PrintQueuePage from './pages/PrintQueuePage'
 
 export default function AdminApp() {
   const [session, setSession] = useState<Session | null>(null)
@@ -51,6 +55,10 @@ export default function AdminApp() {
             <nav className="sa-nav" aria-label="ניווט ראשי">
               <NavLink to="/admin" end>לוח בקרה</NavLink>
               <NavLink to="/admin/orders">הזמנות</NavLink>
+              <NavLink to="/admin/inventory">מלאי</NavLink>
+              <NavLink to="/admin/artworks">יצירות</NavLink>
+              <NavLink to="/admin/mappings">שילובים</NavLink>
+              <NavLink to="/admin/print">הדפסות</NavLink>
               <NavLink to="/admin/orders/new">הזמנה חדשה</NavLink>
             </nav>
             <div className="sa-user">
@@ -65,12 +73,17 @@ export default function AdminApp() {
             <Route path="/admin/orders/new" element={<NewOrderPage />} />
             <Route path="/admin/orders/:id" element={<OrderDetailPage />} />
             <Route path="/admin/orders" element={<OrdersPage />} />
+            <Route path="/admin/inventory" element={<InventoryPage />} />
+            <Route path="/admin/artworks" element={<ArtworksPage />} />
+            <Route path="/admin/mappings" element={<MappingsPage />} />
+            <Route path="/admin/print" element={<PrintQueuePage />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Routes>
         </main>
         <nav className="sa-tabbar" aria-label="ניווט תחתון">
           <NavLink to="/admin" end>לוח</NavLink>
           <NavLink to="/admin/orders">הזמנות</NavLink>
+          <NavLink to="/admin/inventory">מלאי</NavLink>
           <NavLink to="/admin/orders/new">חדשה</NavLink>
         </nav>
       </div>
