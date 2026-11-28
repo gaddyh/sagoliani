@@ -68,16 +68,22 @@ function buildPrintList(header: string, items: OrderItemRow[], mappings: Mapping
     }
     if (id) artworkIds.add(id)
   }
-  const links = [...artworkIds]
+  const withLinks = [...artworkIds]
     .map((id) => catalog?.artworks.find((a) => a.id === id))
-    .filter((a): a is NonNullable<typeof a> => Boolean(a?.source_url))
+    .filter((a): a is NonNullable<typeof a> => Boolean(a))
+  const links = withLinks
+    .filter((a) => a.source_url)
     .map((a) => `${a.name}:\n${a.source_url}`)
+  const missingLinks = withLinks
+    .filter((a) => !a.source_url)
+    .map((a) => a.name)
 
   return [
     header,
     ...body,
     ...(unchosen.length ? ['', `⚠ פריטים ללא ציור שנבחר: ${unchosen.join(', ')}`] : []),
     ...(links.length ? ['', 'קישורים להורדת הציורים:', '', ...links.map((l) => l + '\n')] : []),
+    ...(missingLinks.length ? ['', `⚠ ציורים ללא לינק להורדה (ניתן להוסיף בספריית היצירות): ${missingLinks.join(', ')}`] : []),
   ].join('\n')
 }
 
