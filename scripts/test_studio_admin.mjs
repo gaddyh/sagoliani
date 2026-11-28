@@ -117,7 +117,19 @@ try {
   await page.getByRole('button', { name: 'העתקה ללוח' }).click()
   await page.getByText('✔ הועתק ללוח').waitFor()
   console.log('✔ order print list aggregates artwork and print size with copy-to-clipboard')
-  await page.getByRole('button', { name: 'רשימת הדפסות להזמנה' }).click()
+
+  // --- 3c. Multi-order aggregated print list (orders page) -----------------
+  await page.goto(`${baseUrl}/admin/orders`)
+  await page.locator('.sa-order-check').first().check()
+  await page.getByRole('button', { name: 'רשימת הדפסות מצטברת' }).click()
+  const aggregateBox = page.locator('.sa-print-list textarea')
+  await aggregateBox.waitFor()
+  const aggregateText = await aggregateBox.inputValue()
+  assert.ok(aggregateText.includes('רשימת הדפסות מצטברת · 1 הזמנות · R-'), 'aggregate header lists the selected orders')
+  assert.ok(aggregateText.includes(`${testArtworkName}: צריכה מהציור הזה 1 יחי'. גובה 15 ורוחה 12 ס"מ.`), 'aggregated line matches the order print list')
+  await page.getByRole('button', { name: 'העתקה ללוח' }).click()
+  await page.getByText('✔ הועתק ללוח').waitFor()
+  console.log('✔ orders page multi-select aggregated print list works')
 
   // --- 4. Mapping prep queue -> print queue (M2) -----------------------------
   await page.goto(`${baseUrl}/admin/mappings`)

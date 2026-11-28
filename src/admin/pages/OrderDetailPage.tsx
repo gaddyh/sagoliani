@@ -7,69 +7,7 @@ import {
   qualityLabel, printStatusLabel, type AllocationRow, type OrderEventRow, type OrderItemRow, type OrderRow,
 } from '../lib/types'
 import { confirmationMessage, orderTotal, paymentReminderMessage, readyMessage, waLink } from '../lib/whatsapp'
-
-interface MappingVersionRow {
-  product_id: string
-  size_label: string | null
-  material: string | null
-  artwork_id: string
-  print_width_cm: number | null
-  print_height_cm: number | null
-  version: number
-}
-
-// Aggregated print list for one order: artworks grouped with the print size
-// that fits each vessel (prefers the current mapping version, falls back to
-// the dimensions snapshotted on the item at capture).
-function buildPrintList(order: OrderRow, items: OrderItemRow[], mappings: MappingVersionRow[], catalog: Catalog | null): string {
-  const resolveDims = (item: OrderItemRow): { width: number | null; height: number | null } => {
-    const candidates = mappings.filter((mapping) =>
-      mapping.product_id === item.product_id
-      && mapping.artwork_id === item.artwork_id
-      && (mapping.size_label === null || mapping.size_label === item.size_label)
-      && (mapping.material === null || mapping.material === item.material))
-    candidates.sort((a, b) =>
-      ((a.size_label ? 0 : 1) + (a.material ? 0 : 1)) - ((b.size_label ? 0 : 1) + (b.material ? 0 : 1))
-      || b.version - a.version)
-    const best = candidates[0]
-    if (best?.print_width_cm && best?.print_height_cm) return { width: Number(best.print_width_cm), height: Number(best.print_height_cm) }
-    if (item.print_width_cm && item.print_height_cm) return { width: Number(item.print_width_cm), height: Number(item.print_height_cm) }
-    const fallback = catalog?.sizes.find((size) => size.product_id === item.product_id && size.label === item.size_label)
-    return { width: fallback?.print_width_cm ?? null, height: fallback?.print_height_cm ?? null }
-  }
-
-  const lines = new Map<string, { artwork: string; quantity: number; width: number | null; height: number | null }>()
-  const unchosen: string[] = []
-  for (const item of items) {
-    // No explicit artwork -> the vessel's registered default (every vessel
-    // ships with one); only flag when even the default is missing.
-    let artworkId = item.artwork_id
-    if (!artworkId && item.variant_id) {
-      artworkId = catalog?.variants.find((variant) => variant.id === item.variant_id)?.artwork_id ?? null
-    }
-    if (!artworkId) {
-      if (!unchosen.includes(item.product_name_snapshot)) unchosen.push(item.product_name_snapshot)
-      continue
-    }
-    const artwork = catalog?.artworks.find((entry) => entry.id === artworkId)?.name ?? item.artwork_name_snapshot ?? artworkId
-    const dims = resolveDims({ ...item, artwork_id: artworkId })
-    const key = `${artwork}|${dims.width ?? '?'}|${dims.height ?? '?'}`
-    const current = lines.get(key)
-    if (current) current.quantity += item.quantity
-    else lines.set(key, { artwork, quantity: item.quantity, width: dims.width, height: dims.height })
-  }
-
-  const body = [...lines.values()].map((line) =>
-    line.width && line.height
-      ? `${line.artwork}: צריכה מהציור הזה ${line.quantity} יחי'. גובה ${line.height} ורוחה ${line.width} ס"מ.`
-      : `${line.artwork}: צריכה מהציור הזה ${line.quantity} יחי'. (חסרות מידות הדפסה לכלי זה.)`)
-
-  return [
-    `רשימת הדפסות · ${order.number} · ${order.customer_name}`,
-    ...body,
-    ...(unchosen.length ? ['', `⚠ פריטים ללא ציור שנבחר: ${unchosen.join(', ')}`] : []),
-  ].join('\n')
-}
+import { fetchCurrentMappings, orderPrintList } from '../lib/printList'
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -78,7 +16,7 @@ export default function OrderDetailPage() {
   const [items, setItems] = useState<OrderItemRow[]>([])
   const [allocations, setAllocations] = useState<AllocationRow[]>([])
   const [events, setEvents] = useState<OrderEventRow[]>([])
-  const [mappings, setMappings] = useState<MappingVersionRow[]>([])
+  const [mappings, setMappings] = useState< Awaited<ReturnType<typeof fetchCurrentMappings>>>([])
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
@@ -96,13 +34,13 @@ export default function OrderDetailPage() {
       supabase.from('orders').select('*').eq('id', id).single(),
       supabase.from('order_items').select('*').eq('order_id', id).order('created_at'),
       supabase.from('order_events').select('*').eq('order_id', id).order('at'),
-      supabase.from('artwork_mapping_versions').select('product_id, size_label, material, artwork_id, print_width_cm, print_height_cm, version').is('superseded_at', null),
+      fetchCurrentMappings(),
       fetchCatalog(),
     ])
     setOrder(orderResult.data)
     setItems(itemResult.data ?? [])
     setEvents(eventResult.data ?? [])
-    setMappings(mappingResult.data ?? [])
+    setMappings(mappingResult)
     setCatalog(catalogData)
     if (itemResult.data?.length) {
       const { data: allocationRows } = await supabase
@@ -191,13 +129,13 @@ export default function OrderDetailPage() {
         </div>
         {showPrintList && (
           <div className="sa-print-list">
-            <textarea readOnly rows={Math.max(3, buildPrintList(order, items, mappings, catalog).split('\n').length)} value={buildPrintList(order, items, mappings, catalog)} aria-label="רשימת הדפסות" />
+            <textarea readOnly rows={Math.max(3, orderPrintList(order, items, mappings, catalog).split('\n').length)} value={orderPrintList(order, items, mappings, catalog)} aria-label="רשימת הדפסות" />
             <div className="sa-wa-actions">
               <button
                 type="button"
                 className="sa-primary"
                 onClick={async () => {
-                  await navigator.clipboard.writeText(buildPrintList(order, items, mappings, catalog))
+                  await navigator.clipboard.writeText(orderPrintList(order, items, mappings, catalog))
                   setCopied(true)
                 }}
               >{copied ? '✔ הועתק ללוח' : 'העתקה ללוח'}</button>

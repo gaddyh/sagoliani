@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAutoRefresh } from '../lib/useAutoRefresh'
+import { fetchCatalog, type Catalog } from '../lib/catalog'
+import { fetchCurrentMappings, multiOrderPrintList, type MappingVersionRow } from '../lib/printList'
 import { orderStatusLabel, type OrderItemRow, type OrderRow } from '../lib/types'
 import { orderTotal } from '../lib/whatsapp'
 
@@ -19,9 +21,14 @@ export default function OrdersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [items, setItems] = useState<OrderItemRow[]>([])
+  const [catalog, setCatalog] = useState<Catalog | null>(null)
+  const [mappings, setMappings] = useState<MappingVersionRow[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [ready, setReady] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [showAggregate, setShowAggregate] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const statusFilter = searchParams.get('status') ?? 'all'
   const attentionFilter = searchParams.get('filter') === 'attention'
@@ -31,12 +38,16 @@ export default function OrdersPage() {
 
   async function load() {
     setLoading(true)
-    const [orderRows, itemRows] = await Promise.all([
+    const [orderRows, itemRows, catalogData, mappingRows] = await Promise.all([
       supabase.from('orders').select('*').order('captured_at', { ascending: false }),
       supabase.from('order_items').select('*'),
+      fetchCatalog(),
+      fetchCurrentMappings(),
     ])
     setOrders(orderRows.data ?? [])
     setItems(itemRows.data ?? [])
+    setCatalog(catalogData)
+    setMappings(mappingRows)
     setLoading(false)
     setReady(true)
   }
@@ -64,6 +75,23 @@ export default function OrdersPage() {
       || (order.customer_phone ?? '').includes(needle)
   })
 
+  const selectedOrders = orders.filter((order) => selected.has(order.id))
+  const aggregateText = selectedOrders.length && catalog
+    ? multiOrderPrintList(selectedOrders, items, mappings, catalog)
+    : ''
+  const allFilteredSelected = filtered.length > 0 && filtered.every((order) => selected.has(order.id))
+
+  function toggle(orderId: string) {
+    setSelected((current) => {
+      const next = new Set(current)
+      if (next.has(orderId)) next.delete(orderId)
+      else next.add(orderId)
+      return next
+    })
+    setShowAggregate(false)
+    setCopied(false)
+  }
+
   return (
     <section>
       <div className="sa-page-head">
@@ -89,6 +117,39 @@ export default function OrdersPage() {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
       />
+
+      {selected.size > 0 && (
+        <div className="sa-select-bar" role="toolbar" aria-label="פעולות על ההזמנות הנבחרות">
+          <span className="sa-select-count">נבחרו {selected.size} הזמנות</span>
+          <button type="button" className="sa-primary" onClick={() => { setShowAggregate(true); setCopied(false) }}>
+            🖨 רשימת הדפסות מצטברת
+          </button>
+          <button type="button" className="sa-secondary" onClick={() => {
+            setSelected(new Set(filtered.map((order) => order.id)))
+            setShowAggregate(false)
+          }}>{allFilteredSelected ? 'בחירת הכול (נבחר)' : 'בחירת הכול המוצגות'}</button>
+          <button type="button" className="sa-secondary" onClick={() => { setSelected(new Set()); setShowAggregate(false) }}>ניקוי בחירה</button>
+        </div>
+      )}
+
+      {showAggregate && aggregateText && (
+        <div className="sa-card sa-card-wide sa-print-list">
+          <h2 className="sa-card-title">רשימת הדפסות מצטברת לנבחרות</h2>
+          <textarea readOnly rows={Math.max(3, aggregateText.split('\n').length)} value={aggregateText} aria-label="רשימת הדפסות מצטברת" />
+          <div className="sa-wa-actions">
+            <button
+              type="button"
+              className="sa-primary"
+              onClick={async () => {
+                await navigator.clipboard.writeText(aggregateText)
+                setCopied(true)
+              }}
+            >{copied ? '✔ הועתק ללוח' : 'העתקה ללוח'}</button>
+            <button type="button" className="sa-secondary" onClick={() => setShowAggregate(false)}>סגירה</button>
+          </div>
+        </div>
+      )}
+
       {(loading && !ready) ? <p className="sa-loading">טוען…</p> : filtered.length === 0 ? (
         <p className="sa-hint">אין הזמנות מתאימות לתצוגה.</p>
       ) : (
@@ -96,7 +157,14 @@ export default function OrdersPage() {
           {filtered.map((order) => {
             const orderItems = itemsByOrder.get(order.id) ?? []
             return (
-              <li key={order.id}>
+              <li key={order.id} className="sa-order-li">
+                <input
+                  type="checkbox"
+                  className="sa-order-check"
+                  checked={selected.has(order.id)}
+                  onChange={() => toggle(order.id)}
+                  aria-label={`בחירת הזמנה ${order.number}`}
+                />
                 <Link to={`/admin/orders/${order.id}`} className="sa-order-row">
                   <span className="sa-order-number">{order.number}</span>
                   <span className="sa-order-customer">

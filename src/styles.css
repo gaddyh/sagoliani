@@ -693,3 +693,9 @@ button:disabled { opacity: .55; cursor: wait; }
 /* Order print list */
 .sa-print-list { display: grid; gap: 10px; margin-top: 8px; }
 .sa-print-list textarea { width: 100%; padding: 14px; border: 1px solid #cbd0bf; border-radius: 8px; background: white; font: inherit; font-size: 14.5px; line-height: 2; resize: vertical; direction: rtl; }
+
+/* Orders multi-select */
+.sa-order-list li.sa-order-li { display: flex; align-items: center; gap: 10px; }
+.sa-order-check { width: 22px; height: 22px; flex: none; cursor: pointer; }
+.sa-select-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--gold); border-radius: 10px; padding: 12px 16px; }
+.sa-select-count { font-weight: 600; color: var(--olive); }
