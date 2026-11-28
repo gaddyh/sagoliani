@@ -436,7 +436,7 @@ begin
   v_mapping := public.resolve_mapping_version(
     v_item.product_id, v_item.size_label, v_item.material, nullif(p_artwork_id, ''));
   update public.order_item_allocations a
-    set print_status = case when v_mapping is null then 'pending_mapping' else 'ready_to_print' end
+    set print_status = case when v_mapping.id is null then 'pending_mapping' else 'ready_to_print' end
   from public.ceramic_units u
   where a.order_item_id = p_order_item_id
     and a.released_at is null
@@ -647,7 +647,7 @@ begin
   insert into public.production_events
     (ceramic_unit_id, stage_id, result, artist_id, mapping_snapshot, notes)
   values (p_unit_id, 6, 'artwork_applied', v_actor,
-    case when v_mapping is null then null else jsonb_build_object(
+    case when v_mapping.id is null then null else jsonb_build_object(
       'mapping_version_id', v_mapping.id, 'version', v_mapping.version,
       'print_width_cm', v_mapping.print_width_cm, 'print_height_cm', v_mapping.print_height_cm,
       'rotation_deg', v_mapping.rotation_deg, 'placement', v_mapping.placement,
@@ -689,7 +689,7 @@ begin
 
     v_mapping := public.resolve_mapping_version(
       v_alloc.product_id, v_alloc.size_label, v_alloc.material, v_alloc.artwork_id);
-    if v_mapping is null then
+    if v_mapping.id is null then
       raise exception 'אין הכנת הדפסה תואמת לשילוב זה — השלימו את הכנת המיפוי.';
     end if;
 
@@ -972,7 +972,7 @@ begin
     and a.released_at is null
     and a.print_status = 'pending_mapping'
     and i.artwork_id is not null
-    and public.resolve_mapping_version(i.product_id, i.size_label, i.material, i.artwork_id) is not null;
+    and (public.resolve_mapping_version(i.product_id, i.size_label, i.material, i.artwork_id)).id is not null;
 
   return v_id;
 end $$;

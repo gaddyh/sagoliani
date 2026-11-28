@@ -9,7 +9,10 @@
     "test:visual": "node scripts/test_shop.mjs",
     "test:studio": "node scripts/validate.mjs",
     "test:admin": "node scripts/test_admin.mjs",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "test:integration": "node scripts/test_integration.mjs",
+    "test:studio-admin": "node scripts/test_studio_admin.mjs",
+    "reset:dev": "supabase db reset && node scripts/seed_catalog.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",

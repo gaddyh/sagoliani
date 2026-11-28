@@ -45,6 +45,10 @@ create table public.product_sizes (
   product_id text not null references public.ceramic_products(id) on delete cascade,
   label text not null,
   price_ils numeric(10,2) not null check (price_ils >= 0),
+  -- Default decoration area (cm) for artwork prints on this vessel size.
+  -- Used to prefill artwork-product mappings; can be refined per artwork.
+  print_width_cm numeric(6,2) check (print_width_cm is null or print_width_cm > 0),
+  print_height_cm numeric(6,2) check (print_height_cm is null or print_height_cm > 0),
   primary key (product_id, label)
 );
 
@@ -658,7 +662,9 @@ begin
   select * into v_item from public.order_items where id = p_order_item_id;
   v_mapping := public.resolve_mapping_version(
     v_item.product_id, v_item.size_label, v_item.material, p_artwork_id);
-  if p_artwork_id is not null and v_mapping is not null then
+  -- Postgres composite quirk: IS NULL on a row type is true when ANY field is
+  -- null, so the found-check must use the primary key.
+  if p_artwork_id is not null and v_mapping.id is not null then
     v_print_status := 'ready_to_print';
   else
     v_print_status := 'pending_mapping';

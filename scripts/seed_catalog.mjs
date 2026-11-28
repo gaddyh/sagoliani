@@ -72,8 +72,30 @@ await rest('ceramic_products?on_conflict=id', products.map((product, index) => (
   sort_order: index,
 })))
 
+// Default decoration areas (cm) per vessel size, provided by the artists
+// (Nov 2026). Width = רוחב/אורך (the longer dimension), height = גובה.
+const PRINT_AREAS = {
+  'shay-bowl': { 'קוטר 16': [5, 12], 'קוטר 20': [5, 12] },
+  'omer-bowl': { 'קוטר 16': [5, 12], 'קוטר 20': [5, 12] },
+  'river-stones': { 'גדול': [8, 9], 'בינוני': [7, 8], 'קטן': [4, 5] },
+  'irit-platter': { 'מגש': [23, 6] },
+  'ella-platter': { 'מגש': [23, 6] },
+  'yael-bowl': { 'קוטר כ-25 ס״מ': [12, 15] },
+  'mika-plate': { 'צלחת': [8, 12] },
+  'gaddy-plate': { 'קוטר כ-25 ס״מ': [18, 10] },
+}
+
 await rest('product_sizes?on_conflict=product_id,label', products.flatMap((product) =>
-  product.sizes.map((size) => ({ product_id: product.id, label: size.label, price_ils: size.price }))))
+  product.sizes.map((size) => {
+    const area = PRINT_AREAS[product.id]?.[size.label]
+    return {
+      product_id: product.id,
+      label: size.label,
+      price_ils: size.price,
+      print_width_cm: area ? area[0] : null,
+      print_height_cm: area ? area[1] : null,
+    }
+  })))
 
 await rest('artworks?on_conflict=id', galleryArtworks.map((artwork) => ({
   id: artwork.id,
