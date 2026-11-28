@@ -699,3 +699,7 @@ button:disabled { opacity: .55; cursor: wait; }
 .sa-order-check { width: 22px; height: 22px; flex: none; cursor: pointer; }
 .sa-select-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--gold); border-radius: 10px; padding: 12px 16px; }
 .sa-select-count { font-weight: 600; color: var(--olive); }
+
+/* Kiln batches */
+.sa-batch-results { display: grid; gap: 10px; width: 100%; padding: 12px; background: #f7f3eb; border: 1px solid #e5decf; border-radius: 8px; margin-top: 8px; }
+.sa-batch-results .sa-unit-row { background: white; }

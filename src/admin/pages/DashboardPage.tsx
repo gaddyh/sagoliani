@@ -12,23 +12,39 @@ export default function DashboardPage() {
   const [prints, setPrints] = useState({ pending_mapping: 0, ready_to_print: 0, print_failed: 0 })
   const [loading, setLoading] = useState(true)
   const [loaded, setLoaded] = useState(false)
+  const [lowStock, setLowStock] = useState<{ id: string; name: string; available: number; minimum: number }[]>([])
 
   useEffect(() => { void load() }, [])
   useAutoRefresh(load)
 
   async function load() {
     setLoading(true)
-    const [orderRows, unitRows, allocRows] = await Promise.all([
+    const [orderRows, unitRows, allocRows, productRows] = await Promise.all([
       supabase.from('orders').select('*').order('captured_at', { ascending: false }),
-      supabase.from('ceramic_units').select('stage_id, quality, lifecycle'),
-      supabase.from('order_item_allocations').select('print_status, released_at').is('released_at', null),
+      supabase.from('ceramic_units').select('id, product_id, stage_id, quality, lifecycle'),
+      supabase.from('order_item_allocations').select('ceramic_unit_id, print_status, released_at').is('released_at', null),
+      supabase.from('ceramic_products').select('id, name, min_desired_inventory'),
     ])
     setOrders(orderRows.data ?? [])
     const waiting = new Map<number, number>()
+    const allocatedUnits = new Set((allocRows.data ?? []).map((row) => row.ceramic_unit_id))
+    const availableByProduct = new Map<string, number>()
     for (const unit of unitRows.data ?? []) {
       if (unit.lifecycle !== 'active' || unit.quality === 'attention') continue
       waiting.set(unit.stage_id, (waiting.get(unit.stage_id) ?? 0) + 1)
+      if (!allocatedUnits.has(unit.id)) {
+        availableByProduct.set(unit.product_id, (availableByProduct.get(unit.product_id) ?? 0) + 1)
+      }
     }
+    const lowStock = (productRows.data ?? [])
+      .filter((product) => product.min_desired_inventory > 0
+        && (availableByProduct.get(product.id) ?? 0) < product.min_desired_inventory)
+    setLowStock(lowStock.map((product) => ({
+      id: product.id,
+      name: product.name,
+      available: availableByProduct.get(product.id) ?? 0,
+      minimum: product.min_desired_inventory,
+    })))
     setUnits([...waiting.entries()].map(([stage_id, count]) => ({ stage_id, waiting: count })))
     const counts = { pending_mapping: 0, ready_to_print: 0, print_failed: 0 }
     for (const allocation of allocRows.data ?? []) {
@@ -89,8 +105,15 @@ export default function DashboardPage() {
           <span className="sa-card-label">מוכן להדפסה</span>
           <span className="sa-card-hint">קבצים מוכנים להדפסה</span>
         </Link>
+        {lowStock.map((product) => (
+          <Link key={product.id} to="/admin/inventory" className="sa-card sa-card-action sa-card-alert">
+            <span className="sa-card-count">{product.available}</span>
+            <span className="sa-card-label">{product.name} — מלאי נמוך</span>
+            <span className="sa-card-hint">פנוי {product.available} מתחת למינימום {product.minimum}</span>
+          </Link>
+        ))}
         {units.filter((unit) => [2, 4, 6].includes(unit.stage_id) && unit.waiting > 0).map((unit) => (
-          <Link key={unit.stage_id} to={`/admin/inventory?stage=${unit.stage_id}`} className="sa-card sa-card-action">
+          <Link key={unit.stage_id} to="/admin/kiln" className="sa-card sa-card-action">
             <span className="sa-card-count">{unit.waiting}</span>
             <span className="sa-card-label">{stageLabelOf(unit.stage_id)}</span>
             <span className="sa-card-hint">כלים שממתינים לתנור</span>

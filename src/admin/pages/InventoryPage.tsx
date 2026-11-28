@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAutoRefresh } from '../lib/useAutoRefresh'
 import { fetchCatalog, stageName, type Catalog } from '../lib/catalog'
+import { downloadCsv } from '../lib/csv'
 import {
   lifecycleLabel, materialLabel, qualityLabel, type Material, type UnitLifecycle, type UnitRow,
 } from '../lib/types'
@@ -24,6 +25,7 @@ export default function InventoryPage() {
   const [filterStage, setFilterStage] = useState(searchParams.get('stage') ?? '')
   const [filterLifecycle, setFilterLifecycle] = useState<UnitLifecycle>('active')
   const [showCreate, setShowCreate] = useState(false)
+  const [selectedUnits, setSelectedUnits] = useState<Set<string>>(new Set())
 
   useEffect(() => { void load() }, [])
   useAutoRefresh(load)
@@ -63,6 +65,29 @@ export default function InventoryPage() {
     setBusy(false)
   }
 
+  function exportCsv() {
+    const rows: unknown[][] = [[
+      'מוצר', 'מידה', 'חומר', 'שלב', 'איכות', 'מצב', 'ציור מוחל', 'מוקצה להזמנה', 'תאריך יצירה', 'הערות',
+    ]]
+    for (const unit of filtered) {
+      const product = catalog?.products.find((entry) => entry.id === unit.product_id)
+      const allocation = allocations.get(unit.id)
+      rows.push([
+        product?.name ?? unit.product_id,
+        unit.size_label,
+        materialLabel[unit.material],
+        catalog ? stageName(catalog, unit.stage_id) : unit.stage_id,
+        qualityLabel[unit.quality],
+        lifecycleLabel[unit.lifecycle],
+        unit.applied_artwork_id ? catalog?.artworks.find((entry) => entry.id === unit.applied_artwork_id)?.name ?? '' : '',
+        allocation?.orderNumber ?? '',
+        new Date(unit.created_at).toLocaleDateString('he-IL'),
+        unit.notes ?? '',
+      ])
+    }
+    downloadCsv(`inventory-${new Date().toISOString().slice(0, 10)}.csv`, rows)
+  }
+
   const filtered = useMemo(() => units.filter((unit) =>
     (!filterProduct || unit.product_id === filterProduct)
     && (!filterStage || String(unit.stage_id) === filterStage)
@@ -78,15 +103,27 @@ export default function InventoryPage() {
     return counts
   }, [units])
 
+  const availableByProduct = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const unit of units) {
+      if (unit.lifecycle !== 'active' || allocations.has(unit.id)) continue
+      counts.set(unit.product_id, (counts.get(unit.product_id) ?? 0) + 1)
+    }
+    return counts
+  }, [units, allocations])
+
   if (loading && !catalog) return <p className="sa-loading">טוען…</p>
 
   return (
     <section>
       <div className="sa-page-head">
         <h1 className="sa-page-title">מלאי קרמיקה</h1>
-        <button type="button" className="sa-primary" onClick={() => setShowCreate((open) => !open)}>
-          {showCreate ? 'סגירת הטופס' : '+ הוספת יחידות'}
-        </button>
+        <div className="sa-wa-actions">
+          <button type="button" className="sa-secondary" onClick={exportCsv} disabled={filtered.length === 0}>⇓ ייצוא CSV</button>
+          <button type="button" className="sa-primary" onClick={() => setShowCreate((open) => !open)}>
+            {showCreate ? 'סגירת הטופס' : '+ הוספת יחידות'}
+          </button>
+        </div>
       </div>
 
       {error && <p className="sa-error" role="alert">{error}</p>}
@@ -109,6 +146,34 @@ export default function InventoryPage() {
       {showCreate && catalog && <BulkCreateForm catalog={catalog} onDone={async (message) => { await load(); setNotice(message) }} onError={setError} />}
 
       <div className="sa-card sa-card-wide">
+        <h2 className="sa-card-title">מלאי מינימלי להתראה</h2>
+        <p className="sa-hint">כשהמלאי הפנוי של מוצר יורד מתחת למינימום, הוא יופיע בלוח הבקרה. פנוי = יחידות פעילות שאינן מוקצות להזמנה.</p>
+        <ul className="sa-item-rows">
+          {catalog?.products.map((product) => (
+            <li key={product.id} className="sa-item-row">
+              <span className="sa-combo-text"><strong>{product.name}</strong></span>
+              <span className={`sa-chip ${(availableByProduct.get(product.id) ?? 0) < product.min_desired_inventory ? 'sa-chip-print-pending_mapping' : 'sa-chip-print-printed'}`}>
+                פנוי: {availableByProduct.get(product.id) ?? 0}
+              </span>
+              <label>מינימום
+                <input
+                  className="sa-qty"
+                  type="number" min={0} max={500}
+                  defaultValue={product.min_desired_inventory}
+                  onBlur={(event) => {
+                    const next = Number(event.target.value) || 0
+                    if (next !== product.min_desired_inventory) {
+                      void run(() => supabase.rpc('set_product_min_inventory', { p_product_id: product.id, p_minimum: next }), 'המינימום עודכן.')
+                    }
+                  }}
+                />
+              </label>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="sa-card sa-card-wide">
         <div className="sa-filters">
           <select aria-label="מוצר" value={filterProduct} onChange={(event) => setFilterProduct(event.target.value)}>
             <option value="">כל המוצרים</option>
@@ -127,6 +192,14 @@ export default function InventoryPage() {
           </div>
         </div>
 
+        {selectedUnits.size > 0 && (
+          <div className="sa-select-bar" role="toolbar" aria-label="פעולות על היחידות הנבחרות">
+            <span className="sa-select-count">נבחרו {selectedUnits.size} יחידות</span>
+            <button type="button" className="sa-primary" disabled={busy} onClick={() => run(() => supabase.rpc('advance_units_stage', { p_unit_ids: [...selectedUnits], p_result: 'completed' }), 'השלב הושלם לכל היחידות שנבחרו.')}>השלמת שלב לנבחרות</button>
+            <button type="button" className="sa-secondary" disabled={busy} onClick={() => run(() => supabase.rpc('advance_units_stage', { p_unit_ids: [...selectedUnits], p_result: 'rework' }), 'היחידות שנבחרו הוחזרו שלב אחד לתיקון.')}>החזרה לתיקון</button>
+            <button type="button" className="sa-secondary" onClick={() => setSelectedUnits(new Set())}>ניקוי בחירה</button>
+          </div>
+        )}
         {(loading && !ready) ? <p className="sa-loading">טוען…</p> : filtered.length === 0 ? <p className="sa-hint">אין יחידות מתאימות.</p> : (
           <ul className="sa-unit-list">
             {filtered.map((unit) => {
@@ -134,6 +207,18 @@ export default function InventoryPage() {
               const allocation = allocations.get(unit.id)
               return (
                 <li key={unit.id} className={`sa-unit-row ${unit.lifecycle === 'scrapped' ? 'sa-unit-scrapped' : ''}`}>
+                  <input
+                    type="checkbox"
+                    className="sa-order-check"
+                    checked={selectedUnits.has(unit.id)}
+                    onChange={() => setSelectedUnits((current) => {
+                      const next = new Set(current)
+                      if (next.has(unit.id)) next.delete(unit.id)
+                      else next.add(unit.id)
+                      return next
+                    })}
+                    aria-label={`בחירת יחידה ${unit.id.slice(0, 8)}`}
+                  />
                   <img
                     className="sa-unit-thumb"
                     src={product ? productThumb(catalog!, unit.product_id) : ''}

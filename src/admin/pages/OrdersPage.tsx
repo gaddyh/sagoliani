@@ -6,6 +6,7 @@ import { fetchCatalog, type Catalog } from '../lib/catalog'
 import { fetchCurrentMappings, multiOrderPrintList, type MappingVersionRow } from '../lib/printList'
 import { orderStatusLabel, type OrderItemRow, type OrderRow } from '../lib/types'
 import { orderTotal } from '../lib/whatsapp'
+import { downloadCsv } from '../lib/csv'
 
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: 'all', label: 'הכול' },
@@ -81,6 +82,28 @@ export default function OrdersPage() {
     : ''
   const allFilteredSelected = filtered.length > 0 && filtered.every((order) => selected.has(order.id))
 
+  function exportCsv() {
+    const rows: unknown[][] = [[
+      'מספר הזמנה', 'תאריך', 'שם לקוח', 'טלפון', 'סטטוס', 'תשלום', 'אספקה', 'סה״כ פריטים', 'סה״כ בש״ח', 'פריטים',
+    ]]
+    for (const order of filtered) {
+      const orderItems = itemsByOrder.get(order.id) ?? []
+      rows.push([
+        order.number,
+        new Date(order.captured_at).toLocaleDateString('he-IL'),
+        order.customer_name,
+        order.customer_phone ?? '',
+        orderStatusLabel[order.status],
+        order.payment_status,
+        order.delivery_type === 'delivery' ? `משלוח (${order.city ?? ''})` : 'איסוע עצמי',
+        orderItems.reduce((sum, item) => sum + item.quantity, 0),
+        orderTotal(order, orderItems),
+        orderItems.map((item) => `${item.product_name_snapshot}${item.size_label ? ` (${item.size_label})` : ''}${item.artwork_name_snapshot ? ` ציור ${item.artwork_name_snapshot}` : ''} x${item.quantity}`).join(' ; '),
+      ])
+    }
+    downloadCsv(`orders-${new Date().toISOString().slice(0, 10)}.csv`, rows)
+  }
+
   function toggle(orderId: string) {
     setSelected((current) => {
       const next = new Set(current)
@@ -96,7 +119,10 @@ export default function OrdersPage() {
     <section>
       <div className="sa-page-head">
         <h1 className="sa-page-title">הזמנות</h1>
-        <Link className="sa-primary" to="/admin/orders/new">+ הזמנה חדשה</Link>
+        <div className="sa-wa-actions">
+          <button type="button" className="sa-secondary" onClick={exportCsv} disabled={filtered.length === 0}>⇓ ייצוא CSV</button>
+          <Link className="sa-primary" to="/admin/orders/new">+ הזמנה חדשה</Link>
+        </div>
       </div>
       <div className="sa-tabs" role="tablist">
         {STATUS_TABS.map((tab) => (

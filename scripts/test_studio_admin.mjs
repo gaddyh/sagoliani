@@ -157,6 +157,7 @@ try {
   const before = await page.locator('.sa-unit-list li').count()
   await page.getByRole('button', { name: '+ הוספת יחידות' }).click()
   await page.getByLabel('כמות').fill('2')
+  await page.getByLabel("שלב התחלתי").selectOption('שריפה ראשונה')
   await page.getByRole('button', { name: 'הוספת 2 יחידות' }).click()
   await page.locator('.sa-notice').getByText('2 יחידות נוספו').waitFor()
   await page.locator('.sa-unit-list li').first().waitFor()
@@ -164,6 +165,27 @@ try {
   await page.getByRole('button', { name: /שריפה ראשונה/ }).click()
   await page.locator('.sa-unit-list li').first().waitFor()
   console.log('✔ inventory list, bulk creation and stage filter work')
+
+  // --- 5b. Kiln batch flow (M3) ----------------------------------------------
+  await page.goto(`${baseUrl}/admin/kiln`)
+  await page.getByRole('heading', { name: 'תנורים' }).waitFor()
+  // Deselect everything first — the real imported inventory must never
+  // enter a test batch — then select only the two test units.
+  const checkedBoxes = page.locator('input.sa-order-check:checked')
+  while (await checkedBoxes.count()) await checkedBoxes.first().uncheck()
+  const testUnitRows = page.locator('.sa-unit-row').filter({ hasText: 'תבנית לעוגה' }).locator('input')
+  for (let i = 0; i < await testUnitRows.count(); i += 1) await testUnitRows.nth(i).check()
+  await page.getByRole('button', { name: 'יצירת אצווה (2 כלים)' }).click()
+  await page.locator('.sa-notice').getByText('נפתחה אצווה עם 2 כלים').waitFor()
+  await page.getByRole('button', { name: 'התחלת שריפה' }).click()
+  await page.locator('.sa-notice').getByText('השריפה החלה').waitFor()
+  await page.getByRole('button', { name: 'השלמת השריפה' }).click()
+  await page.locator('.sa-batch-results .sa-unit-row').nth(1).getByLabel('פסול').check()
+  await page.getByRole('button', { name: 'אישור תוצאות השריפה' }).click()
+  await page.locator('.sa-notice').getByText('האצווה הושלמה').waitFor()
+  await page.getByText('תקינים: 1').waitFor()
+  await page.getByText('פסול: 1').waitFor()
+  console.log('✔ kiln batch created, fired and completed with per-unit results')
 
   // --- 6. Cancel releases the inventory ---------------------------------------
   await page.goto(`${baseUrl}/admin/orders`)
