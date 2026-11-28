@@ -155,6 +155,7 @@ export interface ArtworkRow {
   original_path: string | null
   is_active: boolean
   show_in_gallery: boolean
+  source_url: string | null
   notes: string | null
 }
 

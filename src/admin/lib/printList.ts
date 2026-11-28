@@ -59,10 +59,25 @@ function buildPrintList(header: string, items: OrderItemRow[], mappings: Mapping
       ? `${line.artwork}: צריכה מהציור הזה ${line.quantity} יחי'. גובה ${line.height} ורוחב ${line.width} ס"מ.`
       : `${line.artwork}: צריכה מהציור הזה ${line.quantity} יחי'. (חסרות מידות הדפסה לכלי זה.)`)
 
+  // Collect source links for each artwork that appears in the list.
+  const artworkIds = new Set<string>()
+  for (const item of items) {
+    let id = item.artwork_id
+    if (!id && item.variant_id) {
+      id = catalog?.variants.find((v) => v.id === item.variant_id)?.artwork_id ?? null
+    }
+    if (id) artworkIds.add(id)
+  }
+  const links = [...artworkIds]
+    .map((id) => catalog?.artworks.find((a) => a.id === id))
+    .filter((a): a is NonNullable<typeof a> => Boolean(a?.source_url))
+    .map((a) => `${a.name}: ${a.source_url}`)
+
   return [
     header,
     ...body,
     ...(unchosen.length ? ['', `⚠ פריטים ללא ציור שנבחר: ${unchosen.join(', ')}`] : []),
+    ...(links.length ? ['', 'קישורים להורדת הציורים:', ...links] : []),
   ].join('\n')
 }
 

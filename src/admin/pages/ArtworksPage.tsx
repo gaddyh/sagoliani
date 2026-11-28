@@ -139,6 +139,7 @@ function EditArtworkForm({ artwork, onCancel, onDone, onError }: {
   const [name, setName] = useState(artwork.name)
   const [description, setDescription] = useState(artwork.description ?? '')
   const [notes, setNotes] = useState(artwork.notes ?? '')
+  const [sourceUrl, setSourceUrl] = useState(artwork.source_url ?? '')
   const [showInGallery, setShowInGallery] = useState(artwork.show_in_gallery)
   const [isActive, setIsActive] = useState(artwork.is_active)
   const [busy, setBusy] = useState(false)
@@ -149,6 +150,7 @@ function EditArtworkForm({ artwork, onCancel, onDone, onError }: {
     const { error } = await supabase.from('artworks').update({
       name: name.trim(), description: description.trim() || null, notes: notes.trim() || null,
       show_in_gallery: showInGallery, is_active: isActive,
+      source_url: sourceUrl.trim() || null,
     }).eq('id', artwork.id)
     if (error) onError(error.message)
     else onDone('היצירה עודכנה.')
@@ -159,6 +161,7 @@ function EditArtworkForm({ artwork, onCancel, onDone, onError }: {
     <div className="sa-form">
       <label>שם <input value={name} onChange={(event) => setName(event.target.value)} /></label>
       <label>תיאור <input value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+      <label>קישור לקובץ מקורי (Google Drive / כל כתובת) <input type="url" dir="ltr" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://drive.google.com/..." /></label>
       <label>הערות פנימיות <textarea rows={2} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
       <label className="sa-check"><input type="checkbox" checked={isActive} onChange={(event) => setIsActive(event.target.checked)} /> יצירה פעילה</label>
       <label className="sa-check"><input type="checkbox" checked={showInGallery} onChange={(event) => setShowInGallery(event.target.checked)} /> תוצג בגלריית האתר (כשהקטלוג ינוהל מהמערכת)</label>
