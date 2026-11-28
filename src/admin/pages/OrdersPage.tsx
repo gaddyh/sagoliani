@@ -179,6 +179,21 @@ export default function OrdersPage() {
       {(loading && !ready) ? <p className="sa-loading">טוען…</p> : filtered.length === 0 ? (
         <p className="sa-hint">אין הזמנות מתאימות לתצוגה.</p>
       ) : (
+        <div className="sa-select-bar" style={{ marginBottom: 10 }}>
+          <input
+            type="checkbox"
+            className="sa-order-check"
+            checked={allFilteredSelected}
+            onChange={() => setSelected(allFilteredSelected ? new Set() : new Set(filtered.map((order) => order.id)))}
+            aria-label="בחירת כל ההזמנות המוצגות"
+          />
+          <span className="sa-select-count">{allFilteredSelected ? 'כולן נבחרו' : 'בחירת כל ההזמנות המוצגות'}</span>
+          {selected.size > 0 && (
+            <button type="button" className="sa-secondary" onClick={() => setSelected(new Set())}>ניקוי בחירה</button>
+          )}
+        </div>
+      )}
+      {(loading && !ready) ? null : filtered.length === 0 ? null : (
         <ul className="sa-order-list">
           {filtered.map((order) => {
             const orderItems = itemsByOrder.get(order.id) ?? []
