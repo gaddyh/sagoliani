@@ -87,18 +87,26 @@ function AddArtworkForm({ onDone, onError }: { onDone: (message: string) => void
   const [name, setName] = useState('')
   const [artist, setArtist] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [driveUrl, setDriveUrl] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function submit() {
     if (busy || !name.trim()) { onError('יש למלא שם ליצירה.'); return }
-    if (!file) { onError('יש לבחור קובץ תמונה.'); return }
+    if (!file && !driveUrl.trim()) { onError('יש לבחור קובץ תמונה או להדביק קישור מהדרייב.'); return }
     setBusy(true)
     try {
       const id = crypto.randomUUID()
-      const { originalPath, previewPath } = await uploadArtworkFiles(file, id)
+      let originalPath: string | null = null
+      let previewPath: string | null = null
+      if (file) {
+        const uploaded = await uploadArtworkFiles(file, id)
+        originalPath = uploaded.originalPath
+        previewPath = uploaded.previewPath
+      }
       const { error: insertError } = await supabase.from('artworks').insert({
         id, name: name.trim(), artist: artist.trim() || null,
         preview_path: previewPath, original_path: originalPath,
+        source_url: driveUrl.trim() || null,
         is_active: true, show_in_gallery: false,
       })
       if (insertError) throw new Error(insertError.message)
@@ -123,8 +131,9 @@ function AddArtworkForm({ onDone, onError }: { onDone: (message: string) => void
           </select>
         </label>
       </div>
-      <label>קובץ מקורי (PNG / JPG / WebP) <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
-      <p className="sa-hint">הקובץ המקורי נשמר באופן פרטי; תצוגה מקדימה נוצרת אוטומטית לשימוש הסטודיו.</p>
+      <label>קובץ מקורי מהמחשב (PNG / JPG / WebP) <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>
+      <label>או קישור מגוגל דרייב <input type="url" dir="ltr" value={driveUrl} onChange={(event) => setDriveUrl(event.target.value)} placeholder="https://drive.google.com/file/d/..." /></label>
+      <p className="sa-hint">אפשר להעלות קובץ מהמחשב (נשמר באופן פרטי + תצוגה מקדימה אוטומטית), להדביק קישור מהדרייב, או את שניהם.</p>
       <button type="button" className="sa-primary" disabled={busy} onClick={submit}>{busy ? 'שומרים…' : 'שמירת היצירה'}</button>
     </div>
   )
