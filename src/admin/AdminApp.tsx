@@ -30,8 +30,15 @@ export default function AdminApp() {
     if (!session?.user) { setArtistName(''); return }
     void (async () => {
       try {
-        const { data } = await supabase.from('profiles').select('display_name').eq('id', session.user.id).single()
-        setArtistName(data?.display_name ?? '')
+        const { data } = await supabase.from('profiles').select('display_name').eq('id', session.user.id).maybeSingle()
+        if (!data) {
+          // The session points at a user that no longer exists (e.g. the
+          // local database was reset). Signing out lands on the login page
+          // instead of showing empty, permission-blocked screens.
+          await supabase.auth.signOut()
+          return
+        }
+        setArtistName(data.display_name)
       } catch { setArtistName('') }
     })()
   }, [session?.user])
