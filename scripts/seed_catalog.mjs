@@ -42,7 +42,7 @@ async function rest(path, body) {
 
 // --- 1. Load catalog data through Vite SSR (same pattern as prerender.mjs) ---
 
-const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' })
+const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error', optimizeDeps: { noDiscovery: true } })
 let products, finishedVariants, galleryArtworks
 try {
   ;({ products, finishedVariants } = await vite.ssrLoadModule('/src/data/products.ts'))

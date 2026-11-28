@@ -8,7 +8,7 @@ const dist = new URL('../dist/', import.meta.url)
 // The studio reads the query string while rendering; Node has no `location`, so provide the empty home-page one.
 globalThis.location = new URL(siteUrl)
 
-const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error' })
+const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'error', optimizeDeps: { noDiscovery: true } })
 try {
   const { render, structuredData } = await vite.ssrLoadModule('/src/entry-server.tsx')
   const template = await readFile(new URL('index.html', dist), 'utf8')
